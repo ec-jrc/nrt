@@ -2,6 +2,7 @@ import abc
 
 import numpy as np
 import pandas as pd
+from netCDF4 import Dataset
 
 from nrt.utils import build_regressors
 
@@ -27,6 +28,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
         trend (bool): Indicate whether stable period fit is performed with
             trend or not
         harmonic_order (int): The harmonic order of the time-series regression
+        x (numpy.ndarray): array of x coordinates
+        y (numpy.ndarray): array of y coordinates
 
     Args:
         mask (numpy.ndarray): A 2D numpy array containing pixels that should be
@@ -37,11 +40,16 @@ class BaseNrt(metaclass=abc.ABCMeta):
         trend (bool): Indicate whether stable period fit is performed with
             trend or not
         harmonic_order (int): The harmonic order of the time-series regression
+        x_coords (numpy.ndarray): x coordinates
+        y_coords (numpy.ndarray): y coordinates
     """
-    def __init__(self, mask=None, trend=True, harmonic_order=3):
+    def __init__(self, mask=None, trend=True, harmonic_order=3, x_coords=None,
+                 y_coords=None):
         self.mask = mask
         self.trend = trend
         self.harmonic_order = harmonic_order
+        self.x = x_coords
+        self.y = y_coords
 
     def _fit(self, X, dataarray, reg='OLS', check_stability=None, **kwargs):
         """Fit a regression model on an xarray.DataArray
@@ -113,8 +121,50 @@ class BaseNrt(metaclass=abc.ABCMeta):
     def from_netcdf(cls, filename, **kwargs):
         pass
 
-    def to_netcdf(self):
-        pass
+    def to_netcdf(self, filename):
+        # List all attributes remove
+        attr = vars(self)
+        with Dataset(filename, 'w') as dst:
+            # define variable
+            x_dim = dst.createDimension('x', len(self.x))
+            y_dim = dst.createDimension('y', len(self.y))
+            r_dim = dst.createDimension('r', self.beta.shape[0])
+            # Create coordinate variables
+            x_var = dst.createVariable('x', np.float32, ('x',))
+            y_var = dst.createVariable('y', np.float32, ('y',))
+            r_var = dst.createVariable('r', np.uint8, ('r', ))
+            # fill values of coordinate variables
+            x_var[:] = self.x
+            y_var[:] = self.y
+            r_var[:] = np.arange(start=0, stop=self.beta.shape[0],
+                                 dtype=np.uint8)
+            # Add beta variable
+            beta_var = dst.createVariable('beta', np.float32, ('r', 'y', 'x'))
+            beta_var[:] = self.beta
+            # Create other variables
+            for k,v in attr.items():
+                if k not in ['x', 'y', 'beta']:
+                    print(k)
+                    if isinstance(v, np.ndarray):
+                        new_var = dst.createVariable(k, v.dtype, ('y', 'x'))
+                        new_var[:] = v
+                    elif isinstance(v, str):
+                        new_var = dst.createVariable(k, 'c')
+                        new_var.value = v
+                    elif isinstance(v, float):
+                        new_var = dst.createVariable(k, 'f4')
+                        new_var.value = v
+                    elif isinstance(v, bool):
+                        new_var = dst.createVariable(k, 'i1')
+                        new_var.value = int(v)
+                    elif isinstance(v, int):
+                        new_var = dst.createVariable(k, 'i4')
+                        new_var.value = v
+
+
+    def set_xy(self, dataarray):
+        self.x = dataarray.x.values
+        self.y = dataarray.y.values
 
     @staticmethod
     def build_design_matrix(dataarray, trend=True, harmonic_order=3):

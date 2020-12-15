@@ -8,11 +8,16 @@ import numpy as np
 def build_regressors(dates, trend=True, harmonic_order=3):
     """Build the design matrix (X) from a list or an array of datetimes
 
-    Args:
-        dates (pandas.DatetimeIndex): The dates to use for building regressors
-
     Trend assumes temporal resolution no finer than daily
     Harmonics assume annual cycles
+
+    Args:
+        dates (pandas.DatetimeIndex): The dates to use for building regressors
+        trend (bool): Whether to add a trend component
+        harmonic_order (int): The order of the harmonic component
+
+    Returns:
+        numpy.ndarray: A design matrix
     """
     dates = dates.sort_values()
     shape = (len(dates), 1 + trend + 2*harmonic_order)

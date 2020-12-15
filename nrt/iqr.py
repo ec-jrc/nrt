@@ -5,8 +5,10 @@ from nrt import BaseNrt
 
 class Iqr(BaseNrt):
     def __init__(self, mask=None, trend=True, harmonic_order=3, sensitivity=1.5,
-                 state=None, q25=None, q75=None, confirm_threshold=3):
-        super().__init__(mask, trend, harmonic_order)
+                 state=None, q25=None, q75=None, confirm_threshold=3,
+                 x_coords=None, y_coords=None):
+        super().__init__(mask, trend, harmonic_order, x_coords=x_coords,
+                         y_coords=y_coords)
         self.monitoring_strategy = 'IQR'
         self.sensitivity = sensitivity
         self.state = state
