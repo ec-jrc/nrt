@@ -37,6 +37,7 @@ setup(name='nrt',
       install_requires=[
           'numpy',
           'xarray',
+          'rasterio',
           'netCDF4',
           'pandas'
       ])
