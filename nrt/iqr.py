@@ -48,6 +48,11 @@ class Iqr(BaseNrt):
         # see where argument of np.left_shift
         self.state = np.left_shift(self.state, np.uint(1))
         self.state = self.state + is_outlier
+        # TODO: update mask (confirmed breaks are no longer monitored)
 
     def _report(self):
-        pass
+        # TODO: add different levels of flagging (level 1, 2, 3, confirmed, ...)
+        # TODO: Merge with updated mask to show unmonitored and previously disturbed areas
+        bit_mask = sum([2**x for x in range(self.confirm_threshold)])
+        flags = np.where(np.bitwise_and(self.state, bit_mask) == bit_mask, 1, 0)
+        return flags.astype(np.uint8)
