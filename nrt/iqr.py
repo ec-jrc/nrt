@@ -4,10 +4,14 @@ from nrt import BaseNrt
 
 
 class Iqr(BaseNrt):
-    def __init__(self, mask=None, trend=True, harmonic_order=3, sensitivity=1.5,
-                 state=None, q25=None, q75=None, confirm_threshold=3,
-                 x_coords=None, y_coords=None):
-        super().__init__(mask, trend, harmonic_order, x_coords=x_coords,
+    def __init__(self, mask=None, trend=True, harmonic_order=3, beta=None,
+                 sensitivity=1.5, state=None, q25=None, q75=None,
+                 confirm_threshold=3, x_coords=None, y_coords=None, **kwargs):
+        super().__init__(mask=mask,
+                         trend=trend,
+                         harmonic_order=harmonic_order,
+                         beta=beta,
+                         x_coords=x_coords,
                          y_coords=y_coords)
         self.monitoring_strategy = 'IQR'
         self.sensitivity = sensitivity
@@ -17,6 +21,7 @@ class Iqr(BaseNrt):
         self.confirm_threshold = confirm_threshold
 
     def fit(self, dataarray, reg='OLS', check_stability=None, **kwargs):
+        self.set_xy(dataarray)
         X = self.build_design_matrix(dataarray, trend=self.trend,
                                      harmonic_order=self.harmonic_order)
         beta, residuals = self._fit(X, dataarray=dataarray, reg=reg,
@@ -44,5 +49,5 @@ class Iqr(BaseNrt):
         self.state = np.left_shift(self.state, np.uint(1))
         self.state = self.state + is_outlier
 
-    def report(self):
+    def _report(self):
         pass

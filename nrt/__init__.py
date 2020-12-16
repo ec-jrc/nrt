@@ -3,6 +3,9 @@ import abc
 import numpy as np
 import pandas as pd
 from netCDF4 import Dataset
+import rasterio
+from rasterio.crs import CRS
+from affine import Affine
 
 from nrt.utils import build_regressors
 
@@ -43,13 +46,14 @@ class BaseNrt(metaclass=abc.ABCMeta):
         x_coords (numpy.ndarray): x coordinates
         y_coords (numpy.ndarray): y coordinates
     """
-    def __init__(self, mask=None, trend=True, harmonic_order=3, x_coords=None,
-                 y_coords=None):
+    def __init__(self, mask=None, trend=True, harmonic_order=3, beta=None,
+                 x_coords=None, y_coords=None):
         self.mask = mask
         self.trend = trend
         self.harmonic_order = harmonic_order
         self.x = x_coords
         self.y = y_coords
+        self.beta = beta
 
     def _fit(self, X, dataarray, reg='OLS', check_stability=None, **kwargs):
         """Fit a regression model on an xarray.DataArray
@@ -98,8 +102,34 @@ class BaseNrt(metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def report(self):
+    def _report(self):
+        """Abstract method
+
+        Must generate a 2D numpy array with unit8 datatype
+        """
         pass
+
+    def report(self, filename, driver='GTiff', crs=CRS.from_epsg(3035)):
+        """Write the result of reporting to a raster geospatial file
+
+        TODO: Make writing a window to larger file possible, but check for potential
+            thread safety issues
+        """
+        r = self._report()
+        meta = {'driver': driver,
+                'crs': crs,
+                'count': 1,
+                'dtype': 'uint8',
+                'transform': self.affine,
+                'height': r.shape[0],
+                'width': r.shape[1]}
+        with rasterio.open(filename, 'w', **meta) as dst:
+            dst.write(r, 1)
+
+    @property
+    def affine(self):
+        # TODO compute affine from x and y coord arrays
+        return Affine.identity()
 
     def predict(self, date):
         """Predict the expected values for a given date
@@ -119,7 +149,23 @@ class BaseNrt(metaclass=abc.ABCMeta):
 
     @classmethod
     def from_netcdf(cls, filename, **kwargs):
-        pass
+        with Dataset(filename) as src:
+            # Get dict of variables
+            d = dict()
+            for k in src.variables.keys():
+                print(k)
+                try:
+                    v = src.variables[k].value
+                except Exception as e:
+                    v = src.variables[k][:]
+                if k == 'x':
+                    k = 'x_coords'
+                if k == 'y':
+                    k = 'y_coords'
+                if k == 'r':
+                    continue
+                d.update({k:v})
+        return cls(**d)
 
     def to_netcdf(self, filename):
         # List all attributes remove
@@ -139,12 +185,12 @@ class BaseNrt(metaclass=abc.ABCMeta):
             r_var[:] = np.arange(start=0, stop=self.beta.shape[0],
                                  dtype=np.uint8)
             # Add beta variable
-            beta_var = dst.createVariable('beta', np.float32, ('r', 'y', 'x'))
+            beta_var = dst.createVariable('beta', np.float32, ('r', 'y', 'x'),
+                                          zlib=True)
             beta_var[:] = self.beta
             # Create other variables
             for k,v in attr.items():
                 if k not in ['x', 'y', 'beta']:
-                    print(k)
                     if isinstance(v, np.ndarray):
                         new_var = dst.createVariable(k, v.dtype, ('y', 'x'))
                         new_var[:] = v
