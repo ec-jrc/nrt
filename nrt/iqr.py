@@ -28,7 +28,7 @@ class Iqr(BaseNrt):
                                     check_stability=check_stability,
                                     **kwargs)
         self.beta = beta
-        q75, q25 = np.percentile(residuals, [75 ,25], 0)
+        q75, q25 = np.nanpercentile(residuals, [75 ,25], 0)
         self.q25 = q25
         self.q75 = q75
 

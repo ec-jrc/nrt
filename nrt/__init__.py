@@ -153,7 +153,6 @@ class BaseNrt(metaclass=abc.ABCMeta):
             # Get dict of variables
             d = dict()
             for k in src.variables.keys():
-                print(k)
                 try:
                     v = src.variables[k].value
                 except Exception as e:
