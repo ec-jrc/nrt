@@ -1,5 +1,4 @@
 import pkg_resources
-import datetime
 import tempfile
 import os
 
@@ -15,7 +14,7 @@ filename = os.path.join(TMP, 'romania_iqr_monitor.nc')
 
 ds_filename = pkg_resources.resource_filename('nrt', 'data/sentinel2_cube_subset_romania_20m.nc')
 ds = xr.open_dataset(ds_filename)
-print(ds) # for some reason data variables are already in float, no so sure why
+print(ds)  # for some reason data variables are already in float, no so sure why
 ds['ndvi'] = (ds.B8A - ds.B4) / (ds.B8A + ds.B4)
 ds = ds.where(ds.SCL.isin([4,5,7]))
 da_history = ds.ndvi.sel(time=slice('2015-01-01', '2017-12-31'))
