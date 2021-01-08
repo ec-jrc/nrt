@@ -36,6 +36,7 @@ setup(name='nrt',
       package_data={'nrt': ['data/*.nc']},
       install_requires=[
           'numpy',
+          'scipy',
           'xarray',
           'rasterio',
           'netCDF4',
