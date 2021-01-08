@@ -8,6 +8,7 @@ from rasterio.crs import CRS
 from affine import Affine
 
 from nrt.utils import build_regressors
+from nrt.stats import nanlstsq
 
 __version__ = "0.0.1"
 
@@ -76,14 +77,15 @@ class BaseNrt(metaclass=abc.ABCMeta):
             beta (numpy.ndarray): The array of regression estimators
             residuals (numpy.ndarray): The array of residuals
         """
-        y = dataarray.values
+        y = dataarray.values.astype(np.float32)
+        X = X.astype(np.float32)
         shape = y.shape
         # TODO: Implement mask subsetting
         shape_flat = (shape[0], shape[1]*shape[2])
         beta_shape = (X.shape[1], shape[1], shape[2])
         y_flat = y.reshape(shape_flat)
         if reg == 'OLS' and not check_stability:
-            beta, _, _, _ = np.linalg.lstsq(X, y_flat)
+            beta = nanlstsq(X, y_flat)
             residuals = np.dot(X, beta) - y_flat
         elif reg == 'LASSO' and not check_stability:
             raise NotImplementedError('Regression type not yet implemented')
