@@ -4,7 +4,7 @@ from nrt import BaseNrt
 
 
 class Brooks(BaseNrt):
-    def __init__(self, mask=None, trend=True, harmonic_order=3, beta=None, x_coords=None, y_coords=None,
+    def __init__(self, mask=None, trend=True, harmonic_order=2, beta=None, x_coords=None, y_coords=None,
                  sensitivity=0.3, threshold=2):
         super().__init__(mask=mask,
                          trend=trend,
@@ -30,6 +30,7 @@ class Brooks(BaseNrt):
         # TODO might have to fill masked_outliers with nan
         masked_outliers = np.ma.masked_array(dataarray, mask=shewhart_mask)
 
+        # fit again, but without outliers
         beta, residuals = self._fit(X, dataarray=masked_outliers, reg=reg,
                                     check_stability=check_stability,
                                     **kwargs)
