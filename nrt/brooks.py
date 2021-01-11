@@ -27,8 +27,7 @@ class Brooks(BaseNrt):
         # Shewhart chart to get rid of outliers (clouds etc)
         sigma = np.nanstd(residuals, axis=2)
         shewhart_mask = np.abs(residuals) > self.threshold * sigma
-        # TODO might have to fill masked_outliers with nan
-        masked_outliers = np.ma.masked_array(dataarray, mask=shewhart_mask)
+        masked_outliers = np.where(shewhart_mask, np.nan, dataarray)
 
         # fit again, but without outliers
         beta, residuals = self._fit(X, dataarray=masked_outliers, reg=reg,
