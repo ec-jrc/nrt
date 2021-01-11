@@ -36,4 +36,16 @@ class Brooks(BaseNrt):
                                     **kwargs)
         self.beta = beta
 
+        # calculate residuals including outliers and get standard deviation
+        # TODO is it possible to not have to predict for everything but only for the masked values
+        #  which aren't in `residuals`?
+        y_pred = self.predict(dataarray.time.values)
+        resid = dataarray - y_pred
+        sigma = np.nanstd(resid, axis=2)
+
+        # screen outliers for the last time
+        shewhart_mask = np.abs(residuals) > self.threshold * sigma
+
+        # calculate EWMA control limits and save them
+
     def monitor(self):
