@@ -64,11 +64,17 @@ class Brooks(BaseNrt):
         residuals = dataarray - y_pred
 
         # Filtering of values with high threshold X-Bar and calculating new EWMA values
-        ewma = np.where(np.abs(residuals > self.threshold * self.sigma),
+        self.ewma = np.where(np.abs(residuals) > self.threshold * self.sigma,
                         self.ewma,
                         (1 - self.sensitivity) * self.ewma + self.sensitivity * residuals)
 
-        # 2.
+    def _report(self):
+        # signals severity of disturbance:
+        #   0 = not disturbed
+        #   >1 = disturbed
+        # TODO: Signal clouds as 255 or something.
+        return np.floor_devide(np.abs(self.ewma), self.cl_ewma).astype(np.uint8)
+
 
     # TODO Check if Numba works
     # @numba.jit("float32[:](float32[:], float32[:])", nopython=True, nogil=True)
