@@ -165,9 +165,11 @@ class BaseNrt(metaclass=abc.ABCMeta):
                     k = 'y_coords'
                 if k == 'r':
                     continue
-                if k.endswith('_bool'):
-                    k = k[:-5]
-                    v = v.astype('bool')
+                try:
+                    if src.variables[k].getncattr('dtype') == 'bool':
+                        v = v.astype('bool')
+                except Exception as e:
+                    pass
                 d.update({k:v})
         return cls(**d)
 
@@ -200,8 +202,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
                             new_var = dst.createVariable(k, v.dtype, ('y', 'x'))
                             new_var[:] = v
                         except Exception as e:
-                            new_var = dst.createVariable(k+"_bool", 'u1', ('y', 'x'))
+                            new_var = dst.createVariable(k, 'u1', ('y', 'x'))
                             new_var[:] = v.astype('u1')
+                            new_var.setncattr('dtype', 'bool')
                             # TODO add handling for v.dtype == 'datetime64'
                     elif isinstance(v, str):
                         new_var = dst.createVariable(k, 'c')
@@ -210,8 +213,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
                         new_var = dst.createVariable(k, 'f4')
                         new_var.value = v
                     elif isinstance(v, bool):
-                        new_var = dst.createVariable(k+'_bool', 'i1')
+                        new_var = dst.createVariable(k, 'i1')
                         new_var.value = int(v)
+                        new_var.setncattr('dtype', 'bool')
                     elif isinstance(v, int):
                         new_var = dst.createVariable(k, 'i4')
                         new_var.value = v
