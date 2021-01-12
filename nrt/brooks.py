@@ -17,6 +17,7 @@ class Brooks(BaseNrt):
         self.sigma = sigma
         self.cl_ewma = None  # control limit
         self.ewma = None  # array with most recent EWMA values
+        self.nodata = None
 
     def fit(self, dataarray, reg='OLS', check_stability=None, **kwargs):
         self.set_xy(dataarray)
@@ -37,6 +38,7 @@ class Brooks(BaseNrt):
                                     check_stability=check_stability,
                                     **kwargs)
         self.beta = beta
+        self.nodata = np.isnan(residuals[-1])
 
         # get new standard deviation
         self.sigma = np.nanstd(residuals, axis=0)
@@ -53,8 +55,10 @@ class Brooks(BaseNrt):
         y_pred = self.predict(date)
         residuals = array - y_pred
 
+        # TODO EWMA calculation in fit and monitor by calc_ewma()
         # Filtering of values with high threshold X-Bar and calculating new EWMA values
         residuals[np.abs(residuals) > self.threshold * self.sigma] = np.nan
+        self.nodata = np.isnan(residuals[-1])
 
         self.ewma = np.where(np.isnan(residuals),
             self.ewma,
@@ -62,10 +66,12 @@ class Brooks(BaseNrt):
 
     def _report(self):
         # signals severity of disturbance:
-        #   0 = not disturbed
+        #    0 = not disturbed
         #   >1 = disturbed
-        # TODO: Signal clouds as 255 or something.
-        return np.floor_divide(np.abs(self.ewma), self.cl_ewma).astype(np.uint8)
+        #  255 = no data
+        signal = np.floor_divide(np.abs(self.ewma), self.cl_ewma).astype(np.uint8)
+        signal[self.nodata] = 255
+        return signal
 
     # TODO Check if Numba works
     # @numba.jit("float32[:](float32[:], float32[:])", nopython=True, nogil=True)
