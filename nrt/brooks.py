@@ -5,7 +5,7 @@ from nrt import BaseNrt
 
 class Brooks(BaseNrt):
     def __init__(self, mask=None, trend=True, harmonic_order=2, beta=None, x_coords=None, y_coords=None,
-                 sensitivity=0.3, threshold=2, sigma=None):
+                 sensitivity=0.3, threshold=2, sigma=None, cl_ewma=None, ewma=None, nodata=None, **kwargs):
         super().__init__(mask=mask,
                          trend=trend,
                          harmonic_order=harmonic_order,
@@ -15,9 +15,9 @@ class Brooks(BaseNrt):
         self.sensitivity = sensitivity
         self.threshold = threshold
         self.sigma = sigma
-        self.cl_ewma = None  # control limit
-        self.ewma = None  # array with most recent EWMA values
-        self.nodata = None
+        self.cl_ewma = cl_ewma  # control limit
+        self.ewma = ewma  # array with most recent EWMA values
+        self.nodata = nodata # saved as byte to allow for netcdf export! Only necessary for singalling missing data
 
     def fit(self, dataarray, reg='OLS', check_stability=None, **kwargs):
         self.set_xy(dataarray)
@@ -30,15 +30,14 @@ class Brooks(BaseNrt):
         # Shewhart chart to get rid of outliers (clouds etc)
         sigma = np.nanstd(residuals_full, axis=0)
         shewhart_mask = np.abs(residuals_full) > (self.threshold * sigma)
-        masked_outliers = dataarray.copy()
-        masked_outliers.values = np.where(shewhart_mask, np.nan, dataarray)
+        dataarray.values[shewhart_mask] = np.nan
 
         # fit again, but without outliers
-        beta, residuals = self._fit(X, dataarray=masked_outliers, reg=reg,
+        beta, residuals = self._fit(X, dataarray=dataarray, reg=reg,
                                     check_stability=check_stability,
                                     **kwargs)
         self.beta = beta
-        self.nodata = np.isnan(residuals[-1])
+        self.nodata = np.isnan(residuals[-1]).astype(np.byte)
 
         # get new standard deviation
         self.sigma = np.nanstd(residuals, axis=0)
@@ -58,7 +57,7 @@ class Brooks(BaseNrt):
         # TODO EWMA calculation in fit and monitor by calc_ewma()
         # Filtering of values with high threshold X-Bar and calculating new EWMA values
         residuals[np.abs(residuals) > self.threshold * self.sigma] = np.nan
-        self.nodata = np.isnan(residuals[-1])
+        self.nodata = np.isnan(residuals[-1]).astype(np.byte)
 
         self.ewma = np.where(np.isnan(residuals),
             self.ewma,
@@ -67,10 +66,11 @@ class Brooks(BaseNrt):
     def _report(self):
         # signals severity of disturbance:
         #    0 = not disturbed
-        #   >1 = disturbed
+        #   >1 = disturbed (bigger number: higher severity)
         #  255 = no data
+        # TODO no data signal works, but is ugly, maybe make it optional
         signal = np.floor_divide(np.abs(self.ewma), self.cl_ewma).astype(np.uint8)
-        signal[self.nodata] = 255
+        signal[self.nodata.nonzero()] = 255
         return signal
 
     # TODO Check if Numba works
