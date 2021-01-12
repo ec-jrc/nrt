@@ -165,6 +165,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
                     k = 'y_coords'
                 if k == 'r':
                     continue
+                if k.endswith('_bool'):
+                    k = k[:-5]
+                    v = v.astype('bool')
                 d.update({k:v})
         return cls(**d)
 
@@ -193,8 +196,13 @@ class BaseNrt(metaclass=abc.ABCMeta):
             for k,v in attr.items():
                 if k not in ['x', 'y', 'beta']:
                     if isinstance(v, np.ndarray):
-                        new_var = dst.createVariable(k, v.dtype, ('y', 'x'))
-                        new_var[:] = v
+                        try:
+                            new_var = dst.createVariable(k, v.dtype, ('y', 'x'))
+                            new_var[:] = v
+                        except Exception as e:
+                            new_var = dst.createVariable(k+"_bool", 'u1', ('y', 'x'))
+                            new_var[:] = v.astype('u1')
+                            # TODO add handling for v.dtype == 'datetime64'
                     elif isinstance(v, str):
                         new_var = dst.createVariable(k, 'c')
                         new_var.value = v
@@ -202,7 +210,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
                         new_var = dst.createVariable(k, 'f4')
                         new_var.value = v
                     elif isinstance(v, bool):
-                        new_var = dst.createVariable(k, 'i1')
+                        new_var = dst.createVariable(k+'_bool', 'i1')
                         new_var.value = int(v)
                     elif isinstance(v, int):
                         new_var = dst.createVariable(k, 'i4')

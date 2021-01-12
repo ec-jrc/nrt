@@ -17,7 +17,7 @@ class Brooks(BaseNrt):
         self.sigma = sigma
         self.cl_ewma = cl_ewma  # control limit
         self.ewma = ewma  # array with most recent EWMA values
-        self.nodata = nodata # saved as byte to allow for netcdf export! Only necessary for singalling missing data
+        self.nodata = nodata # Only necessary for singalling missing data
 
     def fit(self, dataarray, reg='OLS', check_stability=None, **kwargs):
         self.set_xy(dataarray)
@@ -37,7 +37,7 @@ class Brooks(BaseNrt):
                                     check_stability=check_stability,
                                     **kwargs)
         self.beta = beta
-        self.nodata = np.isnan(residuals[-1]).astype(np.byte)
+        self.nodata = np.isnan(residuals[-1])
 
         # get new standard deviation
         self.sigma = np.nanstd(residuals, axis=0)
@@ -57,7 +57,7 @@ class Brooks(BaseNrt):
         # TODO EWMA calculation in fit and monitor by calc_ewma()
         # Filtering of values with high threshold X-Bar and calculating new EWMA values
         residuals[np.abs(residuals) > self.threshold * self.sigma] = np.nan
-        self.nodata = np.isnan(residuals[-1]).astype(np.byte)
+        self.nodata = np.isnan(residuals[-1])
 
         self.ewma = np.where(np.isnan(residuals),
             self.ewma,
@@ -70,7 +70,7 @@ class Brooks(BaseNrt):
         #  255 = no data
         # TODO no data signal works, but is ugly, maybe make it optional
         signal = np.floor_divide(np.abs(self.ewma), self.cl_ewma).astype(np.uint8)
-        signal[self.nodata.nonzero()] = 255
+        signal[self.nodata] = 255
         return signal
 
     # TODO Check if Numba works
