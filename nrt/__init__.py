@@ -9,7 +9,7 @@ from rasterio.crs import CRS
 from affine import Affine
 
 from nrt.utils import build_regressors
-from nrt.stats import nanlstsq
+from nrt.fit_methods import ols, shewhart
 
 __version__ = "0.0.1"
 
@@ -57,7 +57,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         self.y = y_coords
         self.beta = beta
 
-    def _fit(self, X, dataarray, reg='OLS', check_stability=None, **kwargs):
+    def _fit(self, X, dataarray, method='OLS', check_stability=None, **kwargs):
         """Fit a regression model on an xarray.DataArray
 
         #TODO: Not sure whether recresid is implied by ROC or not.
@@ -66,34 +66,31 @@ class BaseNrt(metaclass=abc.ABCMeta):
             X (numpy.ndarray): The design matrix used for the regression
             dataarray (xarray.DataArray): A 3 dimension (time, y, x) DataArray containing
                 the dependant variable
-            reg (str): The regression type. Possible values include ``'OLS'``,
-                ``'IRLS'``, ``'LASSO'``. May be ignored depending on the value
+            method (str): The fitting method. Possible values include ``'OLS'``,
+                ``'IRLS'``, ``'LASSO'``, ``'Shewhart'``. May be ignored depending on the value
                 passed to ``check_stability``
             check_stability (str): Which test should be used in stability checking.
                 If ``None`` no stability check is performed. Other potential values
                 include ``'ROC'``.
-            **kwargs: Other parameters specific to each regression type
+            **kwargs: Other parameters specific to each fit method
 
         Returns:
             beta (numpy.ndarray): The array of regression estimators
             residuals (numpy.ndarray): The array of residuals
+
+        Raises:
+            NotImplementedError: If method is not yet implemented
+            ValueError: Unknown value for `method`
         """
-        y = dataarray.values.astype(np.float32)
-        X = X.astype(np.float32)
-        shape = y.shape
         # TODO: Implement mask subsetting
-        shape_flat = (shape[0], shape[1]*shape[2])
-        beta_shape = (X.shape[1], shape[1], shape[2])
-        y_flat = y.reshape(shape_flat)
-        if reg == 'OLS' and not check_stability:
-            beta = nanlstsq(X, y_flat)
-            residuals = np.dot(X, beta) - y_flat
-        elif reg == 'LASSO' and not check_stability:
-            raise NotImplementedError('Regression type not yet implemented')
+        if method == 'OLS' and not check_stability:
+            beta, residuals = ols(X, dataarray, **kwargs)
+        elif method == 'LASSO' and not check_stability:
+            raise NotImplementedError('Method not yet implemented')
+        elif method == 'Shewhart' and not check_stability:
+            beta, residuals = shewhart(X, dataarray, **kwargs)
         else:
-            raise ValueError('Unknown regression type')
-        residuals = residuals.reshape(shape)
-        beta = beta.reshape(beta_shape)
+            raise ValueError('Unknown method')
         return beta, residuals
 
     @abc.abstractmethod

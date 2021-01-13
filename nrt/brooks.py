@@ -17,26 +17,16 @@ class Brooks(BaseNrt):
         self.sigma = sigma
         self.cl_ewma = cl_ewma  # control limit
         self.ewma = ewma  # array with most recent EWMA values
-        self.nodata = nodata # Only necessary for singalling missing data
+        self.nodata = nodata  # Only necessary for singalling missing data
         self.test = np.array(['2007-07-13', '2006-01-13', '2010-08-13'], dtype='datetime64[D]')
 
-    def fit(self, dataarray, reg='OLS', check_stability=None, **kwargs):
+    def fit(self, dataarray, reg='Shewhart', check_stability=None, **kwargs):
         self.set_xy(dataarray)
         X = self.build_design_matrix(dataarray, trend=self.trend,
                                      harmonic_order=self.harmonic_order)
-        beta_full, residuals_full = self._fit(X, dataarray=dataarray, reg=reg,
+        beta, residuals = self._fit(X, dataarray=dataarray, method=reg,
                                     check_stability=check_stability,
-                                    **kwargs)
-
-        # Shewhart chart to get rid of outliers (clouds etc)
-        sigma = np.nanstd(residuals_full, axis=0)
-        shewhart_mask = np.abs(residuals_full) > (self.threshold * sigma)
-        dataarray.values[shewhart_mask] = np.nan
-
-        # fit again, but without outliers
-        beta, residuals = self._fit(X, dataarray=dataarray, reg=reg,
-                                    check_stability=check_stability,
-                                    **kwargs)
+                                    threshold=self.threshold)
         self.beta = beta
         self.nodata = np.isnan(residuals[-1])
 
@@ -96,6 +86,6 @@ class Brooks(BaseNrt):
                                (1 - sensitivity) * ewma + sensitivity * residuals[0])
         for i in range(1, len(residuals)):
             ewma_new[i] = np.where(np.isnan(residuals[i]),
-                               ewma_new[i - 1],
-                               (1 - sensitivity) * ewma_new[i - 1] + sensitivity * residuals[i])
+                                   ewma_new[i - 1],
+                                   (1 - sensitivity) * ewma_new[i - 1] + sensitivity * residuals[i])
         return ewma_new

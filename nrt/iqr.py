@@ -24,7 +24,7 @@ class Iqr(BaseNrt):
         self.set_xy(dataarray)
         X = self.build_design_matrix(dataarray, trend=self.trend,
                                      harmonic_order=self.harmonic_order)
-        beta, residuals = self._fit(X, dataarray=dataarray, reg=reg,
+        beta, residuals = self._fit(X, dataarray=dataarray, method=reg,
                                     check_stability=check_stability,
                                     **kwargs)
         self.beta = beta
