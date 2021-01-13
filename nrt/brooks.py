@@ -49,7 +49,7 @@ class Brooks(BaseNrt):
         self.cl_ewma = self.threshold * self.sigma * np.sqrt((self.sensitivity / (2 - self.sensitivity)))
 
         # calculate the EWMA value for the end of the training period and save it
-        self.ewma = self.calc_ewma(residuals, sensitivity=self.sensitivity)[-1]
+        self.ewma = self.calc_ewma(residuals, sensitivity=self.sensitivity, ewma=0)[-1]
 
     def monitor(self, array, date):
         y_pred = self.predict(date)
@@ -58,11 +58,9 @@ class Brooks(BaseNrt):
         # TODO EWMA calculation in fit and monitor by calc_ewma()
         # Filtering of values with high threshold X-Bar and calculating new EWMA values
         residuals[np.abs(residuals) > self.threshold * self.sigma] = np.nan
-        self.nodata = np.isnan(residuals[-1])
+        self.nodata = np.isnan(residuals)
 
-        self.ewma = np.where(np.isnan(residuals),
-            self.ewma,
-            (1 - self.sensitivity) * self.ewma + self.sensitivity * residuals)
+        self.ewma = self.calc_ewma(residuals, sensitivity=self.sensitivity, ewma=self.ewma)[-1]
 
     def _report(self):
         # signals severity of disturbance:
@@ -85,14 +83,12 @@ class Brooks(BaseNrt):
                 ewma (numpy.ndarray): 2 dimensional array of previous EWMA values
                 sensitivity (float): Sensitivity of the EWMA chart to previous values (0: high, 1: low)
             Returns:
-                numpy.ndarray: EWMA values in the same format as residuals
+                numpy.ndarray: 3 dimensional array of EWMA values (even if residuals is 2D)
             """
-        ewma_new = np.empty(np.shape(residuals), dtype=np.float32)
-
         # TODO handling of 2D array could probably be nicer
-        is_2d = residuals.ndim == 2
-        if is_2d:
-            ewma_new = np.array([ewma_new])
+        if residuals.ndim == 2:
+            residuals = np.array([residuals])
+        ewma_new = np.empty(np.shape(residuals), dtype=np.float32)
 
         # initialize ewma with 0
         ewma_new[0] = np.where(np.isnan(residuals[0]),
@@ -102,6 +98,4 @@ class Brooks(BaseNrt):
             ewma_new[i] = np.where(np.isnan(residuals[i]),
                                ewma_new[i - 1],
                                (1 - sensitivity) * ewma_new[i - 1] + sensitivity * residuals[i])
-        if is_2d:
-            ewma_new = ewma_new[0]
         return ewma_new
