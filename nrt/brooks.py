@@ -18,6 +18,7 @@ class Brooks(BaseNrt):
         self.cl_ewma = cl_ewma  # control limit
         self.ewma = ewma  # array with most recent EWMA values
         self.nodata = nodata # Only necessary for singalling missing data
+        self.test = np.array(['2007-07-13', '2006-01-13', '2010-08-13'], dtype='datetime64[D]')
 
     def fit(self, dataarray, reg='OLS', check_stability=None, **kwargs):
         self.set_xy(dataarray)
@@ -48,7 +49,7 @@ class Brooks(BaseNrt):
         self.cl_ewma = self.threshold * self.sigma * np.sqrt((self.sensitivity / (2 - self.sensitivity)))
 
         # calculate the EWMA value for the end of the training period and save it
-        self.ewma = self.calc_ewma(residuals)[-1]
+        self.ewma = self.calc_ewma(residuals, sensitivity=self.sensitivity)[-1]
 
     def monitor(self, array, date):
         y_pred = self.predict(date)
@@ -75,20 +76,32 @@ class Brooks(BaseNrt):
 
     # TODO Check if Numba works
     # @numba.jit("float32[:](float32[:], float32[:])", nopython=True, nogil=True)
-    def calc_ewma(self, residuals):
+    @staticmethod
+    def calc_ewma(residuals, ewma=0, sensitivity=0.3):
         """ Calculates EWMA for every value in residuals
 
             Args:
-                residuals (numpy.ndarray): 3 dimensional array of residuals
-
+                residuals (numpy.ndarray): 2 or 3 dimensional array of residuals
+                ewma (numpy.ndarray): 2 dimensional array of previous EWMA values
+                sensitivity (float): Sensitivity of the EWMA chart to previous values (0: high, 1: low)
             Returns:
-                numpy.ndarray: EWMA values
+                numpy.ndarray: EWMA values in the same format as residuals
             """
-        ewma = np.empty(np.shape(residuals), dtype=np.float32)
+        ewma_new = np.empty(np.shape(residuals), dtype=np.float32)
+
+        # TODO handling of 2D array could probably be nicer
+        is_2d = residuals.ndim == 2
+        if is_2d:
+            ewma_new = np.array([ewma_new])
+
         # initialize ewma with 0
-        ewma[0] = 0
+        ewma_new[0] = np.where(np.isnan(residuals[0]),
+                               ewma,
+                               (1 - sensitivity) * ewma + sensitivity * residuals[0])
         for i in range(1, len(residuals)):
-            ewma[i] = np.where(np.isnan(residuals[i]),
-                               ewma[i - 1],
-                               (1 - self.sensitivity) * ewma[i - 1] + self.sensitivity * residuals[i])
-        return ewma
+            ewma_new[i] = np.where(np.isnan(residuals[i]),
+                               ewma_new[i - 1],
+                               (1 - sensitivity) * ewma_new[i - 1] + sensitivity * residuals[i])
+        if is_2d:
+            ewma_new = ewma_new[0]
+        return ewma_new
