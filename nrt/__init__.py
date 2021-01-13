@@ -1,4 +1,5 @@
 import abc
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -122,16 +123,25 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 'crs': crs,
                 'count': 1,
                 'dtype': 'uint8',
-                'transform': self.affine,
+                'transform': self.transform,
                 'height': r.shape[0],
                 'width': r.shape[1]}
         with rasterio.open(filename, 'w', **meta) as dst:
             dst.write(r, 1)
 
     @property
-    def affine(self):
-        # TODO compute affine from x and y coord arrays
-        return Affine.identity()
+    def transform(self):
+        if self.x is None or self.y is None:
+            warnings.warn('x and y coordinate arrays not set, returning identity transform')
+            aff = Affine.identity()
+        else:
+            y_res = abs(self.y[0] - self.y[1])
+            x_res = abs(self.x[0] - self.x[1])
+            y_0 = np.max(self.y) + y_res / 2
+            x_0 = np.min(self.x) - x_res / 2
+            aff = Affine(x_res, 0, x_0,
+                         0, -y_res, y_0)
+        return aff
 
     def predict(self, date):
         """Predict the expected values for a given date
@@ -219,7 +229,6 @@ class BaseNrt(metaclass=abc.ABCMeta):
                     elif isinstance(v, int):
                         new_var = dst.createVariable(k, 'i4')
                         new_var.value = v
-
 
     def set_xy(self, dataarray):
         self.x = dataarray.x.values
