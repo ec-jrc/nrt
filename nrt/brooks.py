@@ -4,8 +4,9 @@ from nrt import BaseNrt
 
 
 class Brooks(BaseNrt):
-    def __init__(self, mask=None, trend=True, harmonic_order=2, beta=None, x_coords=None, y_coords=None,
-                 sensitivity=0.3, threshold=2, sigma=None, cl_ewma=None, ewma=None, nodata=None, **kwargs):
+    def __init__(self, mask=None, trend=True, harmonic_order=2, beta=None,
+                 x_coords=None, y_coords=None, sensitivity=0.3, threshold=2,
+                 sigma=None, cl_ewma=None, ewma=None, nodata=None, **kwargs):
         super().__init__(mask=mask,
                          trend=trend,
                          harmonic_order=harmonic_order,
@@ -18,15 +19,19 @@ class Brooks(BaseNrt):
         self.cl_ewma = cl_ewma  # control limit
         self.ewma = ewma  # array with most recent EWMA values
         self.nodata = nodata  # Only necessary for singalling missing data
-        self.test = np.array(['2007-07-13', '2006-01-13', '2010-08-13'], dtype='datetime64[D]')
 
-    def fit(self, dataarray, reg='Shewhart', check_stability=None, **kwargs):
+    def fit(self, dataarray, method='Shewhart', check_stability=None, **kwargs):
+        """Stable history model fitting
+
+        The preferred fitting method for this monitoring type is ``'Shewhart'``.
+        It requires a control limit parameter ``L``. See ``nrt.fit_methods.shewart``
+        for more details
+        """
         self.set_xy(dataarray)
         X = self.build_design_matrix(dataarray, trend=self.trend,
                                      harmonic_order=self.harmonic_order)
-        beta, residuals = self._fit(X, dataarray=dataarray, method=reg,
-                                    check_stability=check_stability,
-                                    threshold=self.threshold)
+        beta, residuals = self._fit(X, dataarray=dataarray, method=method,
+                                    check_stability=check_stability, **kwargs)
         self.beta = beta
         self.nodata = np.isnan(residuals[-1])
 
