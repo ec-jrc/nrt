@@ -90,7 +90,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         beta_shape = (X.shape[1], shape[1], shape[2])
         y_flat = y.reshape(shape_flat)
         if method == 'OLS' and not check_stability:
-            beta, residuals = ols(X, y_flat, **kwargs)
+            beta, residuals = ols(X, y_flat)
         elif method == 'LASSO' and not check_stability:
             raise NotImplementedError('Method not yet implemented')
         elif method == 'Shewhart' and not check_stability:
