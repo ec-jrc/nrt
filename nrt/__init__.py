@@ -83,14 +83,22 @@ class BaseNrt(metaclass=abc.ABCMeta):
             ValueError: Unknown value for `method`
         """
         # TODO: Implement mask subsetting
+        y = dataarray.values.astype(np.float32)
+        X = X.astype(np.float32)
+        shape = y.shape
+        shape_flat = (shape[0], shape[1] * shape[2])
+        beta_shape = (X.shape[1], shape[1], shape[2])
+        y_flat = y.reshape(shape_flat)
         if method == 'OLS' and not check_stability:
-            beta, residuals = ols(X, dataarray, **kwargs)
+            beta, residuals = ols(X, y_flat, **kwargs)
         elif method == 'LASSO' and not check_stability:
             raise NotImplementedError('Method not yet implemented')
         elif method == 'Shewhart' and not check_stability:
-            beta, residuals = shewhart(X, dataarray, **kwargs)
+            beta, residuals = shewhart(X, y_flat, shape, **kwargs)
         else:
             raise ValueError('Unknown method')
+        beta = beta.reshape(beta_shape)
+        residuals = residuals.reshape(shape)
         return beta, residuals
 
     @abc.abstractmethod
