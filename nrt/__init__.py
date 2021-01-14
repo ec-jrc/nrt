@@ -9,7 +9,7 @@ from rasterio.crs import CRS
 from affine import Affine
 
 from nrt.utils import build_regressors
-from nrt.fit_methods import ols, shewhart
+from nrt.fit_methods import ols, shewhart, rirls
 
 __version__ = "0.0.1"
 
@@ -95,6 +95,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
             raise NotImplementedError('Method not yet implemented')
         elif method == 'Shewhart' and not check_stability:
             beta, residuals = shewhart(X, y_flat, **kwargs)
+        elif method == 'RIRLS' and not check_stability:
+            beta, residuals = rirls(X, y_flat, **kwargs)
         else:
             raise ValueError('Unknown method')
         beta = beta.reshape(beta_shape)

@@ -40,3 +40,36 @@ def nanlstsq(X, y):
         beta[:,idx] = np.dot(XTX, XTY)
     return beta
 
+
+@numba.jit(nopython=True)
+def mad(resid, c=0.6745):
+    """
+    Returns Median-Absolute-Deviation (MAD) for residuals
+    Args:
+        resid (np.ndarray): residuals
+        c (float): scale factor to get to ~standard normal (default: 0.6745)
+                 (i.e. 1 / 0.75iCDF ~= 1.4826 = 1 / 0.6745)
+    Returns:
+        float: MAD 'robust' variance estimate
+    Reference:
+        http://en.wikipedia.org/wiki/Median_absolute_deviation
+    """
+    # Return median absolute deviation adjusted sigma
+    return np.median(np.fabs(resid - np.median(resid))) / c
+
+# Weight scaling methods
+@numba.jit(nopython=True)
+def bisquare(resid, c=4.685):
+    """
+    Returns weighting for each residual using bisquare weight function
+    Args:
+        resid (np.ndarray): residuals to be weighted
+        c (float): tuning constant for Tukey's Biweight (default: 4.685)
+    Returns:
+        weight (ndarray): weights for residuals
+    Reference:
+        http://statsmodels.sourceforge.net/stable/generated/statsmodels.robust.norms.TukeyBiweight.html
+    """
+    # Weight where abs(resid) < c; otherwise 0
+    return (np.abs(resid) < c) * (1 - (resid / c) ** 2) ** 2
+
