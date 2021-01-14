@@ -88,25 +88,29 @@ def rirls(X, y, M=bisquare, tune=4.685,
     Returns:
         tuple: beta-coefficients and residual vector
     """
+    beta = np.zeros((X.shape[1], y.shape[1]), dtype=np.float64)
+    resid = np.zeros(y.shape, dtype=np.float64)
+    for idx in range(y.shape[1]):
+        y_sub = y[:,idx]
+        print(y_sub.shape)
+        beta[:,idx], resid[:,idx] = _weight_fit(X, y_sub, np.ones_like(y_sub))
+        scale = scale_est(resid[:,idx], c=scale_constant)
 
-    beta, resid = _weight_fit(X, y, np.ones_like(y))
-    scale = scale_est(resid, c=scale_constant)
+        EPS = np.finfo('float').eps
+        if scale < EPS:
+            continue
 
-    EPS = np.finfo('float').eps
-    if scale < EPS:
-        return beta, resid
-
-    iteration = 1
-    converged = 0
-    while not converged and iteration < maxiter:
-        _beta = beta.copy()
-        weights = M(resid / scale, c=tune)
-        beta, resid = _weight_fit(X, y, weights)
-        if update_scale:
-            scale = max(EPS,
-                             scale_est(resid, c=scale_constant))
-        iteration += 1
-        converged = not np.any(np.fabs(beta - _beta > tol))
+        iteration = 1
+        converged = 0
+        while not converged and iteration < maxiter:
+            _beta = beta.copy()
+            weights = M(resid[:,idx] / scale, c=tune)
+            beta[:,idx], resid[:,idx] = _weight_fit(X, y_sub, weights)
+            if update_scale:
+                scale = max(EPS,
+                                 scale_est(resid[:,idx], c=scale_constant))
+            iteration += 1
+            converged = not np.any(np.fabs(beta - _beta > tol))
 
     return beta, resid
 
@@ -130,7 +134,11 @@ def _weight_fit(X, y, w):
     Xw = X * sw[:, None]
     yw = y * sw
 
-    beta = nanlstsq(Xw, yw)
+    #beta = np.linalg.lstsq(Xw, yw)
+
+    XTX = np.linalg.inv(np.dot(Xw.T, Xw))
+    XTY = np.dot(Xw.T, yw)
+    beta = np.dot(XTX, XTY)
 
     resid = y - np.dot(X, beta)
 
