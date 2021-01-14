@@ -94,7 +94,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         elif method == 'LASSO' and not check_stability:
             raise NotImplementedError('Method not yet implemented')
         elif method == 'Shewhart' and not check_stability:
-            beta, residuals = shewhart(X, y_flat, shape, **kwargs)
+            beta, residuals = shewhart(X, y_flat, **kwargs)
         else:
             raise ValueError('Unknown method')
         beta = beta.reshape(beta_shape)

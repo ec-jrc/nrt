@@ -2,12 +2,12 @@ import numpy as np
 from nrt.stats import nanlstsq
 
 
-def shewhart(X, y_flat, shape, threshold, **kwargs):
+def shewhart(X, y_flat, threshold, **kwargs):
     beta_full, residuals_full = ols(X, y_flat)
 
     # Shewhart chart to get rid of outliers (clouds etc)
-    sigma = np.nanstd(residuals_full.reshape(shape), axis=0)
-    shewhart_mask = np.abs(residuals_full) > (threshold * sigma.reshape(y_flat.shape[1]))
+    sigma = np.nanstd(residuals_full, axis=0)
+    shewhart_mask = np.abs(residuals_full) > threshold * sigma
     y_flat[shewhart_mask] = np.nan
 
     # fit again, but without outliers
