@@ -2,7 +2,7 @@ import numba
 import numpy as np
 
 
-@numba.jit(nopython=True)
+#@numba.jit(nopython=True)
 def nanlstsq(X, y):
     """Return the least-squares solution to a linear matrix equation
 
@@ -30,14 +30,22 @@ def nanlstsq(X, y):
     Returns:
         np.ndarray: Least-squares solution, ignoring ``Nan``
     """
+    is_1d = y.ndim == 1
+    if is_1d:
+        y = y[:, np.newaxis]
+
     beta = np.zeros((X.shape[1], y.shape[1]), dtype=np.float64)
     for idx in range(y.shape[1]):
         isna = np.isnan(y[:,idx])
         X_sub = X[~isna]
         y_sub = y[~isna,idx]
+
         XTX = np.linalg.inv(np.dot(X_sub.T, X_sub))
         XTY = np.dot(X_sub.T, y_sub)
         beta[:,idx] = np.dot(XTX, XTY)
+
+    if is_1d:
+        beta = beta.squeeze(axis=-1)
     return beta
 
 
@@ -55,7 +63,7 @@ def mad(resid, c=0.6745):
         http://en.wikipedia.org/wiki/Median_absolute_deviation
     """
     # Return median absolute deviation adjusted sigma
-    return np.median(np.fabs(resid - np.median(resid))) / c
+    return np.nanmedian(np.fabs(resid - np.nanmedian(resid))) / c
 
 # Weight scaling methods
 @numba.jit(nopython=True)
