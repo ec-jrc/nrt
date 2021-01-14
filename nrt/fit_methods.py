@@ -88,11 +88,14 @@ def rirls(X, y, M=bisquare, tune=4.685,
     Returns:
         tuple: beta-coefficients and residual vector
     """
+    is_1d = y.ndim == 1
+    if is_1d:
+        y = y[:, np.newaxis]
+
     beta = np.zeros((X.shape[1], y.shape[1]), dtype=np.float64)
     resid = np.zeros(y.shape, dtype=np.float64)
     for idx in range(y.shape[1]):
         y_sub = y[:,idx]
-        print(y_sub.shape)
         beta[:,idx], resid[:,idx] = _weight_fit(X, y_sub, np.ones_like(y_sub))
         scale = scale_est(resid[:,idx], c=scale_constant)
 
@@ -111,6 +114,9 @@ def rirls(X, y, M=bisquare, tune=4.685,
                                  scale_est(resid[:,idx], c=scale_constant))
             iteration += 1
             converged = not np.any(np.fabs(beta - _beta > tol))
+    if is_1d:
+        resid = resid.squeeze(axis=-1)
+        beta = beta.squeeze(axis=-1)
 
     return beta, resid
 
@@ -134,11 +140,7 @@ def _weight_fit(X, y, w):
     Xw = X * sw[:, None]
     yw = y * sw
 
-    #beta = np.linalg.lstsq(Xw, yw)
-
-    XTX = np.linalg.inv(np.dot(Xw.T, Xw))
-    XTY = np.dot(Xw.T, yw)
-    beta = np.dot(XTX, XTY)
+    beta = nanlstsq(Xw, yw)
 
     resid = y - np.dot(X, beta)
 
