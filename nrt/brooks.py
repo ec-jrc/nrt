@@ -1,5 +1,7 @@
 import numpy as np
 import xarray as xr
+import numba
+
 from nrt import BaseNrt
 
 
@@ -53,16 +55,15 @@ class Brooks(BaseNrt):
         self.boundary = self.sensitivity * self.sigma * np.sqrt((
             self.lambda_ / (2 - self.lambda_)))
         # calculate the EWMA value for the end of the training period and save it
-        self.process = self.calc_ewma(residuals, lambda_=self.lambda_, ewma=0)[-1]
+        self.process = self._init_process(residuals)
 
     def monitor(self, array, date):
         y_pred = self.predict(date)
         residuals = array - y_pred
-        # TODO EWMA calculation in fit and monitor by calc_ewma()
         # Filtering of values with high threshold X-Bar and calculating new EWMA values
         residuals[np.abs(residuals) > self.sensitivity * self.sigma] = np.nan
         self.nodata = np.isnan(residuals)
-        self.process = self.calc_ewma(residuals, lambda_=self.lambda_, ewma=self.process)[-1]
+        self.process = self._update_process(array=residuals)
 
     def _report(self):
         # signals severity of disturbance:
@@ -75,30 +76,46 @@ class Brooks(BaseNrt):
         signal[self.nodata] = 255
         return signal
 
-    # TODO Check if Numba works
-    # @numba.jit("float32[:](float32[:], float32[:])", nopython=True, nogil=True)
     @staticmethod
-    def calc_ewma(residuals, ewma=0, lambda_=0.3):
-        """ Calculates EWMA for every value in residuals
-
-            Args:
-                residuals (numpy.ndarray): 2 or 3 dimensional array of residuals
-                ewma (numpy.ndarray): 2 dimensional array of previous EWMA values
-                lambda_ (float): Weight of previous values in the EWMA chart
-                    (0: high, 1: low)
-            Returns:
-                numpy.ndarray: 3 dimensional array of EWMA values (even if residuals is 2D)
-            """
-        # TODO handling of 2D array could probably be nicer
-        if residuals.ndim == 2:
-            residuals = np.array([residuals])
-        ewma_new = np.empty(np.shape(residuals), dtype=np.float32)
-        # initialize ewma with 0
-        ewma_new[0] = np.where(np.isnan(residuals[0]),
-                               ewma,
-                               (1 - lambda_) * ewma + lambda_ * residuals[0])
-        for i in range(1, len(residuals)):
-            ewma_new[i] = np.where(np.isnan(residuals[i]),
-                                   ewma_new[i - 1],
-                                   (1 - lambda_) * ewma_new[i - 1] + lambda_ * residuals[i])
+    def _update_ewma(array, ewma, lambda_):
+        ewma_new = np.where(np.isnan(array),
+                            ewma,
+                            (1 - lambda_) * ewma + lambda_ * array)
         return ewma_new
+
+    def _update_process(self, array):
+        """Update process value (EWMA in this case) with new acquisition
+
+        Args:
+            array (numpy.ndarray): 2 dimensional array corresponding to the residuals
+                of a new acquisition
+
+        Returns:
+            numpy.ndarray: A 2 dimensional array containing the updated EWMA values
+        """
+        # If the monitoring has not been initialized yet, raise an error
+        if self.process is None:
+            raise ValueError('Process has to be initialized before update')
+        # Update ewma value for element of the input array that are not Nan
+        process_new = self._update_ewma(array=array, ewma=self.process,
+                                        lambda_=self.lambda_)
+        return process_new
+
+    @numba.njit
+    def _init_process(self, array):
+        """Initialize the ewma process value using the residuals of the fitted values
+
+        Args:
+            array (np.ndarray): 3 dimensional array of residuals. Usually the residuals
+                from the model fitting
+
+        Returns:
+            numpy.ndarray: A 2 dimensional array corresponding to the last slice
+            of the recursive ewma process updating
+        """
+        ewma = np.zeros_like(array[0,:,:])
+        for slice_ in array:
+            ewma = self._update_ewma(array=slice_, ewma=ewma, lambda_=self.lambda_)
+        return ewma
+
+
