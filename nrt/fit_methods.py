@@ -145,7 +145,8 @@ def _weight_fit(X, y, w):
     Xw = X_big * sw.T[:,:,None]
     yw = y * sw
 
-    # nanlstsq had to be implemented here because X_big had to be subset
+    # nanlstsq had to be implemented here because X_big has to be subset
+    # TODO implement as standalone function to take advantage of Numba
     beta = np.zeros((X.shape[1], y.shape[1]), dtype=np.float32)
     for idx in range(y.shape[1]):
         isna = np.isnan(y[:,idx])
