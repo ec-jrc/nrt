@@ -94,26 +94,30 @@ def rirls(X, y, M=bisquare, tune=4.685,
 
     beta = np.zeros((X.shape[1], y.shape[1]), dtype=np.float64)
     resid = np.zeros(y.shape, dtype=np.float64)
-    for idx in range(y.shape[1]):
-        y_sub = y[:,idx]
-        beta[:,idx], resid[:,idx] = _weight_fit(X, y_sub, np.ones_like(y_sub))
-        scale = scale_est(resid[:,idx], c=scale_constant)
 
-        EPS = np.finfo('float').eps
-        if scale < EPS:
-            continue
+    beta, resid = _weight_fit(X, y, np.ones_like(y))
+    scale = scale_est(resid, c=scale_constant)
 
-        iteration = 1
-        converged = 0
-        while not converged and iteration < maxiter:
-            _beta = beta.copy()
-            weights = M(resid[:,idx] / scale, c=tune)
-            beta[:,idx], resid[:,idx] = _weight_fit(X, y_sub, weights)
-            if update_scale:
-                scale = max(EPS,
-                            scale_est(resid[:,idx], c=scale_constant))
-            iteration += 1
-            converged = not np.any(np.fabs(beta - _beta > tol))
+    EPS = np.finfo('float').eps
+
+    converged = np.zeros_like(scale).astype('bool')
+    converged[scale < EPS] = True
+
+    iteration = 1
+    while not all(converged) and iteration < maxiter:
+
+        y_sub = y[:,~converged]
+        _beta = beta.copy()
+        weights = M(resid[:,~converged] / scale, c=tune)
+
+        beta[:,~converged], resid[:,~converged] = _weight_fit(X, y_sub, weights)
+        iteration += 1
+        is_converged = ~np.any(np.fabs(beta - _beta > tol), axis=0)
+        converged[is_converged] = True
+        if update_scale:
+            est = scale_est(resid[:,~converged], c=scale_constant)
+            scale = np.where(EPS > est, EPS, est)
+
     if is_1d:
         resid = resid.squeeze(axis=-1)
         beta = beta.squeeze(axis=-1)
@@ -134,15 +138,23 @@ def _weight_fit(X, y, w):
     Returns:
         tuple: coefficients and residual vector
     """
-
     sw = np.sqrt(w)
-
-    Xw = X * sw[:, None]
+    #X_big = np.repeat(X[:,:,None], sw.shape[1], axis=2)\
+    #    .reshape(X.shape[0],y.shape[1],-1)
+    X_big = np.tile(X, (y.shape[1],1,1))
+    Xw = X_big * sw.T[:,:,None]
     yw = y * sw
 
-    beta = nanlstsq(Xw, yw[:, np.newaxis]) \
-        .squeeze(-1) \
-        .astype('float32')
+    # nanlstsq had to be implemented here because X_big had to be subset
+    beta = np.zeros((X.shape[1], y.shape[1]), dtype=np.float32)
+    for idx in range(y.shape[1]):
+        isna = np.isnan(y[:,idx])
+        X_sub = Xw[idx, ~isna]
+        y_sub = yw[~isna,idx]
+
+        XTX = np.linalg.inv(np.dot(X_sub.T, X_sub))
+        XTY = np.dot(X_sub.T, y_sub)
+        beta[:,idx] = np.dot(XTX, XTY)
 
     resid = y - np.dot(X, beta)
 

@@ -43,7 +43,8 @@ def nanlstsq(X, y):
     return beta
 
 
-@numba.jit(nopython=True)
+#@numba.jit(nopython=True)
+# axis prevents numba -> for loop might be faster after all
 def mad(resid, c=0.6745):
     """
     Returns Median-Absolute-Deviation (MAD) for residuals
@@ -57,7 +58,8 @@ def mad(resid, c=0.6745):
         http://en.wikipedia.org/wiki/Median_absolute_deviation
     """
     # Return median absolute deviation adjusted sigma
-    return np.nanmedian(np.fabs(resid - np.nanmedian(resid))) / c
+    return np.nanmedian(
+        np.fabs(resid - np.nanmedian(resid, axis=0)), axis=0) / c
 
 # Weight scaling methods
 @numba.jit(nopython=True)
