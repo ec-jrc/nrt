@@ -30,10 +30,6 @@ def nanlstsq(X, y):
     Returns:
         np.ndarray: Least-squares solution, ignoring ``Nan``
     """
-    is_1d = y.ndim == 1
-    if is_1d:
-        y = y[:, np.newaxis]
-
     beta = np.zeros((X.shape[1], y.shape[1]), dtype=np.float64)
     for idx in range(y.shape[1]):
         isna = np.isnan(y[:,idx])
@@ -44,8 +40,6 @@ def nanlstsq(X, y):
         XTY = np.dot(X_sub.T, y_sub)
         beta[:,idx] = np.dot(XTX, XTY)
 
-    if is_1d:
-        beta = beta.squeeze(axis=-1)
     return beta
 
 

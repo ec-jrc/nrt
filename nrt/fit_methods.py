@@ -111,7 +111,7 @@ def rirls(X, y, M=bisquare, tune=4.685,
             beta[:,idx], resid[:,idx] = _weight_fit(X, y_sub, weights)
             if update_scale:
                 scale = max(EPS,
-                                 scale_est(resid[:,idx], c=scale_constant))
+                            scale_est(resid[:,idx], c=scale_constant))
             iteration += 1
             converged = not np.any(np.fabs(beta - _beta > tol))
     if is_1d:
@@ -140,7 +140,9 @@ def _weight_fit(X, y, w):
     Xw = X * sw[:, None]
     yw = y * sw
 
-    beta = nanlstsq(Xw, yw)
+    beta = nanlstsq(Xw, yw[:, np.newaxis]) \
+        .squeeze(-1) \
+        .astype('float32')
 
     resid = y - np.dot(X, beta)
 
