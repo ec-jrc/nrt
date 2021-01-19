@@ -101,7 +101,8 @@ class Brooks(BaseNrt):
                                         lambda_=self.lambda_)
         return process_new
 
-    @numba.njit
+    # TODO: only static methods can be jitted, make _update_ewma external to the class
+    # and _init_process static
     def _init_process(self, array):
         """Initialize the ewma process value using the residuals of the fitted values
 
