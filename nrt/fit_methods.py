@@ -139,8 +139,6 @@ def _weight_fit(X, y, w):
         tuple: coefficients and residual vector
     """
     sw = np.sqrt(w)
-    #X_big = np.repeat(X[:,:,None], sw.shape[1], axis=2)\
-    #    .reshape(X.shape[0],y.shape[1],-1)
     X_big = np.tile(X, (y.shape[1],1,1))
     Xw = X_big * sw.T[:,:,None]
     yw = y * sw
