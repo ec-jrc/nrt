@@ -188,8 +188,9 @@ def screen_outliers_rirls(X, green, swir, **kwargs):
         X (ndarray): Design Matrix
         green (ndarray): 2D array containing spectral values
         swir (float): 2D array containing spectral values (~1.55-1.75um)
+        **kwargs: arguments to be passed to fit_methods.rirls()
     Returns:
-        ndarray: 2D (flat) boolean array with True = stable
+        ndarray: 2D (flat) boolean array with True = clear
     """
     # green and swir probably need to be flattened
 

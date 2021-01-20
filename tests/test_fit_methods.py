@@ -43,7 +43,7 @@ def test_ccdc_is_stable(stability_ccdc, threshold=3):
     np.testing.assert_array_equal(is_stable, check_stability)
 
 
-def test_screen_outliers_ccdc(X_y_intercept_slope):
+def test_screen_outliers_ccdc(X_y_clear):
     X, y, clear = X_y_clear
 
     is_clear = fm.screen_outliers_rirls(X, y, y)
@@ -51,7 +51,8 @@ def test_screen_outliers_ccdc(X_y_intercept_slope):
 
 
 @pytest.fixture
-def X_y_clear(request):
+def X_y_clear(X_y_intercept_slope):
+    # adds an array indicating 'clear' pixels as True and outliers as False
     X, y, intercept, slope = X_y_intercept_slope
     clear = np.ones_like(y).astype('bool')
     clear[9, 0] = False
@@ -71,6 +72,8 @@ def X_y_intercept_slope(request):
     # Add noise (X_y_clear depends on the same noise)
     y[0,9] = 0
     y[1,0] = 23
+    # y[0,5] = np.nan
+    # y[1,5] = np.nan
 
     return X, y.T, intercept, slope
 
