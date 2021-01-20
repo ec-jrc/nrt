@@ -13,7 +13,7 @@ Citations:
 """
 import numpy as np
 import numba
-from nrt.stats import nanlstsq, mad, bisquare
+from nrt.stats import nanlstsq, mad, bisquare, weighted_nanlstsq
 
 
 def shewhart(X, y, L):
@@ -92,9 +92,6 @@ def rirls(X, y, M=bisquare, tune=4.685,
     if is_1d:
         y = y[:, np.newaxis]
 
-    beta = np.zeros((X.shape[1], y.shape[1]), dtype=np.float64)
-    resid = np.zeros(y.shape, dtype=np.float64)
-
     beta, resid = _weight_fit(X, y, np.ones_like(y))
     scale = scale_est(resid, c=scale_constant)
 
@@ -143,17 +140,7 @@ def _weight_fit(X, y, w):
     Xw = X_big * sw.T[:,:,None]
     yw = y * sw
 
-    # nanlstsq had to be implemented here because X_big has to be subset
-    # TODO implement as standalone function to take advantage of Numba
-    beta = np.zeros((X.shape[1], y.shape[1]), dtype=np.float32)
-    for idx in range(y.shape[1]):
-        isna = np.isnan(y[:,idx])
-        X_sub = Xw[idx, ~isna]
-        y_sub = yw[~isna,idx]
-
-        XTX = np.linalg.inv(np.dot(X_sub.T, X_sub))
-        XTY = np.dot(X_sub.T, y_sub)
-        beta[:,idx] = np.dot(XTX, XTY)
+    beta = weighted_nanlstsq(Xw, yw)
 
     resid = y - np.dot(X, beta)
 
