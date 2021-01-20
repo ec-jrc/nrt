@@ -21,6 +21,7 @@ def test_rirls(X_y_intercept_slope):
     #np.testing.assert_allclose(np.dot(X, beta), y)
 
 
+
 # @pytest.mark.parametrize(('X', 'y'), [
 #     (np.random.rand(n, n), np.random.rand(n))
 #     for n in range(1, 10)
@@ -35,6 +36,13 @@ def test_rirls(X_y_intercept_slope):
 #                maxiter=50, tol=1e-8)
 
 
+def test_ccdc_is_stable(stability_ccdc, threshold=3):
+    residuals, slope, check_stability = stability_ccdc
+
+    is_stable = fm.ccdc_is_stable(slope,residuals,threshold)
+    np.testing.assert_array_equal(is_stable, check_stability)
+
+
 @pytest.fixture
 def X_y_intercept_slope(request):
     np.random.seed(0)
@@ -47,3 +55,20 @@ def X_y_intercept_slope(request):
     y[0,9] = 0
     y[1,0] = 10
     return X, y.T, intercept, slope
+
+
+# fixture of 2D residuals with extreme values start and end
+# 1D slope with extreme value and corresponding results in stability
+@pytest.fixture
+def stability_ccdc(request):
+    np.random.seed(0)
+    # build an example, where one pixel has a large first value,
+    # one a large last value one a large slope and one just random residuals
+    residuals = np.random.rand(20,4)-0.5
+    residuals[0,0] = 100
+    residuals[-1,1] = 100
+    slope = np.array([0,0,10,0])
+
+    stability = np.array([False, False, False, True])
+
+    return residuals, slope, stability
