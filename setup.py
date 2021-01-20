@@ -18,6 +18,8 @@ with open('nrt/__init__.py') as f:
 with codecs.open('README.rst', encoding='utf-8') as f:
     readme = f.read()
 
+extra_reqs = {'tests': ['pytest']}
+
 setup(name='nrt',
       version=version,
       description=u"Online monitoring with xarray",
@@ -42,5 +44,6 @@ setup(name='nrt',
           'netCDF4',
           'numba',
           'pandas'
-      ])
+      ],
+      extras_require=extra_reqs)
 

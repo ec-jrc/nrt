@@ -64,11 +64,11 @@ class BaseNrt(metaclass=abc.ABCMeta):
 
         Args:
             X (numpy.ndarray): The design matrix used for the regression
-            dataarray (xarray.DataArray): A 3 dimension (time, y, x) DataArray containing
-                the dependant variable
+            dataarray (xarray.DataArray): A 3 dimension (time, y, x) DataArray
+                containing the dependant variable
             method (str): The fitting method. Possible values include ``'OLS'``,
-                ``'IRLS'``, ``'LASSO'``, ``'Shewhart'``. May be ignored depending on the value
-                passed to ``check_stability``
+                ``'IRLS'``, ``'LASSO'``, ``'Shewhart'``. May be ignored depending
+                on the value passed to ``check_stability``
             check_stability (str): Which test should be used in stability checking.
                 If ``None`` no stability check is performed. Other potential values
                 include ``'ROC'``.
@@ -90,7 +90,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         beta_shape = (X.shape[1], shape[1], shape[2])
         y_flat = y.reshape(shape_flat)
         if method == 'OLS' and not check_stability:
-            beta, residuals = ols(X, y_flat, **kwargs)
+            beta, residuals = ols(X, y_flat)
         elif method == 'LASSO' and not check_stability:
             raise NotImplementedError('Method not yet implemented')
         elif method == 'Shewhart' and not check_stability:
@@ -170,21 +170,23 @@ class BaseNrt(metaclass=abc.ABCMeta):
             # Get dict of variables
             d = dict()
             for k in src.variables.keys():
+                nc_var = src.variables[k]
+                # bool are stored as int in netcdf and need to be coerced back to bool
+                is_bool = 'dtype' in nc_var.ncattrs() and nc_var.getncattr('dtype') == 'bool'
                 try:
-                    v = src.variables[k].value
+                    v = nc_var.value
+                    if is_bool:
+                        v = bool(v)
                 except Exception as e:
-                    v = src.variables[k][:]
+                    v = nc_var[:]
+                    if is_bool:
+                        v = v.astype(np.bool)
                 if k == 'x':
                     k = 'x_coords'
                 if k == 'y':
                     k = 'y_coords'
                 if k == 'r':
                     continue
-                try:
-                    if src.variables[k].getncattr('dtype') == 'bool':
-                        v = v.astype('bool')
-                except Exception as e:
-                    pass
                 d.update({k:v})
         return cls(**d)
 
@@ -213,14 +215,12 @@ class BaseNrt(metaclass=abc.ABCMeta):
             for k,v in attr.items():
                 if k not in ['x', 'y', 'beta']:
                     if isinstance(v, np.ndarray):
-                        try:
-                            new_var = dst.createVariable(k, v.dtype, ('y', 'x'))
-                            new_var[:] = v
-                        except Exception as e:
-                            new_var = dst.createVariable(k, 'u1', ('y', 'x'))
-                            new_var[:] = v.astype('u1')
+                        # bool array are stored as int8
+                        dtype = np.uint8 if v.dtype == bool else v.dtype
+                        new_var = dst.createVariable(k, dtype, ('y', 'x'))
+                        new_var[:] = v
+                        if v.dtype == bool:
                             new_var.setncattr('dtype', 'bool')
-                            # TODO add handling for v.dtype == 'datetime64'
                     elif isinstance(v, str):
                         new_var = dst.createVariable(k, 'c')
                         new_var.value = v
