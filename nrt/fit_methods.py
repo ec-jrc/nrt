@@ -178,3 +178,30 @@ def ccdc_is_stable(slope, residuals, threshold):
     is_stable = slope_rmse & first & last
 
     return is_stable
+
+
+def screen_outliers_rirls(X, green, swir, **kwargs):
+    """
+    Screen for missed clouds and other outliers using green and SWIR band
+
+    Args:
+        X (ndarray): Design Matrix
+        green (ndarray): 2D array containing spectral values
+        swir (float): 2D array containing spectral values (~1.55-1.75um)
+    Returns:
+        ndarray: 2D (flat) boolean array with True = stable
+    """
+    # green and swir probably need to be flattened
+
+    is_clear = ~np.isnan(green)
+
+    # 1. estimate time series model using rirls for green and swir
+    # TODO could be sped up, since masking is the same for green and swir
+    g_beta, g_residuals = rirls(X, green, **kwargs)
+    s_beta, s_residuals = rirls(X, swir, **kwargs)
+
+    # Update mask using thresholds
+    is_clear[g_residuals>0.04] = False
+    is_clear[s_residuals<-0.04] = False
+
+    return is_clear
