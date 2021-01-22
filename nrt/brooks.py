@@ -33,7 +33,8 @@ class Brooks(BaseNrt):
         self.process = process  # array with most recent EWMA values
         self.nodata = nodata  # Only necessary for singalling missing data
 
-    def fit(self, dataarray, method='Shewhart', check_stability=None, **kwargs):
+    def fit(self, dataarray, method='OLS', screen_outliers='Shewhart',
+            check_stability=None, **kwargs):
         """Stable history model fitting
 
         The preferred fitting method for this monitoring type is ``'Shewhart'``.

@@ -1,4 +1,4 @@
-"""Model fitting
+"""Removing outliers
 
 Functions defined in this module always use a 2D array containing the dependant
 variables (y) and return y with outliers set to np.nan.
@@ -39,7 +39,7 @@ def shewhart(X, y, L):
     return y
 
 
-def screen_outliers_rirls(X, y, green, swir, **kwargs):
+def ccdc_rirls(X, y, green, swir, **kwargs):
     """
     Screen for missed clouds and other outliers using green and SWIR band
 

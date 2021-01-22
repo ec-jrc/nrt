@@ -9,7 +9,8 @@ from rasterio.crs import CRS
 from affine import Affine
 
 from nrt.utils import build_regressors
-from nrt.fit_methods import ols, shewhart, rirls
+from nrt.fit_methods import ols, rirls
+from nrt.screen_outliers import ccdc_rirls, shewhart
 
 __version__ = "0.0.1"
 
@@ -72,6 +73,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
             method (str): The fitting method. Possible values include ``'OLS'``,
                 ``'IRLS'``, ``'LASSO'``, ``'Shewhart'``. May be ignored depending
                 on the value passed to ``check_stability``
+            screen_outliers (str): The screening method. Possible values include
+                ``'Shewhart'`` and ``'CCDC_RIRLS'``.
             check_stability (str): Which test should be used in stability checking.
                 If ``None`` no stability check is performed. Other potential values
                 include ``'ROC'``.
@@ -95,30 +98,25 @@ class BaseNrt(metaclass=abc.ABCMeta):
 
         # 1. Optionally screen outliers
         #   This just updats y_flat
-        if screen_outliers:
-            y_flat = self._screen_outliers(X, y_flat,
-                                           method=screen_outliers, **kwargs)
+        if screen_outliers == 'Shewhart':
+            y_flat = shewhart(X, y_flat, **kwargs)
+        elif screen_outliers == 'CCDC_RIRLS':
+            y_flat = ccdc_rirls(X, y_flat, **kwargs)
 
-        # 2. If check stability is on, loop over the whole thing and
-        #   continually check stability and refit until everything is stable
-        #   or an abort criteria is reached
-        #   Every iteration y_flat will be subset with the updated self.mask
+        # 2. If a stability check method is selected, do that instead of fitting
+        if check_stability == 'RecResid':
+            raise NotImplementedError('Method not yet implemented')
+        elif check_stability == 'CCDC':
+            beta, residuals = ccdc_stable_fit()
 
-        is_unstable = True
-        while is_unstable:
-            if method == 'OLS':
-                beta, residuals = ols(X, y_flat)
-            elif method == 'LASSO':
-                raise NotImplementedError('Method not yet implemented')
-            elif method == 'RIRLS':
-                beta, residuals = rirls(X, y_flat, **kwargs)
-            else:
-                raise ValueError('Unknown method')
-
-            if check_stability:
-                is_unstable = self._check_stability(method=check_stability)
-            else
-                is_unstable = False
+        if method == 'OLS':
+            beta, residuals = ols(X, y_flat)
+        elif method == 'LASSO':
+            raise NotImplementedError('Method not yet implemented')
+        elif method == 'RIRLS':
+            beta, residuals = rirls(X, y_flat, **kwargs)
+        else:
+            raise ValueError('Unknown method')
 
         beta = beta.reshape(beta_shape)
         residuals = residuals.reshape(shape)
