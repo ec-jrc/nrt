@@ -57,7 +57,10 @@ class BaseNrt(metaclass=abc.ABCMeta):
         self.y = y_coords
         self.beta = beta
 
-    def _fit(self, X, dataarray, method='OLS', check_stability=None, **kwargs):
+    def _fit(self, X, dataarray,
+             method='OLS',
+             screen_outliers=None,
+             check_stability=None, **kwargs):
         """Fit a regression model on an xarray.DataArray
 
         #TODO: Not sure whether recresid is implied by ROC or not.
@@ -89,19 +92,72 @@ class BaseNrt(metaclass=abc.ABCMeta):
         shape_flat = (shape[0], shape[1] * shape[2])
         beta_shape = (X.shape[1], shape[1], shape[2])
         y_flat = y.reshape(shape_flat)
-        if method == 'OLS' and not check_stability:
-            beta, residuals = ols(X, y_flat)
-        elif method == 'LASSO' and not check_stability:
-            raise NotImplementedError('Method not yet implemented')
-        elif method == 'Shewhart' and not check_stability:
-            beta, residuals = shewhart(X, y_flat, **kwargs)
-        elif method == 'RIRLS' and not check_stability:
-            beta, residuals = rirls(X, y_flat, **kwargs)
-        else:
-            raise ValueError('Unknown method')
+
+        # 1. Optionally screen outliers
+        #   This just updats y_flat
+        if screen_outliers:
+            y_flat = self._screen_outliers(X, y_flat, **kwargs)
+
+        # 2. If check stability is on, loop over the whole thing and
+        #   continually check stability and refit until everything is stable
+        #   or an abort criteria is reached
+        #   Every iteration y_flat will be subset with the updated self.mask
+
+        is_unstable = True
+        while is_unstable:
+            if method == 'OLS':
+                beta, residuals = ols(X, y_flat)
+            elif method == 'LASSO':
+                raise NotImplementedError('Method not yet implemented')
+            elif method == 'RIRLS':
+                beta, residuals = rirls(X, y_flat, **kwargs)
+            else:
+                raise ValueError('Unknown method')
+
+            if check_stability:
+                is_unstable = self._check_stability(method=check_stability)
+            else
+                is_unstable = False
+
         beta = beta.reshape(beta_shape)
         residuals = residuals.reshape(shape)
         return beta, residuals
+
+    def _screen_outliers(self, X, y_flat, method='shewhart', **kwargs):
+        """Screen outliers from timeseries
+
+        Args:
+            X (numpy.ndarray): The design matrix used for the regression
+            dataarray (xarray.DataArray): A 3 dimension (time, y, x) DataArray
+                containing the dependant variable
+            method (str): The screening method. Possible values include
+                ``'shewhart'`` and ``'CCDC_RIRLS'``.
+            **kwargs: Other parameters specific to each screening method
+
+        Returns:
+            xarray.DataArray: DataArray with outliers set to np.nan
+        """
+        pass
+
+    def _check_stability(self, method='CCDC', **kwargs):
+        """Check for stability
+
+        Check if the fitted models are stable over the time series. If not,
+        set self.mask to indicate where unstable time series remain.
+
+        Args:
+            dataarray (xarray.DataArray): A 3 dimension (time, y, x) DataArray
+                containing the dependant variable
+            method (str): The screening method. Possible values include
+                ``'CCDC'`` and ``'RecResid'``.
+            **kwargs: Other parameters specific to each method
+
+        Returns:
+            boolean: True if there are still unstable time series and other
+                abort criteria haven't been reached yet (i.e. insufficient
+                length of time series).
+        """
+
 
     @abc.abstractmethod
     def fit(self):

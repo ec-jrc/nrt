@@ -5,20 +5,18 @@ import numba
 from nrt import BaseNrt
 
 
+
 class CCDC(BaseNrt):
     """Monitoring using CCDC-like implementation
 
     Implementation loosely following method described in Zhu & Woodcock 2014.
 
     Args:
-        lambda_ (float): Weight of previous observation in the monitoring process
-            (memory). Valid range is [0,1], 1 corresponding to no memory and 0 to
-            full memory
         sensitivity (float): Sensitivity parameter used in the computation of the
             monitoring boundaries. Lower values imply more sensitive monitoring
     """
     def __init__(self, mask=None, trend=True, harmonic_order=2, beta=None,
-                 x_coords=None, y_coords=None, sensitivity=2, **kwargs):
+                 x_coords=None, y_coords=None, sensitivity=3, **kwargs):
         super().__init__(mask=mask,
                          trend=trend,
                          harmonic_order=harmonic_order,
@@ -32,7 +30,7 @@ class CCDC(BaseNrt):
         """Stable history model fitting
 
         Much more complicated call than for shewhart. If screen outliers is
-        required, green, swir and the threshold for screening must be passed.
+        required, green and swir bands must be passed.
 
         The stability check will use the same sensitivity as is later used for
         detecting changes (default: 3*RMSE)
@@ -42,8 +40,9 @@ class CCDC(BaseNrt):
                                      harmonic_order=self.harmonic_order)
 
         # 1. Screen outliers
+        is_clear = screen_outliers_rirls()
 
-        # 2. Fit "Normal" regression
+        # 2. Fit "Normal" OLS regression
 
         # 3. Check stability of 2.
 

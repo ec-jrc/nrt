@@ -63,8 +63,8 @@ def ols(X, y):
 
 
 def rirls(X, y, M=bisquare, tune=4.685,
-             scale_est=mad, scale_constant=0.6745,
-             update_scale=True, maxiter=50, tol=1e-8, **kwargs):
+          scale_est=mad, scale_constant=0.6745,
+          update_scale=True, maxiter=50, tol=1e-8, **kwargs):
     """ Robust Linear Model using Iterative Reweighted Least Squares (RIRLS)
     Perform robust fitting regression via iteratively reweighted least squares
     according to weight function and tuning parameter.
@@ -103,16 +103,17 @@ def rirls(X, y, M=bisquare, tune=4.685,
     iteration = 1
     while not all(converged) and iteration < maxiter:
 
-        y_sub = y[:,~converged]
+        y_sub = y[:, ~converged]
         _beta = beta.copy()
-        weights = M(resid[:,~converged] / scale, c=tune)
+        weights = M(resid[:, ~converged] / scale, c=tune)
 
-        beta[:,~converged], resid[:,~converged] = _weight_fit(X, y_sub, weights)
+        beta[:, ~converged], resid[:, ~converged] = _weight_fit(X, y_sub,
+                                                                weights)
         iteration += 1
         is_converged = ~np.any(np.fabs(beta - _beta > tol), axis=0)
         converged[is_converged] = True
         if update_scale:
-            est = scale_est(resid[:,~converged], c=scale_constant)
+            est = scale_est(resid[:, ~converged], c=scale_constant)
             scale = np.where(EPS > est, EPS, est)
 
     if is_1d:
@@ -124,7 +125,7 @@ def rirls(X, y, M=bisquare, tune=4.685,
 
 # Broadcast on sw prevents nopython
 # TODO: check implementation https://github.com/numba/numba/pull/1542
-#@numba.jit()
+# @numba.jit()
 def _weight_fit(X, y, w):
     """
     Apply a weighted OLS fit to data
@@ -136,8 +137,8 @@ def _weight_fit(X, y, w):
         tuple: coefficients and residual vector
     """
     sw = np.sqrt(w)
-    X_big = np.tile(X, (y.shape[1],1,1))
-    Xw = X_big * sw.T[:,:,None]
+    X_big = np.tile(X, (y.shape[1], 1, 1))
+    Xw = X_big * sw.T[:, :, None]
     yw = y * sw
 
     beta = weighted_nanlstsq(Xw, yw)
@@ -147,7 +148,7 @@ def _weight_fit(X, y, w):
     return beta, resid
 
 
-def ccdc_is_stable(slope, residuals, threshold):
+def is_stable_ccdc(slope, residuals, threshold):
     """
     Check the stability of the fitted model using CCDC Method
 
@@ -168,10 +169,10 @@ def ccdc_is_stable(slope, residuals, threshold):
     """
 
     # "flat" 2D implementation
-    rmse = np.sqrt(np.nanmean(residuals**2, axis=0))
+    rmse = np.sqrt(np.nanmean(residuals ** 2, axis=0))
     slope_rmse = slope / rmse < threshold
-    first = residuals[0,:] / rmse < threshold
-    last = residuals[-1,:] / rmse < threshold
+    first = residuals[0, :] / rmse < threshold
+    last = residuals[-1, :] / rmse < threshold
     print(first)
 
     # It's only stable if all conditions are met
@@ -202,7 +203,7 @@ def screen_outliers_rirls(X, green, swir, **kwargs):
     s_beta, s_residuals = rirls(X, swir, **kwargs)
 
     # Update mask using thresholds
-    is_clear[g_residuals>0.04] = False
-    is_clear[s_residuals<-0.04] = False
+    is_clear[g_residuals > 0.04] = False
+    is_clear[s_residuals < -0.04] = False
 
     return is_clear

@@ -39,7 +39,7 @@ def test_rirls(X_y_intercept_slope):
 def test_ccdc_is_stable(stability_ccdc, threshold=3):
     residuals, slope, check_stability = stability_ccdc
 
-    is_stable = fm.ccdc_is_stable(slope,residuals,threshold)
+    is_stable = fm.is_stable_ccdc(slope, residuals, threshold)
     np.testing.assert_array_equal(is_stable, check_stability)
 
 
