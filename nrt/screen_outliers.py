@@ -12,6 +12,8 @@ Citations:
   52(6), pp.3316-3332.
 - ADD ZHU
 """
+import numpy as np
+from nrt.fit_methods import rirls
 
 
 def shewhart(X, y, L):
@@ -34,4 +36,29 @@ def shewhart(X, y, L):
     sigma = np.nanstd(residuals_full, axis=0)
     shewhart_mask = np.abs(residuals_full) > L * sigma
     y[shewhart_mask] = np.nan
+    return y
+
+
+def screen_outliers_rirls(X, y, green, swir, **kwargs):
+    """
+    Screen for missed clouds and other outliers using green and SWIR band
+
+    Args:
+        X ((M, N) np.ndarray): Matrix of independant variables
+        y ((M, K) np.ndarray): Matrix of dependant variables
+        green (ndarray): 2D array containing spectral values
+        swir (ndarray): 2D array containing spectral values (~1.55-1.75um)
+        **kwargs: arguments to be passed to fit_methods.rirls()
+    Returns:
+        ndarray: 2D (flat) boolean array with True = clear
+    """
+    # 1. estimate time series model using rirls for green and swir
+    # TODO could be sped up, since masking is the same for green and swir
+    g_beta, g_residuals = rirls(X, green, **kwargs)
+    s_beta, s_residuals = rirls(X, swir, **kwargs)
+
+    # Update mask using thresholds
+    y[g_residuals > 0.04] = np.nan
+    y[s_residuals < -0.04] = np.nan
+
     return y

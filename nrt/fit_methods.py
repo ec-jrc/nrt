@@ -6,10 +6,7 @@ These functions are meant to be called in ``nrt.BaseNrt._fit()``
 
 Citations:
 
-- Brooks, E.B., Wynne, R.H., Thomas, V.A., Blinn, C.E. and Coulston, J.W., 2013.
-  On-the-fly massively multitemporal change detection using statistical quality
-  control charts and Landsat data. IEEE Transactions on Geoscience and Remote Sensing,
-  52(6), pp.3316-3332.
+
 """
 import numpy as np
 import numba
@@ -18,9 +15,6 @@ from nrt.stats import nanlstsq, mad, bisquare, weighted_nanlstsq
 
 def ols(X, y):
     """Fit simple OLS model
-
-    The array of dependant variables ``y`` may contain no data values denoted by
-    ``np.nan``
 
     Args:
         X ((M, N) np.ndarray): Matrix of independant variables
@@ -152,31 +146,3 @@ def is_stable_ccdc(slope, residuals, threshold):
     is_stable = slope_rmse & first & last
 
     return is_stable
-
-
-def screen_outliers_rirls(X, green, swir, **kwargs):
-    """
-    Screen for missed clouds and other outliers using green and SWIR band
-
-    Args:
-        X (ndarray): Design Matrix
-        green (ndarray): 2D array containing spectral values
-        swir (float): 2D array containing spectral values (~1.55-1.75um)
-        **kwargs: arguments to be passed to fit_methods.rirls()
-    Returns:
-        ndarray: 2D (flat) boolean array with True = clear
-    """
-    # green and swir probably need to be flattened
-
-    is_clear = ~np.isnan(green)
-
-    # 1. estimate time series model using rirls for green and swir
-    # TODO could be sped up, since masking is the same for green and swir
-    g_beta, g_residuals = rirls(X, green, **kwargs)
-    s_beta, s_residuals = rirls(X, swir, **kwargs)
-
-    # Update mask using thresholds
-    is_clear[g_residuals > 0.04] = False
-    is_clear[s_residuals < -0.04] = False
-
-    return is_clear
