@@ -89,13 +89,20 @@ class BaseNrt(metaclass=abc.ABCMeta):
             NotImplementedError: If method is not yet implemented
             ValueError: Unknown value for `method`
         """
-        # TODO: Implement mask subsetting
+        # lower level functions using numba may require that X and y have the same
+        # datatype (e.g. float32, float32 signature)
         y = dataarray.values.astype(np.float32)
         X = X.astype(np.float32)
+        # If no mask has been set at class instantiation, assume everything is forest
+        if self.mask is None:
+            self.mask = np.ones_like(y[0,:,:], dtype=np.uint8)
+        mask_bool = self.mask == 1
         shape = y.shape
-        shape_flat = (shape[0], shape[1] * shape[2])
         beta_shape = (X.shape[1], shape[1], shape[2])
-        y_flat = y.reshape(shape_flat)
+        # Create empty arrays with output shapes to store reg coefficients and residuals
+        beta = np.zeros(beta_shape, dtype=np.float32)
+        residuals = np.zeros_like(y, dtype=np.float32)
+        y_flat = y[:, mask_bool]
 
         # 1. Optionally screen outliers
         #   This just updats y_flat
@@ -112,19 +119,19 @@ class BaseNrt(metaclass=abc.ABCMeta):
             if not self.trend:
                 raise ValueError('Method "CCDC" requires "trend" to be true.')
             dates = pd.DatetimeIndex(dataarray.time.values)
-            beta, residuals = ccdc_stable_fit(X, y_flat, dates, **kwargs)
+            beta_flat, residuals_flat = ccdc_stable_fit(X, y_flat, dates, **kwargs)
 
         if method == 'OLS':
-            beta, residuals = ols(X, y_flat)
+            beta_flat, residuals_flat = ols(X, y_flat)
         elif method == 'LASSO':
             raise NotImplementedError('Method not yet implemented')
         elif method == 'RIRLS':
-            beta, residuals = rirls(X, y_flat, **kwargs)
+            beta_flat, residuals_flat = rirls(X, y_flat, **kwargs)
         else:
             raise ValueError('Unknown method')
 
-        beta = beta.reshape(beta_shape)
-        residuals = residuals.reshape(shape)
+        beta[:, mask_bool] = beta_flat
+        residuals[:, mask_bool] = residuals_flat
         return beta, residuals
 
     def _screen_outliers(self, X, y_flat, method='shewhart', **kwargs):
