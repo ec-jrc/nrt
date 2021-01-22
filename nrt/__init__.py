@@ -107,6 +107,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
         if check_stability == 'RecResid':
             raise NotImplementedError('Method not yet implemented')
         elif check_stability == 'CCDC':
+            if not self.trend:
+                raise ValueError('Method "CCDC" requires "trend" to be true.')
             beta, residuals = ccdc_stable_fit()
 
         if method == 'OLS':

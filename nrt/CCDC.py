@@ -25,8 +25,8 @@ class CCDC(BaseNrt):
                          y_coords=y_coords)
         self.sensitivity = sensitivity
 
-    def fit(self, dataarray, reg='ols', screen_outliers='rirls',
-            check_stability='ccdc', green=None, swir=None, **kwargs):
+    def fit(self, dataarray, reg='ols', screen_outliers='CCDC_RIRLS',
+            check_stability='CCDC', green=None, swir=None, **kwargs):
         """Stable history model fitting
 
         Much more complicated call than for shewhart. If screen outliers is
@@ -39,19 +39,11 @@ class CCDC(BaseNrt):
         X = self.build_design_matrix(dataarray, trend=self.trend,
                                      harmonic_order=self.harmonic_order)
 
-        # 1. Screen outliers
-        is_clear = screen_outliers_rirls()
-
-        # 2. Fit "Normal" OLS regression
-
-        # 3. Check stability of 2.
-
-        # 3.a unstable: change the time frame (how?), refit and check
-        #               stability again.
-        #               If after the smallest possible time frame (365 days)
-        #               it is not stable -> won't be monitored
-
-        # 3.b stable: Done
+        beta, residuals = self._fit(X, dataarray,
+                                    method='OLS',
+                                    screen_outliers='CCDC_RIRLS',
+                                    check_stability='CCDC',
+                                    green=green, swir=swir)
 
     def monitor(self, array, date):
         y_pred = self.predict(date)

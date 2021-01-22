@@ -13,7 +13,7 @@ Citations:
 - ADD ZHU
 """
 import numpy as np
-from nrt.fit_methods import rirls
+from nrt.fit_methods import rirls, ols
 
 
 def shewhart(X, y, L):
@@ -53,9 +53,20 @@ def ccdc_rirls(X, y, green, swir, **kwargs):
         ndarray: 2D (flat) boolean array with True = clear
     """
     # 1. estimate time series model using rirls for green and swir
+    # TODO: change handling so that green and swir are extracted from the
+    #       DataArray further up the chain
+
+    shape = green.shape
+    shape_flat = (shape[0], shape[1] * shape[2])
+
+    green_flat = green.values.astype(np.float32).reshape(shape_flat)
+    swir_flat = swir.values.astype(np.float32).reshape(shape_flat)
+
+    print(X.shape)
+
     # TODO could be sped up, since masking is the same for green and swir
-    g_beta, g_residuals = rirls(X, green, **kwargs)
-    s_beta, s_residuals = rirls(X, swir, **kwargs)
+    g_beta, g_residuals = rirls(X, green_flat, **kwargs)
+    s_beta, s_residuals = rirls(X, swir_flat, **kwargs)
 
     # Update mask using thresholds
     y[g_residuals > 0.04] = np.nan

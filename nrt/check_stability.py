@@ -10,6 +10,25 @@ Citations:
 - ADD ZHU
 """
 import numpy as np
+from nrt.fit_methods import ols
+
+def ccdc_stable_fit(X, y, dates, threshold=3):
+    # 1. Fit
+    beta, residuals = ols(X,y)
+
+    # 2. Check stability
+    is_stable = is_stable_ccdc(beta[1,:], residuals, threshold)
+
+    # 3. Update mask
+    y_ = y[:,~is_stable]
+
+    # 4. Change Timeframe
+
+
+    # 5. Check for enough clear acquisitions
+
+    # 6. Rinse and repeat
+
 
 def is_stable_ccdc(slope, residuals, threshold):
     """
