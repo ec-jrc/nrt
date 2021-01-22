@@ -93,7 +93,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         shape = y.shape
         beta_shape = (X.shape[1], shape[1], shape[2])
         # Create empty arrays with output shapes to store reg coefficients and residuals
-        beta = np.zero(beta_shape, dtype=np.float32)
+        beta = np.zeros(beta_shape, dtype=np.float32)
         residuals = np.zeros_like(y, dtype=np.float32)
         y_flat = y[:,mask_bool]
         if method == 'OLS' and not check_stability:
