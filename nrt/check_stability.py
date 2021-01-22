@@ -12,9 +12,9 @@ Citations:
 import numpy as np
 from nrt.fit_methods import ols
 
-def ccdc_stable_fit(X, y, dates, threshold=3):
+def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
     # 1. Fit
-    beta, residuals = ols(X,y)
+    beta, residuals = ols(X, y)
 
     # 2. Check stability
     is_stable = is_stable_ccdc(beta[1,:], residuals, threshold)
@@ -23,7 +23,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3):
     y_ = y[:,~is_stable]
 
     # 4. Change Timeframe
-
+    print(dates)
 
     # 5. Check for enough clear acquisitions
 

@@ -16,7 +16,8 @@ class CCDC(BaseNrt):
             monitoring boundaries. Lower values imply more sensitive monitoring
     """
     def __init__(self, mask=None, trend=True, harmonic_order=2, beta=None,
-                 x_coords=None, y_coords=None, sensitivity=3, **kwargs):
+                 x_coords=None, y_coords=None, sensitivity=3, scaling_factor=1,
+                 **kwargs):
         super().__init__(mask=mask,
                          trend=trend,
                          harmonic_order=harmonic_order,
@@ -24,6 +25,7 @@ class CCDC(BaseNrt):
                          x_coords=x_coords,
                          y_coords=y_coords)
         self.sensitivity = sensitivity
+        self.scaling_factor = scaling_factor
 
     def fit(self, dataarray, reg='ols', screen_outliers='CCDC_RIRLS',
             check_stability='CCDC', green=None, swir=None, **kwargs):

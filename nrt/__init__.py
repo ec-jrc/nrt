@@ -110,7 +110,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
         elif check_stability == 'CCDC':
             if not self.trend:
                 raise ValueError('Method "CCDC" requires "trend" to be true.')
-            beta, residuals = ccdc_stable_fit()
+            dates = pd.DatetimeIndex(dataarray.time.values)
+            beta, residuals = ccdc_stable_fit(X, y_flat, dates, **kwargs)
 
         if method == 'OLS':
             beta, residuals = ols(X, y_flat)
