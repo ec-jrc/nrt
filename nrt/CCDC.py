@@ -45,7 +45,8 @@ class CCDC(BaseNrt):
                                     method='OLS',
                                     screen_outliers='CCDC_RIRLS',
                                     check_stability='CCDC',
-                                    green=green, swir=swir)
+                                    green=green, swir=swir,
+                                    scaling_factor=self.scaling_factor)
 
     def monitor(self, array, date):
         y_pred = self.predict(date)

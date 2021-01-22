@@ -13,6 +13,7 @@ import numpy as np
 from nrt.fit_methods import ols
 
 def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
+
     # 1. Fit
     beta, residuals = ols(X, y)
 

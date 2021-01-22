@@ -39,7 +39,7 @@ def shewhart(X, y, L):
     return y
 
 
-def ccdc_rirls(X, y, green, swir, **kwargs):
+def ccdc_rirls(X, y, green, swir, scaling_factor=1, **kwargs):
     """
     Screen for missed clouds and other outliers using green and SWIR band
 
@@ -67,7 +67,7 @@ def ccdc_rirls(X, y, green, swir, **kwargs):
     s_beta, s_residuals = rirls(X, swir_flat, **kwargs)
 
     # Update mask using thresholds
-    y[g_residuals > 0.04] = np.nan
-    y[s_residuals < -0.04] = np.nan
+    y[g_residuals > 0.04*scaling_factor] = np.nan
+    y[s_residuals < -0.04*scaling_factor] = np.nan
 
     return y
