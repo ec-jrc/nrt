@@ -62,8 +62,6 @@ def ccdc_rirls(X, y, green, swir, **kwargs):
     green_flat = green.values.astype(np.float32).reshape(shape_flat)
     swir_flat = swir.values.astype(np.float32).reshape(shape_flat)
 
-    print(X.shape)
-
     # TODO could be sped up, since masking is the same for green and swir
     g_beta, g_residuals = rirls(X, green_flat, **kwargs)
     s_beta, s_residuals = rirls(X, swir_flat, **kwargs)
