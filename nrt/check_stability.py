@@ -12,19 +12,42 @@ Citations:
 import numpy as np
 from nrt.fit_methods import ols
 
+
 def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
+    # 0. Remove observations with too little data
+    # Minimum 1.5 times the number of coefficients
+    obs_count = np.count_nonzero(~np.isnan(y), axis=0)
+    enough = obs_count > X.shape[1] * 1.5
+    is_stable = np.zeros_like(enough)
+    y_sub = y[:, enough]
+    X_sub = X
 
     # 1. Fit
-    beta, residuals = ols(X, y)
+    beta, residuals = ols(X, y_sub)
 
-    # 2. Check stability
-    is_stable = is_stable_ccdc(beta[1,:], residuals, threshold)
+    # Keep going while everything isn't either stable or has enough data left
+    #print(np.count_nonzero(is_stable))
+    while not np.all(is_stable | ~enough):
+        # 2. Check stability
+        is_stable_sub = is_stable_ccdc(beta[1, :], residuals, threshold)
 
-    # 3. Update mask
-    y_ = y[:,~is_stable]
+        # 3. Update mask
+        # Everything that wasn't stable last time and had enough data gets updated
+        is_stable[~is_stable & enough] = is_stable_sub
+        print(np.count_nonzero(is_stable))
 
-    # 4. Change Timeframe
-    print(dates)
+        # 4. Change Timeframe and fit again
+
+        y_sub = y_sub[0:-2,~is_stable_sub]
+        X_sub = X_sub[0:-2,:]
+
+        obs_count = np.count_nonzero(~np.isnan(y_sub), axis=0)
+        enough_sub = obs_count > X.shape[1] * 1.5
+        enough[enough] = enough_sub
+
+        y_sub = y_sub[:,~is_stable_sub & enough_sub]
+
+        beta, residuals = ols(X_sub, y_sub)
 
     # 5. Check for enough clear acquisitions
 
@@ -56,7 +79,6 @@ def is_stable_ccdc(slope, residuals, threshold):
     slope_rmse = slope / rmse < threshold
     first = residuals[0, :] / rmse < threshold
     last = residuals[-1, :] / rmse < threshold
-    print(first)
 
     # It's only stable if all conditions are met
     is_stable = slope_rmse & first & last

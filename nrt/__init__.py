@@ -110,7 +110,6 @@ class BaseNrt(metaclass=abc.ABCMeta):
             y_flat = shewhart(X, y_flat, **kwargs)
         elif screen_outliers == 'CCDC_RIRLS':
             y_flat = ccdc_rirls(X, y_flat, **kwargs)
-            print(np.sum(~np.isnan(y_flat), axis=0))
 
         # 2. If a stability check method is selected, do that instead of fitting
         if check_stability == 'RecResid':
