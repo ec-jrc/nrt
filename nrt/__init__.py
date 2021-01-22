@@ -96,7 +96,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
         # 1. Optionally screen outliers
         #   This just updats y_flat
         if screen_outliers:
-            y_flat = self._screen_outliers(X, y_flat, **kwargs)
+            y_flat = self._screen_outliers(X, y_flat,
+                                           method=screen_outliers, **kwargs)
 
         # 2. If check stability is on, loop over the whole thing and
         #   continually check stability and refit until everything is stable
