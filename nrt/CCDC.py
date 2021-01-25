@@ -42,9 +42,9 @@ class CCDC(BaseNrt):
                                      harmonic_order=self.harmonic_order)
 
         beta, residuals = self._fit(X, dataarray,
-                                    method='OLS',
-                                    screen_outliers='CCDC_RIRLS',
-                                    check_stability='CCDC',
+                                    method=reg,
+                                    screen_outliers=screen_outliers,
+                                    check_stability=check_stability,
                                     green=green, swir=swir,
                                     scaling_factor=self.scaling_factor)
 
