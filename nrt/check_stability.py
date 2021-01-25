@@ -22,36 +22,38 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
     y_sub = y[:, enough]
     X_sub = X
 
-    # 1. Fit
-    beta, residuals = ols(X, y_sub)
+    # Initialize beta and residuals filled with nan
+    beta = np.full([X.shape[1], y.shape[1]], np.nan, dtype=np.float32)
+    residuals = np.full(y.shape, np.nan, dtype=np.float32)
+
 
     # Keep going while everything isn't either stable or has enough data left
-    #print(np.count_nonzero(is_stable))
     while not np.all(is_stable | ~enough):
+        # 1. Fit
+        beta_sub, residuals_sub = ols(X_sub, y_sub)
+
         # 2. Check stability
-        is_stable_sub = is_stable_ccdc(beta[1, :], residuals, threshold)
+        is_stable_sub = is_stable_ccdc(beta_sub[1, :], residuals_sub, threshold)
 
         # 3. Update mask
         # Everything that wasn't stable last time and had enough data gets updated
         is_stable[~is_stable & enough] = is_stable_sub
         print(np.count_nonzero(is_stable))
 
-        # 4. Change Timeframe and fit again
-
+        # 4. Change Timeframe and remove everything that is now stable
         y_sub = y_sub[0:-2,~is_stable_sub]
         X_sub = X_sub[0:-2,:]
 
+        # Then check where there isn't enough data left
         obs_count = np.count_nonzero(~np.isnan(y_sub), axis=0)
         enough_sub = obs_count > X.shape[1] * 1.5
-        enough[enough] = enough_sub
+        enough[~is_stable & enough] = enough_sub
 
-        y_sub = y_sub[:,~is_stable_sub & enough_sub]
+        # Remove everything where there isn't enough data
+        y_sub = y_sub[:,enough_sub]
 
-        beta, residuals = ols(X_sub, y_sub)
-
-    # 5. Check for enough clear acquisitions
-
-    # 6. Rinse and repeat
+        # # Re-fit
+        # beta_sub, residuals_sub = ols(X_sub, y_sub)
 
 
 def is_stable_ccdc(slope, residuals, threshold):
