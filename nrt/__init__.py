@@ -117,7 +117,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         elif check_stability == 'CCDC':
             if not self.trend:
                 raise ValueError('Method "CCDC" requires "trend" to be true.')
-            dates = pd.DatetimeIndex(dataarray.time.values)
+            dates = dataarray.time.values
             beta_flat, residuals_flat, is_stable = \
                 ccdc_stable_fit(X, y_flat, dates, **kwargs)
             # TODO which value should unstable pixels get?

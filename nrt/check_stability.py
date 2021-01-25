@@ -14,6 +14,33 @@ from nrt.fit_methods import ols
 
 
 def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
+    """
+    Fitting stable regressions using an adapted CCDC method
+
+    Models are first fit using OLS regression. Those models are then checked for
+    stability with 'is_stable_ccdc()'. If a model is not stable, the two oldest
+    acquisitions are removed and a model is fit using this shorter
+    time-series and again checked for stability. This process continues as long
+    as all of the following 3 conditions are met:
+
+    1. There are unstable timeseries left.
+    2. There are enough cloud-free acquisitions left (threshold is 1.5x the
+        number of parameters in the design matrix).
+    3. There is still data for more than 1 year available.
+
+    Args:
+        X ((M, N) np.ndarray): Matrix of independant variables
+        y ((M, K) np.ndarray): Matrix of dependant variables
+        dates ((M, )np.ndarray): Corresponding dates to y in numpy datetime64
+        threshold (float): Sensitivity of stability checking. Gets passed to
+            'is_stable_ccdc()'
+    Returns:
+        beta (numpy.ndarray): The array of regression estimators
+        residuals (numpy.ndarray): The array of residuals
+        is_stable (numpy.ndarray): 1D Boolean array indicating stability
+
+
+    """
     # 0. Remove observations with too little data
     # Minimum 1.5 times the number of coefficients
     obs_count = np.count_nonzero(~np.isnan(y), axis=0)
@@ -21,6 +48,16 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
     is_stable = np.full(enough.shape, False, dtype=np.bool)
     y_sub = y[:, enough]
     X_sub = X
+
+    # Initialize dates to check if there's acquisitions for an entire year
+    first_date = dates[0]
+    last_date = dates[-1]
+    delta = last_date - first_date
+
+    # If the dates are less than one year apart Raise an Exception
+    if delta.astype('timedelta64[Y]') < np.timedelta64(1, 'Y'):
+        raise ValueError('"dates" requires a full year of data.')
+
 
     # Initialize beta and residuals filled with nan
     beta = np.full([X.shape[1], y.shape[1]], np.nan, dtype=np.float32)
@@ -48,7 +85,15 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
         y_sub = y_sub[2:,~is_stable_sub]
         X_sub = X_sub[2:,:]
 
-        # Then check where there isn't enough data left
+        dates = dates[2:]
+        first_date = dates[0]
+        delta = last_date - first_date
+
+        # If the dates are less than one year apart stop the loop
+        if delta.astype('timedelta64[Y]') < np.timedelta64(1, 'Y'):
+            break
+
+        # Check where there isn't enough data left
         obs_count = np.count_nonzero(~np.isnan(y_sub), axis=0)
         enough_sub = obs_count > X.shape[1] * 1.5
         enough[~is_stable & enough] = enough_sub
