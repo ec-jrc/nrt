@@ -34,7 +34,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
 
         beta[:,~is_stable & enough] = beta_sub
         residuals[:,~is_stable & enough] = np.nan
-        residuals[0:y_sub.shape[0],~is_stable & enough] = residuals_sub
+        residuals[-y_sub.shape[0]:,~is_stable & enough] = residuals_sub
 
         # 2. Check stability
         is_stable_sub = is_stable_ccdc(beta_sub[1, :], residuals_sub, threshold)
@@ -45,8 +45,8 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
         print(np.count_nonzero(is_stable))
 
         # 4. Change Timeframe and remove everything that is now stable
-        y_sub = y_sub[0:-2,~is_stable_sub]
-        X_sub = X_sub[0:-2,:]
+        y_sub = y_sub[2:,~is_stable_sub]
+        X_sub = X_sub[2:,:]
 
         # Then check where there isn't enough data left
         obs_count = np.count_nonzero(~np.isnan(y_sub), axis=0)
