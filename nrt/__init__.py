@@ -118,15 +118,20 @@ class BaseNrt(metaclass=abc.ABCMeta):
             if not self.trend:
                 raise ValueError('Method "CCDC" requires "trend" to be true.')
             dates = pd.DatetimeIndex(dataarray.time.values)
-            beta_flat, residuals_flat = ccdc_stable_fit(X, y_flat, dates, **kwargs)
+            beta_flat, residuals_flat, is_stable = \
+                ccdc_stable_fit(X, y_flat, dates, **kwargs)
+            # TODO which value should unstable pixels get?
+            is_stable_2d = is_stable.reshape(y.shape[1],y.shape[2])
+            self.mask[~is_stable_2d] = 5
 
-        if method == 'OLS':
+
+        if method == 'OLS' and not check_stability:
             beta_flat, residuals_flat = ols(X, y_flat)
-        elif method == 'LASSO':
+        elif method == 'LASSO' and not check_stability:
             raise NotImplementedError('Method not yet implemented')
-        elif method == 'RIRLS':
+        elif method == 'RIRLS' and not check_stability:
             beta_flat, residuals_flat = rirls(X, y_flat, **kwargs)
-        else:
+        elif not check_stability:
             raise ValueError('Unknown method')
 
         beta[:, mask_bool] = beta_flat

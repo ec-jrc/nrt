@@ -33,6 +33,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
         beta_sub, residuals_sub = ols(X_sub, y_sub)
 
         beta[:,~is_stable & enough] = beta_sub
+        residuals[:,~is_stable & enough] = np.nan
         residuals[0:y_sub.shape[0],~is_stable & enough] = residuals_sub
 
         # 2. Check stability
@@ -57,6 +58,8 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
 
         # # Re-fit
         # beta_sub, residuals_sub = ols(X_sub, y_sub)
+
+    return beta, residuals, is_stable
 
 
 def is_stable_ccdc(slope, residuals, threshold):
