@@ -18,7 +18,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
     # Minimum 1.5 times the number of coefficients
     obs_count = np.count_nonzero(~np.isnan(y), axis=0)
     enough = obs_count > X.shape[1] * 1.5
-    is_stable = np.zeros_like(enough).astype(np.bool)
+    is_stable = np.full(enough.shape, False, dtype=np.bool)
     y_sub = y[:, enough]
     X_sub = X
 
@@ -31,6 +31,9 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
     while not np.all(is_stable | ~enough):
         # 1. Fit
         beta_sub, residuals_sub = ols(X_sub, y_sub)
+
+        beta[:,~is_stable & enough] = beta_sub
+        residuals[0:y_sub.shape[0],~is_stable & enough] = residuals_sub
 
         # 2. Check stability
         is_stable_sub = is_stable_ccdc(beta_sub[1, :], residuals_sub, threshold)
