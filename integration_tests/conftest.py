@@ -6,10 +6,9 @@ import xarray as xr
 import numpy as np
 import pandas as pd
 
-
 @pytest.fixture
-def ndvi_history_dataarray():
-    """A NDVI dataarray of Romania
+def history_dataarray():
+    """History dataarray over romania
 
     1 squared km over a forest in Romania.
     NDVI with cloud already filtered (appear as np.nan) in the arrays
@@ -20,9 +19,23 @@ def ndvi_history_dataarray():
     ds = xr.open_dataset(filename)
     ds['ndvi'] = (ds.B8A - ds.B4) / (ds.B8A + ds.B4)
     ds = ds.where(ds.SCL.isin([4,5,7]))
-    ndvi_history = ds.ndvi.sel(time=slice(datetime.datetime(2015, 1, 1),
-                                          datetime.datetime(2018, 12, 31)))
-    return ndvi_history
+    history = ds.sel(time=slice(datetime.datetime(2015, 1, 1),
+                                     datetime.datetime(2018, 12, 31)))
+    return history
+
+
+@pytest.fixture
+def ndvi_history(history_dataarray):
+    """A NDVI dataarray of Romania
+    """
+    return history_dataarray.ndvi
+
+
+@pytest.fixture
+def green_swir_history(history_dataarray):
+    """A NDVI dataarray of Romania
+    """
+    return history_dataarray.B3, history_dataarray.B11
 
 
 @pytest.fixture

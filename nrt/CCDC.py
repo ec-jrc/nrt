@@ -90,12 +90,12 @@ class CCDC(BaseNrt):
                 See ``_fit()`` for info.
             check_stability (string): Stability check to use.
                 See ``_fit()`` for info.
-            green (xr.DataArray): Green spectral values to be used by
+            green (xr.DataArray): Green reflectance values to be used by
                 ``screen_outliers``.
-            swir (xr.DataArray): Short wave infrared (SWIR) values to be used by
-                ``screen_outliers``.
-            scaling_factor (int): Scaling factor to be applied to ``green`` and
-                ``swir``.
+            swir (xr.DataArray): Short wave infrared (SWIR) reflectance values
+                to be used by ``screen_outliers``.
+            scaling_factor (int): Optional Scaling factor to be applied to
+                ``green`` and ``swir``.
             **kwargs: to be passed to ``_fit``
 
         """
