@@ -1,9 +1,9 @@
 import numpy as np
 import xarray as xr
-import numba
+import logging
 
 from nrt import BaseNrt
-
+from .log import logger
 
 class CCDC(BaseNrt):
     """Monitoring using CCDC-like implementation

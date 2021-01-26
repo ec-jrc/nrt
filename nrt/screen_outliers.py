@@ -17,6 +17,7 @@ Citations:
 """
 import numpy as np
 from nrt.fit_methods import rirls, ols
+from .log import logger
 
 
 def shewhart(X, y, L):
@@ -70,7 +71,14 @@ def ccdc_rirls(X, y, green, swir, scaling_factor=1, **kwargs):
     s_beta, s_residuals = rirls(X, swir_flat, **kwargs)
 
     # Update mask using thresholds
-    y[g_residuals > 0.04*scaling_factor] = np.nan
-    y[s_residuals < -0.04*scaling_factor] = np.nan
+    is_outlier = np.logical_or(g_residuals > 0.04*scaling_factor,
+                               s_residuals < -0.04*scaling_factor)
+
+    y[is_outlier] = np.nan
+
+    logger.debug('%.2f%% of (non nan) pixels removed.',
+                 (np.count_nonzero(is_outlier)
+                  / np.count_nonzero(~np.isnan(green)))*100
+                 )
 
     return y

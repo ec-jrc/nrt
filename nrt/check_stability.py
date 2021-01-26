@@ -16,6 +16,7 @@ https://doi.org/10.1016/j.rse.2014.01.011.
 """
 import numpy as np
 from nrt.fit_methods import ols
+from .log import logger
 
 
 def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
@@ -84,11 +85,13 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
         # 3. Update mask
         # Everything that wasn't stable last time and had enough data gets updated
         is_stable[~is_stable & enough] = is_stable_sub
-        print(np.count_nonzero(is_stable))
 
         # 4. Change Timeframe and remove everything that is now stable
         y_sub = y_sub[2:,~is_stable_sub]
         X_sub = X_sub[2:,:]
+
+        logger.debug('Fitted %d stable pixels.',
+                     is_stable_sub.shape[0]-y_sub.shape[1])
 
         dates = dates[2:]
         first_date = dates[0]
