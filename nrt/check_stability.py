@@ -7,7 +7,12 @@ These functions are meant to be called in ``nrt.BaseNrt._fit()``
 
 Citations:
 
-- ADD ZHU
+- Zhu, Zhe, and Curtis E. Woodcock. 2014. “Continuous Change Detection and
+Classification of Land Cover Using All Available Landsat Data.” Remote
+Sensing of Environment 144 (March): 152–71.
+https://doi.org/10.1016/j.rse.2014.01.011.
+
+-
 """
 import numpy as np
 from nrt.fit_methods import ols
@@ -19,21 +24,21 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
 
     Models are first fit using OLS regression. Those models are then checked for
     stability with 'is_stable_ccdc()'. If a model is not stable, the two oldest
-    acquisitions are removed and a model is fit using this shorter
+    acquisitions are removed, a model is fit using this shorter
     time-series and again checked for stability. This process continues as long
     as all of the following 3 conditions are met:
 
     1. There are unstable timeseries left.
     2. There are enough cloud-free acquisitions left (threshold is 1.5x the
         number of parameters in the design matrix).
-    3. There is still data for more than 1 year available.
+    3. There is still data of more than 1 year available.
 
     Args:
         X ((M, N) np.ndarray): Matrix of independant variables
         y ((M, K) np.ndarray): Matrix of dependant variables
         dates ((M, )np.ndarray): Corresponding dates to y in numpy datetime64
         threshold (float): Sensitivity of stability checking. Gets passed to
-            'is_stable_ccdc()'
+            ``is_stable_ccdc()``
     Returns:
         beta (numpy.ndarray): The array of regression estimators
         residuals (numpy.ndarray): The array of residuals

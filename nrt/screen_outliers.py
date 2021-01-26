@@ -10,7 +10,10 @@ Citations:
   On-the-fly massively multitemporal change detection using statistical quality
   control charts and Landsat data. IEEE Transactions on Geoscience and Remote Sensing,
   52(6), pp.3316-3332.
-- ADD ZHU
+- Zhu, Zhe, and Curtis E. Woodcock. 2014. “Continuous Change Detection and
+  Classification of Land Cover Using All Available Landsat Data.” Remote
+  Sensing of Environment 144 (March): 152–71.
+  https://doi.org/10.1016/j.rse.2014.01.011.
 """
 import numpy as np
 from nrt.fit_methods import rirls, ols

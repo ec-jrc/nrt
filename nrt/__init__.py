@@ -138,41 +138,6 @@ class BaseNrt(metaclass=abc.ABCMeta):
         residuals[:, mask_bool] = residuals_flat
         return beta, residuals
 
-    def _screen_outliers(self, X, y_flat, method='shewhart', **kwargs):
-        """Screen outliers from timeseries
-
-        Args:
-            X (numpy.ndarray): The design matrix used for the regression
-            dataarray (xarray.DataArray): A 3 dimension (time, y, x) DataArray
-                containing the dependant variable
-            method (str): The screening method. Possible values include
-                ``'shewhart'`` and ``'CCDC_RIRLS'``.
-            **kwargs: Other parameters specific to each screening method
-
-        Returns:
-            xarray.DataArray: DataArray with outliers set to np.nan
-        """
-        pass
-
-    def _check_stability(self, method='CCDC', **kwargs):
-        """Check for stability
-
-        Check if the fitted models are stable over the time series. If not,
-        set self.mask to indicate where unstable time series remain.
-
-        Args:
-            dataarray (xarray.DataArray): A 3 dimension (time, y, x) DataArray
-                containing the dependant variable
-            method (str): The screening method. Possible values include
-                ``'CCDC'`` and ``'RecResid'``.
-            **kwargs: Other parameters specific to each method
-
-        Returns:
-            boolean: True if there are still unstable time series and other
-                abort criteria haven't been reached yet (i.e. insufficient
-                length of time series).
-        """
-
 
     @abc.abstractmethod
     def fit(self):
