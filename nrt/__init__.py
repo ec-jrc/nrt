@@ -10,8 +10,8 @@ from affine import Affine
 
 from nrt.utils import build_regressors
 from nrt.fit_methods import ols, rirls
-from nrt.screen_outliers import ccdc_rirls, shewhart
-from nrt.check_stability import ccdc_stable_fit
+from nrt.outliers import ccdc_rirls, shewhart
+from nrt.stability import ccdc_stable_fit
 
 __version__ = "0.0.1"
 

@@ -1,4 +1,4 @@
-import nrt.check_stability as cs
+import nrt.stability as cs
 import numpy as np
 
 def test_ccdc_is_stable(stability_ccdc, threshold=3):

@@ -3,7 +3,7 @@ import xarray as xr
 import logging
 
 from nrt import BaseNrt
-from .log import logger
+from nrt.log import logger
 
 class CCDC(BaseNrt):
     """Monitoring using CCDC-like implementation
@@ -53,9 +53,7 @@ class CCDC(BaseNrt):
         nodata (np.ndarray): 2D Boolean array. Signals missing data in the newest
             acquisition
         rmse (np.ndarray): 2D float array indicating RMSE for each pixel
-
     """
-
     def __init__(self, mask=None, trend=True, harmonic_order=2, beta=None,
                  x_coords=None, y_coords=None, sensitivity=3,
                  boundary=3, process=None, nodata=None, rmse=None,

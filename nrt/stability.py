@@ -15,8 +15,10 @@ https://doi.org/10.1016/j.rse.2014.01.011.
 -
 """
 import numpy as np
+import numba
+
 from nrt.fit_methods import ols
-from .log import logger
+from nrt.log import logger
 
 
 def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
@@ -44,8 +46,6 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
         beta (numpy.ndarray): The array of regression estimators
         residuals (numpy.ndarray): The array of residuals
         is_stable (numpy.ndarray): 1D Boolean array indicating stability
-
-
     """
     # 0. Remove observations with too little data
     # Minimum 1.5 times the number of coefficients
@@ -64,11 +64,9 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
     if delta.astype('timedelta64[Y]') < np.timedelta64(1, 'Y'):
         raise ValueError('"dates" requires a full year of data.')
 
-
     # Initialize beta and residuals filled with nan
     beta = np.full([X.shape[1], y.shape[1]], np.nan, dtype=np.float32)
     residuals = np.full(y.shape, np.nan, dtype=np.float32)
-
 
     # Keep going while everything isn't either stable or has enough data left
     while not np.all(is_stable | ~enough):
@@ -108,10 +106,6 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
 
         # Remove everything where there isn't enough data
         y_sub = y_sub[:,enough_sub]
-
-        # # Re-fit
-        # beta_sub, residuals_sub = ols(X_sub, y_sub)
-
     return beta, residuals, is_stable
 
 
@@ -145,3 +139,41 @@ def is_stable_ccdc(slope, residuals, threshold):
     is_stable = slope_rmse & first & last
 
     return is_stable
+
+
+#@numba.jit(nopython=True, nogil=True)
+def recresid(X, y, span):
+    nobs, nvars = X.shape
+
+    recresid_ = np.nan * np.zeros((nobs))
+    recvar = np.nan * np.zeros((nobs))
+
+    X0 = X[:span, :]
+    y0 = y[:span]
+
+    # Initial fit
+    XTX_j = np.linalg.inv(np.dot(X0.T, X0))
+    XTY = np.dot(X0.T, y0)
+    beta = np.dot(XTX_j, XTY)
+
+    yhat_j = np.dot(X[span - 1, :], beta)
+    recresid_[span - 1] = y[span - 1] - yhat_j
+    recvar[span - 1] = 1 + np.dot(X[span - 1, :],
+                                  np.dot(XTX_j, X[span - 1, :]))
+    for j in range(span, nobs):
+        x_j = X[j:j+1, :]
+        y_j = y[j]
+
+        # Prediction with previous beta
+        resid_j = y_j - np.dot(x_j, beta)
+
+        # Update
+        XTXx_j = np.dot(XTX_j, x_j.T)
+        f_t = 1 + np.dot(x_j, XTXx_j)
+        XTX_j = XTX_j - np.dot(XTXx_j, XTXx_j.T) / f_t  # eqn 5.5.15
+
+        beta = beta + (XTXx_j * resid_j / f_t).ravel()  # eqn 5.5.14
+        recresid_[j] = resid_j.item()
+        recvar[j] = f_t.item()
+
+    return recresid_ / np.sqrt(recvar)

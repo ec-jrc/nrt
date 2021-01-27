@@ -1,6 +1,7 @@
-import nrt.screen_outliers as so
 import numpy as np
 import xarray as xr
+
+import nrt.outliers as so
 
 def test_screen_outliers_ccdc(X_y_clear):
     X, y, clear = X_y_clear

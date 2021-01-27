@@ -10,6 +10,7 @@ Citations:
 """
 import numpy as np
 import numba
+
 from nrt.stats import nanlstsq, mad, bisquare, weighted_nanlstsq
 
 
@@ -69,7 +70,6 @@ def rirls(X, y, M=bisquare, tune=4.685,
 
     iteration = 1
     while not all(converged) and iteration < maxiter:
-
         y_sub = y[:, ~converged]
         _beta = beta.copy()
         weights = M(resid[:, ~converged] / scale, c=tune)

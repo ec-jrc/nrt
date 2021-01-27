@@ -93,8 +93,7 @@ def nanmedian_along_axis(arr, axis):
     return res
 
 
-#@numba.jit(nopython=True)
-# axis prevents numba -> for loop might be faster after all
+@numba.jit(nopython=True)
 def mad(resid, c=0.6745):
     """
     Returns Median-Absolute-Deviation (MAD) for residuals
