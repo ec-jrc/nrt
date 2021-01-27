@@ -124,7 +124,6 @@ class BaseNrt(metaclass=abc.ABCMeta):
             is_stable_2d = is_stable.reshape(y.shape[1],y.shape[2])
             self.mask[~is_stable_2d] = 5
 
-
         if method == 'OLS' and not check_stability:
             beta_flat, residuals_flat = ols(X, y_flat)
         elif method == 'LASSO' and not check_stability:
@@ -137,7 +136,6 @@ class BaseNrt(metaclass=abc.ABCMeta):
         beta[:, mask_bool] = beta_flat
         residuals[:, mask_bool] = residuals_flat
         return beta, residuals
-
 
     @abc.abstractmethod
     def fit(self):

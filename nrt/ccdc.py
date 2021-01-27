@@ -1,9 +1,7 @@
 import numpy as np
 import xarray as xr
-import logging
 
 from nrt import BaseNrt
-from nrt.log import logger
 
 class CCDC(BaseNrt):
     """Monitoring using CCDC-like implementation
@@ -11,9 +9,9 @@ class CCDC(BaseNrt):
     Implementation loosely following method described in Zhu & Woodcock 2014.
 
     Zhu, Zhe, and Curtis E. Woodcock. 2014. “Continuous Change Detection and
-        Classification of Land Cover Using All Available Landsat Data.” Remote
-        Sensing of Environment 144 (March): 152–71.
-        https://doi.org/10.1016/j.rse.2014.01.011.
+    Classification of Land Cover Using All Available Landsat Data.” Remote
+    Sensing of Environment 144 (March): 152–71.
+    https://doi.org/10.1016/j.rse.2014.01.011.
 
     Attributes:
         mask (numpy.ndarray): A 2D numpy array containing pixels that should
@@ -95,12 +93,10 @@ class CCDC(BaseNrt):
             scaling_factor (int): Optional Scaling factor to be applied to
                 ``green`` and ``swir``.
             **kwargs: to be passed to ``_fit``
-
         """
         self.set_xy(dataarray)
         X = self.build_design_matrix(dataarray, trend=self.trend,
                                      harmonic_order=self.harmonic_order)
-
         self.beta, residuals = self._fit(X, dataarray,
                                          method=reg,
                                          screen_outliers=screen_outliers,
@@ -111,8 +107,7 @@ class CCDC(BaseNrt):
         self.rmse = np.sqrt(np.nanmean(residuals ** 2, axis=0))
 
     def monitor(self, array, date):
-        """
-        Monitoring of forest disturbance
+        """ Monitoring of forest disturbance
 
         Args:
             array (np.ndarray): 2D numpy array in the same format as used in
@@ -123,11 +118,10 @@ class CCDC(BaseNrt):
         y_pred = self.predict(date)
         residuals = array - y_pred
         self.nodata = np.isnan(residuals)
-
-        # Calculation is different for multivariate analysis
+        # TODO: Calculation is different for multivariate analysis
         # (mean of all bands has to be > sensitivity)
         is_outlier = np.abs(residuals) / self.rmse > self.sensitivity
-
+        # Update process
         if self.process is None:
             self.process = np.zeros_like(array, dtype=np.uint8)
         self.process = self.process * is_outlier + is_outlier

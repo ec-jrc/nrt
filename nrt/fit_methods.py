@@ -3,10 +3,6 @@
 Functions defined in this module always use a 2D array containing the dependant
 variables (y) and return both coefficient (beta) and residuals matrices
 These functions are meant to be called in ``nrt.BaseNrt._fit()``
-
-Citations:
-
-
 """
 import numpy as np
 import numba
@@ -33,11 +29,13 @@ def ols(X, y):
 def rirls(X, y, M=bisquare, tune=4.685,
           scale_est=mad, scale_constant=0.6745,
           update_scale=True, maxiter=50, tol=1e-8, **kwargs):
-    """ Robust Linear Model using Iterative Reweighted Least Squares (RIRLS)
+    """Robust Linear Model using Iterative Reweighted Least Squares (RIRLS)
+
     Perform robust fitting regression via iteratively reweighted least squares
     according to weight function and tuning parameter.
     Basically a clone from `statsmodels` that should be much faster and follows
     the scikit-learn __init__/fit/predict paradigm.
+
     Args:
         X (np.ndarray): 2D (n_obs x n_features) design matrix
         y (np.ndarray): 1D independent variable
@@ -53,6 +51,7 @@ def rirls(X, y, M=bisquare, tune=4.685,
             across iterations (default: True)
         M (callable): function for scaling residuals
         tune (float): tuning constant for scale estimate
+
     Returns:
         tuple: beta-coefficients and residual vector
     """
@@ -95,12 +94,13 @@ def rirls(X, y, M=bisquare, tune=4.685,
 # TODO: check implementation https://github.com/numba/numba/pull/1542
 # @numba.jit()
 def _weight_fit(X, y, w):
-    """
-    Apply a weighted OLS fit to data
+    """Apply a weighted OLS fit to data
+
     Args:
-        X (ndarray): independent variables
-        y (ndarray): dependent variable
-        w (ndarray): observation weights
+        X (np.ndarray): independent variables
+        y (np.ndarray): dependent variable
+        w (np.ndarray): observation weights
+
     Returns:
         tuple: coefficients and residual vector
     """
@@ -108,9 +108,6 @@ def _weight_fit(X, y, w):
     X_big = np.tile(X, (y.shape[1], 1, 1))
     Xw = X_big * sw.T[:, :, None]
     yw = y * sw
-
     beta = weighted_nanlstsq(Xw, yw)
-
     resid = y - np.dot(X, beta)
-
     return beta, resid

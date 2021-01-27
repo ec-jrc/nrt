@@ -2,7 +2,7 @@ import numba
 import numpy as np
 
 
-#@numba.jit(nopython=True)
+@numba.jit(nopython=True)
 def nanlstsq(X, y):
     """Return the least-squares solution to a linear matrix equation
 
@@ -32,14 +32,14 @@ def nanlstsq(X, y):
     """
     beta = np.zeros((X.shape[1], y.shape[1]), dtype=np.float64)
     for idx in range(y.shape[1]):
+        # subset y and X
         isna = np.isnan(y[:,idx])
         X_sub = X[~isna]
         y_sub = y[~isna,idx]
-
+        # Compute beta on data subset
         XTX = np.linalg.inv(np.dot(X_sub.T, X_sub))
         XTY = np.dot(X_sub.T, y_sub)
         beta[:,idx] = np.dot(XTX, XTY)
-
     return beta
 
 
@@ -52,6 +52,7 @@ def weighted_nanlstsq(X, y):
     Args:
         X ((K, M, N) np.ndarray): Matrix of independant variables
         y ((M, K) np.ndarray): Matrix of dependant variables
+
     Returns:
         np.ndarray: Least-squares solution for every y with unique X
     """
@@ -73,16 +74,17 @@ def weighted_nanlstsq(X, y):
 
 @numba.jit(nopython=True)
 def nanmedian_along_axis(arr, axis):
-    """
-    Returns Mean along selected axis
+    """Returns Mean along selected axis
 
     Implementation to work with numba
 
     Args:
         arr (np.ndarray): N-Dimensional array
         axis (int): Axis to calculate the median along
+
     Returns:
         np.ndarray: Median excluding nan along the axis
+
     Reference:
         http://en.wikipedia.org/wiki/Median_absolute_deviation
     """
@@ -95,14 +97,15 @@ def nanmedian_along_axis(arr, axis):
 
 @numba.jit(nopython=True)
 def mad(resid, c=0.6745):
-    """
-    Returns Median-Absolute-Deviation (MAD) for residuals
+    """Returns Median-Absolute-Deviation (MAD) for residuals
+
     Args:
         resid (np.ndarray): residuals
         c (float): scale factor to get to ~standard normal (default: 0.6745)
-                 (i.e. 1 / 0.75iCDF ~= 1.4826 = 1 / 0.6745)
+            (i.e. 1 / 0.75iCDF ~= 1.4826 = 1 / 0.6745)
     Returns:
         float: MAD 'robust' variance estimate
+
     Reference:
         http://en.wikipedia.org/wiki/Median_absolute_deviation
     """
@@ -113,16 +116,17 @@ def mad(resid, c=0.6745):
 # Weight scaling methods
 @numba.jit(nopython=True)
 def bisquare(resid, c=4.685):
-    """
-    Returns weighting for each residual using bisquare weight function
+    """Weight residuals using bisquare weight function
+
     Args:
         resid (np.ndarray): residuals to be weighted
         c (float): tuning constant for Tukey's Biweight (default: 4.685)
+
     Returns:
         weight (ndarray): weights for residuals
+
     Reference:
         http://statsmodels.sourceforge.net/stable/generated/statsmodels.robust.norms.TukeyBiweight.html
     """
     # Weight where abs(resid) < c; otherwise 0
     return (np.abs(resid) < c) * (1 - (resid / c) ** 2) ** 2
-
