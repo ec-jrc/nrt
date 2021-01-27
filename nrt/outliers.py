@@ -16,8 +16,9 @@ Citations:
   https://doi.org/10.1016/j.rse.2014.01.011.
 """
 import numpy as np
+
 from nrt.fit_methods import rirls, ols
-from .log import logger
+from nrt.log import logger
 
 
 def shewhart(X, y, L):
@@ -52,6 +53,8 @@ def ccdc_rirls(X, y, green, swir, scaling_factor=1, **kwargs):
         y ((M, K) np.ndarray): Matrix of dependant variables
         green (ndarray): 2D array containing spectral values
         swir (ndarray): 2D array containing spectral values (~1.55-1.75um)
+        scaling_factor (int): Scaling factor to bring green and swir values
+            to reflectance values between 0 and 1
         **kwargs: arguments to be passed to fit_methods.rirls()
     Returns:
         ndarray: 2D (flat) boolean array with True = clear
@@ -73,12 +76,10 @@ def ccdc_rirls(X, y, green, swir, scaling_factor=1, **kwargs):
     # Update mask using thresholds
     is_outlier = np.logical_or(g_residuals > 0.04*scaling_factor,
                                s_residuals < -0.04*scaling_factor)
-
     y[is_outlier] = np.nan
 
     logger.debug('%.2f%% of (non nan) pixels removed.',
                  (np.count_nonzero(is_outlier)
-                  / np.count_nonzero(~np.isnan(green)))*100
-                 )
+                  / np.count_nonzero(~np.isnan(green)))*100)
 
     return y
