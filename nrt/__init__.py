@@ -9,9 +9,8 @@ from rasterio.crs import CRS
 from affine import Affine
 
 from nrt.utils import build_regressors
-from nrt.fit_methods import ols, rirls
+from nrt.fit_methods import ols, rirls, ccdc_stable_fit
 from nrt.outliers import ccdc_rirls, shewhart
-from nrt.stability import ccdc_stable_fit
 
 __version__ = "0.0.1"
 
@@ -61,8 +60,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
 
     def _fit(self, X, dataarray,
              method='OLS',
-             screen_outliers=None,
-             check_stability=None, **kwargs):
+             screen_outliers=None, **kwargs):
         """Fit a regression model on an xarray.DataArray
 
         #TODO: Not sure whether recresid is implied by ROC or not.
@@ -72,13 +70,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
             dataarray (xarray.DataArray): A 3 dimension (time, y, x) DataArray
                 containing the dependant variable
             method (str): The fitting method. Possible values include ``'OLS'``,
-                ``'IRLS'``, ``'LASSO'``, ``'Shewhart'``. May be ignored depending
-                on the value passed to ``check_stability``
+                ``'IRLS'``, ``'LASSO'`` and ``'CCDC-stable'``.
             screen_outliers (str): The screening method. Possible values include
                 ``'Shewhart'`` and ``'CCDC_RIRLS'``.
-            check_stability (str): Which test should be used in stability checking.
-                If ``None`` no stability check is performed. Other potential values
-                include ``'ROC'``.
             **kwargs: Other parameters specific to each fit method
 
         Returns:
@@ -115,17 +109,17 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 swir_flat = kwargs.pop('swir').values\
                     .astype(np.float32)[:, mask_bool]
             except KeyError as e:
-                ValueError('Parameters `green` and `swir` need to be passed '
-                           'for CCDC_RIRLS.')
+                raise ValueError('Parameters `green` and `swir` need to be '
+                           'passed for CCDC_RIRLS.')
             y_flat = ccdc_rirls(X, y_flat,
                                 green=green_flat, swir=swir_flat, **kwargs)
-        else:
+        elif screen_outliers:
             raise ValueError('Unknown screen_outliers')
 
-        # 2. If a stability check method is selected, do that instead of fitting
-        if check_stability == 'RecResid':
+        # 2. Fit using specified method
+        if method == 'ROC':
             raise NotImplementedError('Method not yet implemented')
-        elif check_stability == 'CCDC':
+        elif method == 'CCDC-stable':
             if not self.trend:
                 raise ValueError('Method "CCDC" requires "trend" to be true.')
             dates = dataarray.time.values
@@ -133,16 +127,13 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 ccdc_stable_fit(X, y_flat, dates, **kwargs)
             is_stable_2d = is_stable.reshape(y.shape[1], y.shape[2])
             self.mask[~is_stable_2d] = 2
-        else:
-            raise ValueError('Unknown check_stability')
-
-        if method == 'OLS' and not check_stability:
+        elif method == 'OLS':
             beta_flat, residuals_flat = ols(X, y_flat)
-        elif method == 'LASSO' and not check_stability:
+        elif method == 'LASSO':
             raise NotImplementedError('Method not yet implemented')
-        elif method == 'RIRLS' and not check_stability:
+        elif method == 'RIRLS':
             beta_flat, residuals_flat = rirls(X, y_flat, **kwargs)
-        elif not check_stability:
+        else:
             raise ValueError('Unknown method')
 
         beta[:, mask_bool] = beta_flat

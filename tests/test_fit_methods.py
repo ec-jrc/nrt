@@ -1,6 +1,7 @@
 import numpy as np
 
 import nrt.fit_methods as fm
+import nrt.stats
 import nrt.stats as st
 
 
@@ -33,3 +34,7 @@ def test_rirls(X_y_intercept_slope):
 #     beta, residuals = fm.rirls(X, y, M=st.bisquare, tune=4.685,
 #                scale_est=st.mad, scale_constant=0.6745, update_scale=True,
 #                maxiter=50, tol=1e-8)
+def test_ccdc_is_stable(stability_ccdc, threshold=3):
+    residuals, slope, check_stability = stability_ccdc
+    is_stable = nrt.stats.is_stable_ccdc(slope, residuals, threshold)
+    np.testing.assert_array_equal(is_stable, check_stability)

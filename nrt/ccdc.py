@@ -68,9 +68,8 @@ class CCDC(BaseNrt):
         self.nodata = nodata
         self.rmse = rmse
 
-    def fit(self, dataarray, reg='ols', screen_outliers='CCDC_RIRLS',
-            check_stability='CCDC', green=None, swir=None, scaling_factor=1,
-            **kwargs):
+    def fit(self, dataarray, method='CCDC-stable', screen_outliers='CCDC_RIRLS',
+            green=None, swir=None, scaling_factor=1, **kwargs):
         """Stable history model fitting
 
         If screen outliers is required, green and swir bands must be passed.
@@ -81,10 +80,8 @@ class CCDC(BaseNrt):
         Args:
             dataarray (xr.DataArray): xarray Dataarray including the historic
                 data to be fitted
-            reg (string): Regression to use. See ``_fit()`` for info.
+            method (string): Regression to use. See ``_fit()`` for info.
             screen_outliers (string): Outlier screening to use.
-                See ``_fit()`` for info.
-            check_stability (string): Stability check to use.
                 See ``_fit()`` for info.
             green (xr.DataArray): Green reflectance values to be used by
                 ``screen_outliers``.
@@ -98,9 +95,8 @@ class CCDC(BaseNrt):
         X = self.build_design_matrix(dataarray, trend=self.trend,
                                      harmonic_order=self.harmonic_order)
         self.beta, residuals = self._fit(X, dataarray,
-                                         method=reg,
+                                         method=method,
                                          screen_outliers=screen_outliers,
-                                         check_stability=check_stability,
                                          green=green, swir=swir,
                                          scaling_factor=scaling_factor,
                                          **kwargs)

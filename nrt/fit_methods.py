@@ -7,7 +7,9 @@ These functions are meant to be called in ``nrt.BaseNrt._fit()``
 import numpy as np
 import numba
 
-from nrt.stats import nanlstsq, mad, bisquare, weighted_nanlstsq
+from nrt.log import logger
+
+from nrt.stats import nanlstsq, mad, bisquare, weighted_nanlstsq, is_stable_ccdc
 
 
 def ols(X, y):
@@ -117,3 +119,85 @@ def weighted_ols(X, y, w):
     beta = weighted_nanlstsq(Xw, yw)
     resid = y - np.dot(X, beta)
     return beta, resid
+
+
+def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
+    """Fitting stable regressions using an adapted CCDC method
+
+    Models are first fit using OLS regression. Those models are then checked for
+    stability with 'is_stable_ccdc()'. If a model is not stable, the two oldest
+    acquisitions are removed, a model is fit using this shorter
+    time-series and again checked for stability. This process continues as long
+    as all of the following 3 conditions are met:
+
+    1. There are unstable timeseries left.
+    2. There are enough cloud-free acquisitions left (threshold is 1.5x the
+        number of parameters in the design matrix).
+    3. There is still data of more than 1 year available.
+
+    Args:
+        X ((M, N) np.ndarray): Matrix of independant variables
+        y ((M, K) np.ndarray): Matrix of dependant variables
+        dates ((M, ) np.ndarray): Corresponding dates to y in numpy datetime64
+        threshold (float): Sensitivity of stability checking. Gets passed to
+            ``is_stable_ccdc()``
+    Returns:
+        beta (numpy.ndarray): The array of regression estimators
+        residuals (numpy.ndarray): The array of residuals
+        is_stable (numpy.ndarray): 1D Boolean array indicating stability
+    """
+    # 0. Remove observations with too little data
+    # Minimum 1.5 times the number of coefficients
+    obs_count = np.count_nonzero(~np.isnan(y), axis=0)
+    enough = obs_count > X.shape[1] * 1.5
+    is_stable = np.full(enough.shape, False, dtype=np.bool)
+    y_sub = y[:, enough]
+    X_sub = X
+
+    # Initialize dates to check if there's acquisitions for an entire year
+    first_date = dates[0]
+    last_date = dates[-1]
+    delta = last_date - first_date
+
+    # If the dates are less than one year apart Raise an Exception
+    if delta.astype('timedelta64[Y]') < np.timedelta64(1, 'Y'):
+        raise ValueError('"dates" requires a full year of data.')
+
+    # Initialize beta and residuals filled with nan
+    beta = np.full([X.shape[1], y.shape[1]], np.nan, dtype=np.float32)
+    residuals = np.full(y.shape, np.nan, dtype=np.float32)
+
+    # Keep going while everything isn't either stable or has enough data left
+    while not np.all(is_stable | ~enough):
+        # 1. Fit
+        beta_sub, residuals_sub = ols(X_sub, y_sub)
+        beta[:,~is_stable & enough] = beta_sub
+        residuals[:,~is_stable & enough] = np.nan
+        residuals[-y_sub.shape[0]:,~is_stable & enough] = residuals_sub
+
+        # 2. Check stability
+        is_stable_sub = is_stable_ccdc(beta_sub[1, :], residuals_sub, threshold)
+
+        # 3. Update mask
+        # Everything that wasn't stable last time and had enough data gets updated
+        is_stable[~is_stable & enough] = is_stable_sub
+
+        # 4. Change Timeframe and remove everything that is now stable
+        y_sub = y_sub[2:,~is_stable_sub]
+        X_sub = X_sub[2:,:]
+        logger.debug('Fitted %d stable pixels.',
+                     is_stable_sub.shape[0]-y_sub.shape[1])
+        dates = dates[2:]
+        first_date = dates[0]
+        delta = last_date - first_date
+
+        # If the dates are less than one year apart stop the loop
+        if delta.astype('timedelta64[Y]') < np.timedelta64(1, 'Y'):
+            break
+        # Check where there isn't enough data left
+        obs_count = np.count_nonzero(~np.isnan(y_sub), axis=0)
+        enough_sub = obs_count > X.shape[1] * 1.5
+        enough[~is_stable & enough] = enough_sub
+        # Remove everything where there isn't enough data
+        y_sub = y_sub[:,enough_sub]
+    return beta, residuals, is_stable

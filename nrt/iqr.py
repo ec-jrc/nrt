@@ -20,12 +20,11 @@ class Iqr(BaseNrt):
         self.q75 = q75
         self.confirm_threshold = confirm_threshold
 
-    def fit(self, dataarray, reg='OLS', check_stability=None, **kwargs):
+    def fit(self, dataarray, method='OLS', **kwargs):
         self.set_xy(dataarray)
         X = self.build_design_matrix(dataarray, trend=self.trend,
                                      harmonic_order=self.harmonic_order)
-        beta, residuals = self._fit(X, dataarray=dataarray, method=reg,
-                                    check_stability=check_stability,
+        beta, residuals = self._fit(X, dataarray=dataarray, method=method,
                                     **kwargs)
         self.beta = beta
         q75, q25 = np.nanpercentile(residuals, [75 ,25], 0)
