@@ -48,13 +48,11 @@ class CCDC(BaseNrt):
             high sensitivity. Value can't be zero.
         boundary (int): Number of consecutive observations identified as outliers
             to signal as disturbance
-        nodata (np.ndarray): 2D Boolean array. Signals missing data in the newest
-            acquisition
         rmse (np.ndarray): 2D float array indicating RMSE for each pixel
     """
     def __init__(self, mask=None, trend=True, harmonic_order=2, beta=None,
                  x_coords=None, y_coords=None, sensitivity=3,
-                 boundary=3, process=None, nodata=None, rmse=None,
+                 boundary=3, process=None, rmse=None,
                  **kwargs):
         super().__init__(mask=mask,
                          trend=trend,
@@ -65,7 +63,6 @@ class CCDC(BaseNrt):
         self.sensitivity = sensitivity
         self.process = process
         self.boundary = boundary
-        self.nodata = nodata
         self.rmse = rmse
 
     def fit(self, dataarray, method='CCDC-stable', screen_outliers='CCDC_RIRLS',
@@ -113,7 +110,6 @@ class CCDC(BaseNrt):
         # TODO masking needs to be done in predict()
         y_pred = self.predict(date)
         residuals = array - y_pred
-        self.nodata = np.isnan(residuals)
         # TODO: Calculation is different for multivariate analysis
         # (mean of all bands has to be > sensitivity)
         is_outlier = np.abs(residuals) / self.rmse > self.sensitivity
@@ -126,10 +122,8 @@ class CCDC(BaseNrt):
         # signals severity of disturbance:
         #    0 = not disturbed
         #   >1 = disturbed (bigger number: longer duration)
-        #  255 = no data
         # TODO when masking is implemented in monitor(), change the reporting
         #   here as well
         signal = np.floor_divide(self.process,
                                  self.boundary).astype(np.uint8)
-        signal[self.nodata] = 255
         return signal
