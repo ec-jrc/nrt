@@ -1,6 +1,8 @@
+from pathlib import Path
 import pytest
 import numpy as np
 
+here = Path(__file__)/'..'
 
 @pytest.fixture
 def X_y_clear(X_y_intercept_slope):
@@ -38,3 +40,12 @@ def stability_ccdc(request):
     slope = np.array([0,0,10,0])
     stability = np.array([False, False, False, True])
     return residuals, slope, stability
+
+
+@pytest.fixture
+def X_y_dates_romania(request):
+    X = np.genfromtxt(here/'data'/'X.csv', dtype=np.float32)
+    y = np.genfromtxt(here/'data'/'y.csv', dtype=np.float32)
+    dates = np.genfromtxt(here/'data'/'dates.csv').astype("datetime64[ns]")
+
+    return X, y, dates

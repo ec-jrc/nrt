@@ -26,8 +26,10 @@ def test_ccdc_is_stable(stability_ccdc, threshold=3):
     np.testing.assert_array_equal(is_stable, check_stability)
 
 
-def test_recresid(X_y_date_romania):
-    X, y, dates = X_y_date_romania
+def test_recresid(X_y_dates_romania):
+    X, y, dates = X_y_dates_romania
+
+    print(y)
 
     y_single = y[:,0]
     is_nan = np.isnan(y_single)
