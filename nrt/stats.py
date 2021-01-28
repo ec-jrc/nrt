@@ -50,7 +50,8 @@ def weighted_nanlstsq(X, y):
     Analog to ``nanlstsq`` but X is unique for every observation in y
 
     Args:
-        X ((K, M, N) np.ndarray): Matrix of independant variables
+        X ((K, M, N) np.ndarray): Weighted Matrix of independant variables,
+            unique for each timeseries K in y
         y ((M, K) np.ndarray): Matrix of dependant variables
 
     Returns:

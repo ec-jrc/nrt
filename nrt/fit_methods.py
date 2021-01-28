@@ -59,25 +59,35 @@ def rirls(X, y, M=bisquare, tune=4.685,
     if is_1d:
         y = y[:, np.newaxis]
 
-    beta, resid = _weight_fit(X, y, np.ones_like(y))
+    beta, resid = weighted_ols(X, y, np.ones_like(y))
     scale = scale_est(resid, c=scale_constant)
 
     EPS = np.finfo('float').eps
 
+    # Initializing array signaling converged models and setting everything
+    # True where scale is smaller epsilon, to avoid singular matrices during
+    # weighted fit
     converged = np.zeros_like(scale).astype('bool')
     converged[scale < EPS] = True
 
     iteration = 1
     while not all(converged) and iteration < maxiter:
+        # 1. Get all non-converged timeseries
         y_sub = y[:, ~converged]
         _beta = beta.copy()
-        weights = M(resid[:, ~converged] / scale, c=tune)
 
-        beta[:, ~converged], resid[:, ~converged] = _weight_fit(X, y_sub,
-                                                                weights)
+        # 2. Calculate new weights and do a weighted fit
+        weights = M(resid[:, ~converged] / scale, c=tune)
+        beta[:, ~converged], resid[:, ~converged] = weighted_ols(X, y_sub,
+                                                                 weights)
         iteration += 1
+
+        # 3. For all time series where the change in beta is smaller than the
+        #   tolerance set convergence to True
         is_converged = ~np.any(np.fabs(beta - _beta > tol), axis=0)
         converged[is_converged] = True
+
+        # If chosen repeat initialization by recalculating the scale
         if update_scale:
             est = scale_est(resid[:, ~converged], c=scale_constant)
             scale = np.where(EPS > est, EPS, est)
@@ -89,11 +99,7 @@ def rirls(X, y, M=bisquare, tune=4.685,
     return beta, resid
 
 
-# np.tile prevents nopython could be changed so that weighting of X happens in
-# weighted_nanlstsq()
-# TODO: check implementation https://github.com/numba/numba/pull/1542
-# @numba.jit()
-def _weight_fit(X, y, w):
+def weighted_ols(X, y, w):
     """Apply a weighted OLS fit to data
 
     Args:

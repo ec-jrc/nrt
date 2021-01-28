@@ -120,9 +120,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
             dates = dataarray.time.values
             beta_flat, residuals_flat, is_stable = \
                 ccdc_stable_fit(X, y_flat, dates, **kwargs)
-            # TODO which value should unstable pixels get?
-            is_stable_2d = is_stable.reshape(y.shape[1],y.shape[2])
-            self.mask[~is_stable_2d] = 5
+            is_stable_2d = is_stable.reshape(y.shape[1], y.shape[2])
+            self.mask[~is_stable_2d] = 2
 
         if method == 'OLS' and not check_stability:
             beta_flat, residuals_flat = ols(X, y_flat)
