@@ -109,7 +109,16 @@ class BaseNrt(metaclass=abc.ABCMeta):
         if screen_outliers == 'Shewhart':
             y_flat = shewhart(X, y_flat, **kwargs)
         elif screen_outliers == 'CCDC_RIRLS':
-            y_flat = ccdc_rirls(X, y_flat, **kwargs)
+            try:
+                green_flat = kwargs.pop('green').values\
+                    .astype(np.float32)[:, mask_bool]
+                swir_flat = kwargs.pop('swir').values\
+                    .astype(np.float32)[:, mask_bool]
+            except KeyError as e:
+                ValueError('Parameters `green` and `swir` need to be passed '
+                           'for CCDC_RIRLS.')
+            y_flat = ccdc_rirls(X, y_flat,
+                                green=green_flat, swir=swir_flat, **kwargs)
 
         # 2. If a stability check method is selected, do that instead of fitting
         if check_stability == 'RecResid':
