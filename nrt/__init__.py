@@ -119,6 +119,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
                            'for CCDC_RIRLS.')
             y_flat = ccdc_rirls(X, y_flat,
                                 green=green_flat, swir=swir_flat, **kwargs)
+        else:
+            raise ValueError('Unknown screen_outliers')
 
         # 2. If a stability check method is selected, do that instead of fitting
         if check_stability == 'RecResid':
@@ -131,6 +133,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 ccdc_stable_fit(X, y_flat, dates, **kwargs)
             is_stable_2d = is_stable.reshape(y.shape[1], y.shape[2])
             self.mask[~is_stable_2d] = 2
+        else:
+            raise ValueError('Unknown check_stability')
 
         if method == 'OLS' and not check_stability:
             beta_flat, residuals_flat = ols(X, y_flat)
