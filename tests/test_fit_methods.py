@@ -18,23 +18,23 @@ def test_rirls(X_y_intercept_slope):
 
     np.testing.assert_allclose(beta, np.array([[intercept, intercept],
                                                [slope, slope]]))
-    #np.testing.assert_allclose(np.dot(X, beta), y)
 
 
-
-# @pytest.mark.parametrize(('X', 'y'), [
-#     (np.random.rand(n, n), np.random.rand(n))
-#     for n in range(1, 10)
-# ])
-# def test_RLM_issue88(X, y):
-#     """ Issue 88: Numeric problems when n_obs == n_reg/k/p/number of regressors
-#     The regression result will be garbage so we're not worrying about the
-#     coefficients. However, it shouldn't raise an exception.
-#     """
-#     beta, residuals = fm.rirls(X, y, M=st.bisquare, tune=4.685,
-#                scale_est=st.mad, scale_constant=0.6745, update_scale=True,
-#                maxiter=50, tol=1e-8)
 def test_ccdc_is_stable(stability_ccdc, threshold=3):
     residuals, slope, check_stability = stability_ccdc
     is_stable = nrt.stats.is_stable_ccdc(slope, residuals, threshold)
     np.testing.assert_array_equal(is_stable, check_stability)
+
+
+def test_recresid(X_y_date_romania):
+    X, y, dates = X_y_date_romania
+
+    y_single = y[:,0]
+    is_nan = np.isnan(y_single)
+    y_sub = y_single[~is_nan]
+    X_sub = X[~is_nan,:]
+
+    rresid = st.recresid(X=X_sub, y=y_sub, span=X.shape[1])
+    print(rresid)
+
+    assert False
