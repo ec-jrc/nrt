@@ -164,7 +164,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
     def _detect_break(self):
         """Defines if the current process value is a confirmed break
 
-        This method may be overwritten in subclass if required
+        This method may be overridden in subclass if required
         """
         is_break = np.floor_divide(self.process,
                                    self.boundary).astype(np.uint8)
@@ -184,7 +184,14 @@ class BaseNrt(metaclass=abc.ABCMeta):
         return is_valid
 
     @abc.abstractmethod
-    def _update_process(self):
+    def _update_process(self, residuals, is_valid):
+        """Update process values given an array of residuals
+
+        Args:
+            residuals (np.ndarray): A 2D array of residuals
+            is_valid (np.ndarray): A boolean 2D array indicating where process
+                values should be updated
+        """
         pass
 
     def _report(self):
