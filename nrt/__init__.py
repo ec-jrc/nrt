@@ -148,7 +148,14 @@ class BaseNrt(metaclass=abc.ABCMeta):
         """Monitor given a new acquisition
 
         The method takes care of (1) predicting the expected pixels values,
-        (2) updating the process value, and (3) updating self.mask
+        (2) updating the process value, and (3) updating self.mask in case a
+        break is confirmed
+
+        Args:
+            array (np.ndarray): 2D array containing the new acquisition to be
+                monitored
+            date (datetime.datetime): Date of acquisition of data contained in
+                the array
         """
         y_pred = self.predict(date)
         residuals = array - y_pred
