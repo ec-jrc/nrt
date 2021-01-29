@@ -9,7 +9,8 @@ from rasterio.crs import CRS
 from affine import Affine
 
 from nrt.utils import build_regressors
-from nrt.fit_methods import ols, shewhart
+from nrt.fit_methods import ols, rirls, ccdc_stable_fit
+from nrt.outliers import ccdc_rirls, shewhart
 
 __version__ = "0.0.1"
 
@@ -57,7 +58,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
         self.y = y_coords
         self.beta = beta
 
-    def _fit(self, X, dataarray, method='OLS', check_stability=None, **kwargs):
+    def _fit(self, X, dataarray,
+             method='OLS',
+             screen_outliers=None, **kwargs):
         """Fit a regression model on an xarray.DataArray
 
         #TODO: Not sure whether recresid is implied by ROC or not.
@@ -67,11 +70,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
             dataarray (xarray.DataArray): A 3 dimension (time, y, x) DataArray
                 containing the dependant variable
             method (str): The fitting method. Possible values include ``'OLS'``,
-                ``'IRLS'``, ``'LASSO'``, ``'Shewhart'``. May be ignored depending
-                on the value passed to ``check_stability``
-            check_stability (str): Which test should be used in stability checking.
-                If ``None`` no stability check is performed. Other potential values
-                include ``'ROC'``.
+                ``'IRLS'``, ``'LASSO'`` and ``'CCDC-stable'``.
+            screen_outliers (str): The screening method. Possible values include
+                ``'Shewhart'`` and ``'CCDC_RIRLS'``.
             **kwargs: Other parameters specific to each fit method
 
         Returns:
@@ -95,17 +96,48 @@ class BaseNrt(metaclass=abc.ABCMeta):
         # Create empty arrays with output shapes to store reg coefficients and residuals
         beta = np.zeros(beta_shape, dtype=np.float32)
         residuals = np.zeros_like(y, dtype=np.float32)
-        y_flat = y[:,mask_bool]
-        if method == 'OLS' and not check_stability:
-            beta_flat, residuals_flat = ols(X, y_flat)
-        elif method == 'LASSO' and not check_stability:
+        y_flat = y[:, mask_bool]
+
+        # 1. Optionally screen outliers
+        #   This just updats y_flat
+        if screen_outliers == 'Shewhart':
+            y_flat = shewhart(X, y_flat, **kwargs)
+        elif screen_outliers == 'CCDC_RIRLS':
+            try:
+                green_flat = kwargs.pop('green').values\
+                    .astype(np.float32)[:, mask_bool]
+                swir_flat = kwargs.pop('swir').values\
+                    .astype(np.float32)[:, mask_bool]
+            except KeyError as e:
+                raise ValueError('Parameters `green` and `swir` need to be '
+                           'passed for CCDC_RIRLS.')
+            y_flat = ccdc_rirls(X, y_flat,
+                                green=green_flat, swir=swir_flat, **kwargs)
+        elif screen_outliers:
+            raise ValueError('Unknown screen_outliers')
+
+        # 2. Fit using specified method
+        if method == 'ROC':
             raise NotImplementedError('Method not yet implemented')
-        elif method == 'Shewhart' and not check_stability:
-            beta_flat, residuals_flat = shewhart(X, y_flat, **kwargs)
+        elif method == 'CCDC-stable':
+            if not self.trend:
+                raise ValueError('Method "CCDC" requires "trend" to be true.')
+            dates = dataarray.time.values
+            beta_flat, residuals_flat, is_stable = \
+                ccdc_stable_fit(X, y_flat, dates, **kwargs)
+            is_stable_2d = is_stable.reshape(y.shape[1], y.shape[2])
+            self.mask[~is_stable_2d] = 2
+        elif method == 'OLS':
+            beta_flat, residuals_flat = ols(X, y_flat)
+        elif method == 'LASSO':
+            raise NotImplementedError('Method not yet implemented')
+        elif method == 'RIRLS':
+            beta_flat, residuals_flat = rirls(X, y_flat, **kwargs)
         else:
             raise ValueError('Unknown method')
-        beta[:,mask_bool] = beta_flat
-        residuals[:,mask_bool] = residuals_flat
+
+        beta[:, mask_bool] = beta_flat
+        residuals[:, mask_bool] = residuals_flat
         return beta, residuals
 
     @abc.abstractmethod

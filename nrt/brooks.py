@@ -33,7 +33,8 @@ class Brooks(BaseNrt):
         self.process = process  # array with most recent EWMA values
         self.nodata = nodata  # Only necessary for singalling missing data
 
-    def fit(self, dataarray, method='Shewhart', check_stability=None, **kwargs):
+    def fit(self, dataarray, method='OLS',
+            screen_outliers='Shewhart', **kwargs):
         """Stable history model fitting
 
         The preferred fitting method for this monitoring type is ``'Shewhart'``.
@@ -43,8 +44,8 @@ class Brooks(BaseNrt):
         self.set_xy(dataarray)
         X = self.build_design_matrix(dataarray, trend=self.trend,
                                      harmonic_order=self.harmonic_order)
-        beta, residuals = self._fit(X, dataarray=dataarray, method=method,
-                                    check_stability=check_stability, **kwargs)
+        beta, residuals = self._fit(X, dataarray=dataarray,
+                                    method=method, **kwargs)
         self.beta = beta
         self.nodata = np.isnan(residuals[-1])
         # get new standard deviation
