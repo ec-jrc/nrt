@@ -168,8 +168,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
         residuals = array - y_pred
         # Compute a mask of values that can be worked on
         is_valid = np.logical_and(self.mask == 1, np.isfinite(array))
-        is_valid = self._detect_extreme_ouliers(residuals=residuals,
-                                                is_valid=is_valid)
+        is_valid = self._detect_extreme_outliers(residuals=residuals,
+                                                 is_valid=is_valid)
         self._update_process(residuals=residuals, is_valid=is_valid)
         is_break = self._detect_break()
         # Update mask (3 value corresponds to a confirmed break)
@@ -184,8 +184,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
                                    self.boundary).astype(np.uint8)
         return is_break
 
-    def _detect_extreme_ouliers(self, residuals, is_valid):
-        """Detect extreme ouliers in an array of residuals from prediction
+    def _detect_extreme_outliers(self, residuals, is_valid):
+        """Detect extreme outliers in an array of residuals from prediction
 
         Sometimes used as pre-filtering of incoming new data to discard eventual
         remaining clouds for instance

@@ -58,7 +58,7 @@ class Brooks(BaseNrt):
         # calculate the EWMA value for the end of the training period and save it
         self.process = self._init_process(residuals)
 
-    def _detect_extreme_ouliers(self, residuals, is_valid):
+    def _detect_extreme_outliers(self, residuals, is_valid):
         is_eoutlier = np.abs(residuals) > self.sensitivity * self.sigma
         return np.logical_and(~is_eoutlier, is_valid)
 
