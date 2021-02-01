@@ -49,17 +49,14 @@ class BaseNrt(metaclass=abc.ABCMeta):
         x_coords (numpy.ndarray): x coordinates
         y_coords (numpy.ndarray): y coordinates
     """
-
-    def __init_subclass__(cls, mask, trend, harmonic_order,
-                          beta, boundary, process, x_coords, y_coords):
-        cls.mask = mask
-        cls.trend = trend
-        cls.harmonic_order = harmonic_order
-        cls.x = x_coords
-        cls.y = y_coords
-        cls.beta = beta
-        cls.boundary = boundary
-        cls.process = process
+    def __init__(self, mask=None, trend=True, harmonic_order=3, beta=None,
+                 x_coords=None, y_coords=None):
+        self.mask = mask
+        self.trend = trend
+        self.harmonic_order = harmonic_order
+        self.x = x_coords
+        self.y = y_coords
+        self.beta = beta
 
     def _fit(self, X, dataarray,
              method='OLS',
@@ -89,7 +86,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         X = X.astype(np.float32)
         # If no mask has been set at class instantiation, assume everything is forest
         if self.mask is None:
-            self.mask = np.ones_like(y[0, :, :], dtype=np.uint8)
+            self.mask = np.ones_like(y[0,:,:], dtype=np.uint8)
         mask_bool = self.mask == 1
         shape = y.shape
         beta_shape = (X.shape[1], shape[1], shape[2])
@@ -104,13 +101,13 @@ class BaseNrt(metaclass=abc.ABCMeta):
             y_flat = shewhart(X, y_flat, **kwargs)
         elif screen_outliers == 'CCDC_RIRLS':
             try:
-                green_flat = kwargs.pop('green').values \
-                                 .astype(np.float32)[:, mask_bool]
-                swir_flat = kwargs.pop('swir').values \
-                                .astype(np.float32)[:, mask_bool]
+                green_flat = kwargs.pop('green').values\
+                    .astype(np.float32)[:, mask_bool]
+                swir_flat = kwargs.pop('swir').values\
+                    .astype(np.float32)[:, mask_bool]
             except KeyError as e:
                 raise ValueError('Parameters `green` and `swir` need to be '
-                                 'passed for CCDC_RIRLS.')
+                           'passed for CCDC_RIRLS.')
             y_flat = ccdc_rirls(X, y_flat,
                                 green=green_flat, swir=swir_flat, **kwargs)
         elif screen_outliers:
@@ -231,8 +228,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
     @property
     def transform(self):
         if self.x is None or self.y is None:
-            warnings.warn(
-                'x and y coordinate arrays not set, returning identity transform')
+            warnings.warn('x and y coordinate arrays not set, returning identity transform')
             aff = Affine.identity()
         else:
             y_res = abs(self.y[0] - self.y[1])
@@ -267,8 +263,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
             for k in src.variables.keys():
                 nc_var = src.variables[k]
                 # bool are stored as int in netcdf and need to be coerced back to bool
-                is_bool = 'dtype' in nc_var.ncattrs() and nc_var.getncattr(
-                    'dtype') == 'bool'
+                is_bool = 'dtype' in nc_var.ncattrs() and nc_var.getncattr('dtype') == 'bool'
                 try:
                     v = nc_var.value
                     if is_bool:
@@ -283,7 +278,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
                     k = 'y_coords'
                 if k == 'r':
                     continue
-                d.update({k: v})
+                d.update({k:v})
         return cls(**d)
 
     def to_netcdf(self, filename):
@@ -297,7 +292,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
             # Create coordinate variables
             x_var = dst.createVariable('x', np.float32, ('x',))
             y_var = dst.createVariable('y', np.float32, ('y',))
-            r_var = dst.createVariable('r', np.uint8, ('r',))
+            r_var = dst.createVariable('r', np.uint8, ('r', ))
             # fill values of coordinate variables
             x_var[:] = self.x
             y_var[:] = self.y
@@ -308,7 +303,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
                                           zlib=True)
             beta_var[:] = self.beta
             # Create other variables
-            for k, v in attr.items():
+            for k,v in attr.items():
                 if k not in ['x', 'y', 'beta']:
                     if isinstance(v, np.ndarray):
                         # bool array are stored as int8
@@ -349,8 +344,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 ``_fit()`` method
         """
         dates = pd.DatetimeIndex(dataarray.time.values)
-        X = build_regressors(dates=dates, trend=trend,
-                             harmonic_order=harmonic_order)
+        X = build_regressors(dates=dates, trend=trend, harmonic_order=harmonic_order)
         return X
 
     def _regressors(self, date):
@@ -366,3 +360,5 @@ class BaseNrt(metaclass=abc.ABCMeta):
         X = build_regressors(dates=date_pd, trend=self.trend,
                              harmonic_order=self.harmonic_order)
         return X
+
+
