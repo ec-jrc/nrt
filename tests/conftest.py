@@ -71,5 +71,5 @@ def X_y_dates_romania(request):
 # })
 @pytest.fixture
 def strcchng_rr(request):
-    return np.loadtxt(here / 'data' / 'rr_result.csv',
-                      delimiter=',', dtype=np.float64)
+    return np.genfromtxt(here / 'data' / 'rr_result.csv',
+                      delimiter=',', dtype=np.float64, missing_values='NA')

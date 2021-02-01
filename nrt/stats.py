@@ -164,42 +164,58 @@ def is_stable_ccdc(slope, residuals, threshold):
 
 
 def recresid(X, y, span=None):
-    nobs, nvars = X.shape
+    nvars = X.shape[1]
     if span is None:
         span = nvars
 
     # init result arrays
-    recresid_ = np.nan * np.zeros(y)
-    recvar = np.nan * np.zeros(y)
+    norm_rresid = np.nan * np.zeros_like(y)
 
-    X0 = X[:span]
-    y0 = y[:span]
+    for idx in range(y.shape[1]):
+        # subset and remove nan
+        is_nan = np.isnan(y[:,idx])
+        y_sub = y[~is_nan,idx]
+        y0 = y_sub[:span]
+        X_sub = X[~is_nan,:]
+        X0 = X_sub[:span]
 
-    # Initial fit
-    XTX_j = np.linalg.inv(np.dot(X0.T, X0))
-    XTY = np.dot(X0.T, y0)
-    beta = np.dot(XTX_j, XTY)
+        # set number of observations
+        nobs = X_sub.shape[0]
 
-    yhat_j = np.dot(X[span - 1], beta)
-    recresid_[span - 1] = y[span - 1] - yhat_j
-    recvar[span - 1] = 1 + np.dot(X[span - 1],
-                                  np.dot(XTX_j, X[span - 1]))
-    for j in range(span, nobs):
-        x_j = X[j:j + 1, :]
-        y_j = y[j]
+        # init sub-result arrays
+        recresid_sub = np.nan * np.zeros_like(y_sub)
+        recvar_sub = np.nan * np.zeros_like(y_sub)
 
-        # Prediction with previous beta
-        yhat_j = np.dot(x_j, beta)
-        resid_j = y_j - yhat_j
+        # Initial fit
+        XTX_j = np.linalg.inv(np.dot(X0.T, X0))
+        XTY = np.dot(X0.T, y0)
+        beta = np.dot(XTX_j, XTY)
 
-        # Update
-        XTXx_j = np.dot(XTX_j, x_j.T)
-        f_t = 1 + np.dot(x_j, XTXx_j)
-        XTX_j = XTX_j - np.dot(XTXx_j, XTXx_j.T) / f_t  # eqn 5.5.15
+        # First prediction
+        yhat_j = np.dot(X_sub[span - 1], beta)
+        recresid_sub[span - 1] = y_sub[span - 1] - yhat_j
+        recvar_sub[span - 1] = 1 + np.dot(X_sub[span - 1],
+                                      np.dot(XTX_j, X_sub[span - 1]))
+        for j in range(span, nobs):
+            x_j = X_sub[j:j + 1, :]
+            y_j = y_sub[j]
 
-        beta = beta + (XTXx_j * resid_j / f_t).ravel()  # eqn 5.5.14
+            # Prediction with previous beta
+            yhat_j = np.dot(x_j, beta)
+            resid_j = y_j - yhat_j
 
-        recresid_[j] = resid_j
-        recvar[j] = f_t
+            # Update
+            XTXx_j = np.dot(XTX_j, x_j.T)
+            f_t = 1 + np.dot(x_j, XTXx_j)
+            XTX_j = XTX_j - np.dot(XTXx_j, XTXx_j.T) / f_t  # eqn 5.5.15
 
-    return recresid_ / np.sqrt(recvar)
+            beta = beta + (XTXx_j * resid_j / f_t).ravel()  # eqn 5.5.14
+
+            recresid_sub[j] = resid_j
+            recvar_sub[j] = f_t
+
+        # Write sub result to full result array
+        norm_rresid_sub = recresid_sub / np.sqrt(recvar_sub)
+        norm_rresid[~is_nan,idx] = norm_rresid_sub
+
+    return norm_rresid
