@@ -3,27 +3,19 @@ import numpy as np
 from nrt import BaseNrt
 
 
-class Iqr(BaseNrt):
-    def __init__(self, mask=None, trend=True, harmonic_order=3, beta=None,
-                 sensitivity=1.5, process=None, q25=None, q75=None,
-                 boundary=3, x_coords=None, y_coords=None, **kwargs):
+class Iqr(BaseNrt, mask=None, trend=True, harmonic_order=3, beta=None,
+          x_coords=None, y_coords=None, boundary=3):
+    def __init__(self, sensitivity=1.5, process=None, q25=None, q75=None):
         """Online monitoring of disturbances based on interquartile range
 
         Reference:
             https://stats.stackexchange.com/a/1153
         """
-        super().__init__(mask=mask,
-                         trend=trend,
-                         harmonic_order=harmonic_order,
-                         beta=beta,
-                         x_coords=x_coords,
-                         y_coords=y_coords)
         self.monitoring_strategy = 'IQR'
         self.sensitivity = sensitivity
         self.process = process
         self.q25 = q25
         self.q75 = q75
-        self.boundary = boundary
 
     def fit(self, dataarray, method='OLS', **kwargs):
         self.set_xy(dataarray)
