@@ -161,3 +161,45 @@ def is_stable_ccdc(slope, residuals, threshold):
     # It's only stable if all conditions are met
     is_stable = slope_rmse & first & last
     return is_stable
+
+
+def recresid(X, y, span=None):
+    nobs, nvars = X.shape
+    if span is None:
+        span = nvars
+
+    # init result arrays
+    recresid_ = np.nan * np.zeros(y)
+    recvar = np.nan * np.zeros(y)
+
+    X0 = X[:span]
+    y0 = y[:span]
+
+    # Initial fit
+    XTX_j = np.linalg.inv(np.dot(X0.T, X0))
+    XTY = np.dot(X0.T, y0)
+    beta = np.dot(XTX_j, XTY)
+
+    yhat_j = np.dot(X[span - 1], beta)
+    recresid_[span - 1] = y[span - 1] - yhat_j
+    recvar[span - 1] = 1 + np.dot(X[span - 1],
+                                  np.dot(XTX_j, X[span - 1]))
+    for j in range(span, nobs):
+        x_j = X[j:j + 1, :]
+        y_j = y[j]
+
+        # Prediction with previous beta
+        yhat_j = np.dot(x_j, beta)
+        resid_j = y_j - yhat_j
+
+        # Update
+        XTXx_j = np.dot(XTX_j, x_j.T)
+        f_t = 1 + np.dot(x_j, XTXx_j)
+        XTX_j = XTX_j - np.dot(XTXx_j, XTXx_j.T) / f_t  # eqn 5.5.15
+
+        beta = beta + (XTXx_j * resid_j / f_t).ravel()  # eqn 5.5.14
+
+        recresid_[j] = resid_j
+        recvar[j] = f_t
+
+    return recresid_ / np.sqrt(recvar)

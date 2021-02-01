@@ -29,14 +29,12 @@ def test_ccdc_is_stable(stability_ccdc, threshold=3):
 def test_recresid(X_y_dates_romania):
     X, y, dates = X_y_dates_romania
 
-    print(y)
-
     y_single = y[:,0]
     is_nan = np.isnan(y_single)
     y_sub = y_single[~is_nan]
     X_sub = X[~is_nan,:]
 
-    rresid = st.recresid(X=X_sub, y=y_sub, span=X.shape[1])
+    rresid = st.recresid(X=X_sub, y=y_sub, span=X.shape[1]+1)
     print(rresid)
 
     assert False
