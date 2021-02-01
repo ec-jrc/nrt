@@ -36,6 +36,10 @@ class BaseNrt(metaclass=abc.ABCMeta):
         harmonic_order (int): The harmonic order of the time-series regression
         x (numpy.ndarray): array of x coordinates
         y (numpy.ndarray): array of y coordinates
+        process (numpy.ndarray): 2D numpy array containing the
+            process value for every pixel
+        boundary (Union[numpy.ndarray, int, float]): Process boundary for all
+            pixels or every pixel individually
 
     Args:
         mask (numpy.ndarray): A 2D numpy array containing pixels that should be
@@ -48,15 +52,21 @@ class BaseNrt(metaclass=abc.ABCMeta):
         harmonic_order (int): The harmonic order of the time-series regression
         x_coords (numpy.ndarray): x coordinates
         y_coords (numpy.ndarray): y coordinates
+        process (numpy.ndarray): 2D numpy array containing the
+            process value for every pixel
+        boundary (Union[numpy.ndarray, int, float]): Process boundary for all
+            pixels or every pixel individually
     """
     def __init__(self, mask=None, trend=True, harmonic_order=3, beta=None,
-                 x_coords=None, y_coords=None):
+                 x_coords=None, y_coords=None, process=None, boundary=None):
         self.mask = mask
         self.trend = trend
         self.harmonic_order = harmonic_order
         self.x = x_coords
         self.y = y_coords
         self.beta = beta
+        self.process = process
+        self.boundary = boundary
 
     def _fit(self, X, dataarray,
              method='OLS',
@@ -200,7 +210,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
     def _report(self):
         """Prepare data to be written to disk by ``self.report``
 
-        In general returns the mask attribute, but may be overridden in subcalss
+        In general returns the mask attribute, but may be overridden in subclass
         to report a different output (for instance mask and disturbance magnitude)
         Must generate a 2D or 3D numpy array with unit8 datatype
         In case of multi-band (3D) array, the band should be in the first axis
