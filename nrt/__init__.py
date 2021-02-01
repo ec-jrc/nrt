@@ -62,9 +62,6 @@ class BaseNrt(metaclass=abc.ABCMeta):
              method='OLS',
              screen_outliers=None, **kwargs):
         """Fit a regression model on an xarray.DataArray
-
-        #TODO: Not sure whether recresid is implied by ROC or not.
-
         Args:
             X (numpy.ndarray): The design matrix used for the regression
             dataarray (xarray.DataArray): A 3 dimension (time, y, x) DataArray
@@ -176,7 +173,6 @@ class BaseNrt(metaclass=abc.ABCMeta):
         is_break = np.floor_divide(self.process,
                                    self.boundary).astype(np.uint8)
         return is_break
-
 
     def _detect_extreme_ouliers(self, residuals, is_valid):
         """Detect extreme ouliers in an array of residuals from prediction
