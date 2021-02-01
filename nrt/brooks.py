@@ -83,6 +83,7 @@ class Brooks(BaseNrt):
         self.process = np.where(is_valid, process_new, self.process)
 
     def _detect_break(self):
+        # TODO override _report() to also signal severity of disturbance
         is_break = np.floor_divide(np.abs(self.process),
                                    self.boundary).astype(np.uint8)
         return is_break
