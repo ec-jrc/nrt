@@ -26,18 +26,6 @@ def test_ccdc_is_stable(stability_ccdc, threshold=3):
     np.testing.assert_array_equal(is_stable, check_stability)
 
 
-def test_recresid(X_y_dates_romania, strcchng_rr):
-    X, y, dates = X_y_dates_romania
-    result = strcchng_rr
-    span = X.shape[1]+1
-
-    rresid = st.recresid(X=X, y=y, span=span)
-
-    # remove span from results and compare. Slight differences in the beginning
-    # because of floating point accuracy
-    np.testing.assert_allclose(rresid[span+2:,:], result[span+2:,:])
-
-
 def test_roc_stable_fit(X_y_dates_romania):
     X, y, dates = X_y_dates_romania
     beta, resid, is_stable = fm.roc_stable_fit(X, y)
