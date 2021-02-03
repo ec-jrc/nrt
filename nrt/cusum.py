@@ -1,10 +1,12 @@
 import numpy as np
+import numba
 from scipy.stats import norm
 from scipy.optimize import brentq
 
 pnorm = norm.cdf
 
 
+@numba.jit(nopython=True)
 def history_roc(X, y, alpha=0.05):
     # Index, where instability in time-series is detected
     #  0: time-series completely stable
@@ -20,6 +22,7 @@ def history_roc(X, y, alpha=0.05):
 
 
 # REC-CUSUM
+@numba.jit(nopython=True)
 def _brownian_motion_pvalue(x, k):
     """ Return pvalue for some given test statistic """
     # TODO: Make generic, add "type='Brownian Motion'"?
@@ -34,6 +37,7 @@ def _brownian_motion_pvalue(x, k):
     return 1 - (1 - p) ** k
 
 
+@numba.jit(nopython=True)
 def _cusum_rec_boundary(x, alpha=0.05):
     """ Equivalent to ``strucchange::boundary.efp``` for Rec-CUSUM """
     n = x.ravel().size
@@ -48,6 +52,7 @@ def _cusum_rec_test_crit(alpha):
     return brentq(lambda _x: _brownian_motion_pvalue(_x, 1) - alpha, 0, 20)
 
 
+@numba.jit(nopython=True)
 def _cusum_rec_efp(X, y):
     """ Equivalent to ``strucchange::efp`` for Rec-CUSUM """
     # Run "efp"
@@ -59,6 +64,7 @@ def _cusum_rec_efp(X, y):
     return np.cumsum(w) / (sigma * (n - k) ** 0.5)
 
 
+@numba.jit(nopython=True)
 def _cusum_rec_sctest(x):
     """ Equivalent to ``strucchange::sctest`` for Rec-CUSUM """
     x = x[1:]
@@ -69,6 +75,7 @@ def _cusum_rec_sctest(x):
     return stat
 
 
+@numba.jit(nopython=True)
 def _recresid(X, y, span):
     nobs, nvars = X.shape
 

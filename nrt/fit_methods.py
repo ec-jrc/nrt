@@ -203,6 +203,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
     return beta, residuals, is_stable
 
 
+@numba.jit(nopython=True)
 def roc_stable_fit(X, y, alpha=0.05):
     is_stable = np.ones(y.shape[1])
     beta = np.empty([X.shape[1], y.shape[1]], dtype=np.double)
@@ -218,7 +219,7 @@ def roc_stable_fit(X, y, alpha=0.05):
 
         # If there are not enough observations available in the stable period
         # set stability to False and continue
-        # TODO: Maybe also check if the data is more than a year
+        # TODO: Maybe also check if more than 1 year of data is available
         if _y.shape[0] - stable_idx < X.shape[1]*1.5:
             is_stable[idx] = 0
             continue
