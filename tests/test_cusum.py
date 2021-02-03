@@ -27,10 +27,18 @@ def test_history_roc(X_y_dates_romania):
     """
     X, y, dates = X_y_dates_romania
     result = np.array([1, 8, 49, 62, 1], dtype='float32')
-    r_history = cs.history_roc(X=X, y=y)
+    stable_idx = np.zeros(y.shape[1])
+    for idx in range(y.shape[1]):
+        # subset and remove nan
+        is_nan = np.isnan(y[:, idx])
+        _y = y[~is_nan, idx]
+        _X = X[~is_nan, :]
+
+        # get the index where the stable period starts
+        stable_idx[idx] = cs.history_roc(_X, _y)
 
     # Result from strucchange must be subtracted by 1, because R is 1 indexed
-    np.testing.assert_allclose(r_history, result-1)
+    np.testing.assert_allclose(stable_idx, result-1)
 
 
 def test_efp(X_y_dates_romania, strcchng_efp):

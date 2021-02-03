@@ -8,7 +8,7 @@ import numpy as np
 import numba
 
 from nrt.log import logger
-
+from nrt.cusum import history_roc
 from nrt.stats import nanlstsq, mad, bisquare, weighted_nanlstsq, is_stable_ccdc
 
 
@@ -201,3 +201,35 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
         # Remove everything where there isn't enough data
         y_sub = y_sub[:,enough_sub]
     return beta, residuals, is_stable
+
+
+def roc_stable_fit(X, y, alpha=0.05):
+    is_stable = np.ones(y.shape[1])
+    beta = np.empty([X.shape[1], y.shape[1]], dtype=np.double)
+    beta.fill(np.nan)
+    for idx in range(y.shape[1]):
+        # subset and remove nan
+        is_nan = np.isnan(y[:, idx])
+        _y = y[~is_nan, idx]
+        _X = X[~is_nan, :]
+
+        # get the index where the stable period starts
+        stable_idx = history_roc(_X, _y, alpha=alpha)
+
+        # If there are not enough observations available in the stable period
+        # set stability to False and continue
+        # TODO: Maybe also check if the data is more than a year
+        if _y.shape[0] - stable_idx < X.shape[1]*1.5:
+            is_stable[idx] = 0
+            continue
+
+        # Subset and fit
+        X_stable = _X[stable_idx:]
+        y_stable = _y[stable_idx:]
+        XTX = np.linalg.inv(np.dot(X_stable.T, X_stable))
+        XTY = np.dot(X_stable.T, y_stable)
+        beta[:, idx] = np.dot(XTX, XTY)
+
+    residuals = np.dot(X, beta) - y
+    return beta, residuals, is_stable.astype(np.bool)
+

@@ -77,7 +77,6 @@ def strcchng_rr(request):
 
 # Results of calculating Rec-CUSUM efp process value with efp() from package
 # strucchange
-# convert to dataframe
 #     X_df < - as.data.frame(X)
 #     X_df$y < - y[,1]
 #     # Remove nan

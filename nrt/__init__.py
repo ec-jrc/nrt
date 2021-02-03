@@ -9,7 +9,7 @@ from rasterio.crs import CRS
 from affine import Affine
 
 from nrt.utils import build_regressors
-from nrt.fit_methods import ols, rirls, ccdc_stable_fit
+from nrt.fit_methods import ols, rirls, ccdc_stable_fit, roc_stable_fit
 from nrt.outliers import ccdc_rirls, shewhart
 
 __version__ = "0.0.1"
@@ -118,7 +118,10 @@ class BaseNrt(metaclass=abc.ABCMeta):
 
         # 2. Fit using specified method
         if method == 'ROC':
-            raise NotImplementedError('Method not yet implemented')
+            beta_flat, residuals_flat, is_stable = \
+                roc_stable_fit(X, y_flat, **kwargs)
+            is_stable_2d = is_stable.reshape(y.shape[1], y.shape[2])
+            self.mask[~is_stable_2d] = 2
         elif method == 'CCDC-stable':
             if not self.trend:
                 raise ValueError('Method "CCDC" requires "trend" to be true.')

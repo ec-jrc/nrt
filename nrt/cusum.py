@@ -6,34 +6,24 @@ pnorm = norm.cdf
 
 
 def history_roc(X, y, alpha=0.05):
-    # Index, where unstability in time-series is detected
+    # Index, where instability in time-series is detected
     #  0: time-series completely stable
     # >0: stable after this index
-    unstable_idx = np.zeros(y.shape[1])
-    for idx in range(y.shape[1]):
-        # subset and remove nan
-        is_nan = np.isnan(y[:, idx])
-        _y = y[~is_nan, idx]
-        _X = X[~is_nan, :]
-
-        process = _cusum_rec_efp(_X[::-1], _y[::-1])
-        stat = _cusum_rec_sctest(process)
-        stat_pvalue = _brownian_motion_pvalue(stat, 1)
-        if stat_pvalue < alpha:
-            boundary = _cusum_rec_boundary(process, alpha)
-            unstable_idx[idx] = len(process) \
-                                - np.where(np.abs(process) > boundary)[0].min()
-            # convert to correct index in the full timeseries with nan
-            #unstable_idx[idx] = np.where(~is_nan)[0][unstable_sub]
-        else:
-            unstable_idx[idx] = 0
-    return unstable_idx
+    process = _cusum_rec_efp(X[::-1], y[::-1])
+    stat = _cusum_rec_sctest(process)
+    stat_pvalue = _brownian_motion_pvalue(stat, 1)
+    if stat_pvalue < alpha:
+        boundary = _cusum_rec_boundary(process, alpha)
+        return len(process) - np.where(np.abs(process) > boundary)[0].min()
+    else:
+        return 0
 
 
 # REC-CUSUM
 def _brownian_motion_pvalue(x, k):
     """ Return pvalue for some given test statistic """
     # TODO: Make generic, add "type='Brownian Motion'"?
+    # TODO: Make numba compatible, so that history_roc can be jitted
     if x < 0.3:
         p = 1 - 0.1464 * x
     else:
@@ -64,7 +54,7 @@ def _cusum_rec_efp(X, y):
     n, k = X.shape
     k = k+1
     w = _recresid(X, y, k)[k:]
-    sigma = np.std(w)# ** 0.5
+    sigma = np.std(w)
     w = np.concatenate((np.array([0]), w))
     return np.cumsum(w) / (sigma * (n - k) ** 0.5)
 
