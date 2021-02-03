@@ -73,3 +73,24 @@ def X_y_dates_romania(request):
 def strcchng_rr(request):
     return np.genfromtxt(here / 'data' / 'rr_result.csv',
                       delimiter=',', dtype=np.float64, missing_values='NA')
+
+
+# Results of calculating Rec-CUSUM efp process value with efp() from package
+# strucchange
+# convert to dataframe
+#     X_df < - as.data.frame(X)
+#     X_df$y < - y[,1]
+#     # Remove nan
+#     X_df_clear < - X_df[! is.na(X_df$y), ]
+#
+#     level < - 0.05
+#
+#     n < - nrow(X_df_clear)
+#     data_rev < - X_df_clear[n:1, ]
+#     y_rcus < - efp(y
+#     ~ V1 + V2 + V3 + V4 + V5, data = data_rev, type = "Rec-CUSUM")
+#     return (y_rcus$process)
+@pytest.fixture
+def strcchng_efp(request):
+    return np.genfromtxt(here / 'data' / 'efp_result.csv',
+                         delimiter=',', dtype=np.float64, missing_values='NA')

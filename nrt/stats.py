@@ -215,7 +215,33 @@ def recresid(X, y, span=None):
             recvar_sub[j] = f_t
 
         # Write sub result to full result array
-        norm_rresid_sub = recresid_sub / np.sqrt(recvar_sub)
+        sigma = np.sqrt(recvar_sub)
+        norm_rresid_sub = recresid_sub / sigma
         norm_rresid[~is_nan,idx] = norm_rresid_sub
 
     return norm_rresid
+
+
+def history_roc(X, y, span, alpha=0.05):
+    # Index, where unstability in time-series is detected
+    #  0: time-series completely stable
+    # >0: stable after this index
+    unstable_idx = np.zeros(y.shape[1])
+    for idx in range(y.shape[1]):
+        # subset and remove nan
+        is_nan = np.isnan(y[:, idx])
+        _y = y[~is_nan, idx]
+        _X = X[~is_nan, :]
+
+        process = _cusum_rec_efp(_X, _y, span)
+        stat = _cusum_rec_sctest(process)
+        stat_pvalue = _brownian_motion_pvalue(stat, 1)
+        if stat_pvalue < alpha:
+            boundary = _cusum_rec_boundary(process, alpha)
+            unstable_sub = len(process) \
+                                - np.where(np.abs(process) > boundary)[0].min()
+            # convert to correct index in the full timeseries with nan
+            unstable_idx[idx] = np.where(~is_nan)[0][unstable_sub]
+        else:
+            unstable_idx[idx] = 0
+    return unstable_idx
