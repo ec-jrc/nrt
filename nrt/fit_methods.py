@@ -204,9 +204,9 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
 
 
 @numba.jit(nopython=True)
-def roc_stable_fit(X, y, alpha=0.05):
-    is_stable = np.ones(y.shape[1])
-    beta = np.empty([X.shape[1], y.shape[1]], dtype=np.double)
+def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
+    is_stable = np.ones(y.shape[1], dtype=numba.boolean)
+    beta = np.empty((X.shape[1], y.shape[1]), dtype=np.float32)
     beta.fill(np.nan)
     for idx in range(y.shape[1]):
         # subset and remove nan
@@ -215,7 +215,7 @@ def roc_stable_fit(X, y, alpha=0.05):
         _X = X[~is_nan, :]
 
         # get the index where the stable period starts
-        stable_idx = history_roc(_X, _y, alpha=alpha)
+        stable_idx = history_roc(_X, _y, alpha=alpha, crit=crit)
 
         # If there are not enough observations available in the stable period
         # set stability to False and continue
@@ -232,5 +232,5 @@ def roc_stable_fit(X, y, alpha=0.05):
         beta[:, idx] = np.dot(XTX, XTY)
 
     residuals = np.dot(X, beta) - y
-    return beta, residuals, is_stable.astype(np.bool)
+    return beta, residuals, is_stable
 

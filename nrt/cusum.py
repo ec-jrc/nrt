@@ -1,13 +1,12 @@
 import numpy as np
 import numba
-from scipy.stats import norm
 from scipy.optimize import brentq
 
-pnorm = norm.cdf
+from nrt.stats import ncdf
 
 
 @numba.jit(nopython=True)
-def history_roc(X, y, alpha=0.05):
+def history_roc(X, y, alpha=0.05, crit=0.9478982340418134):
     # Index, where instability in time-series is detected
     #  0: time-series completely stable
     # >0: stable after this index
@@ -15,7 +14,7 @@ def history_roc(X, y, alpha=0.05):
     stat = _cusum_rec_sctest(process)
     stat_pvalue = _brownian_motion_pvalue(stat, 1)
     if stat_pvalue < alpha:
-        boundary = _cusum_rec_boundary(process, alpha)
+        boundary = _cusum_rec_boundary(process, crit)
         return len(process) - np.where(np.abs(process) > boundary)[0].min()
     else:
         return 0
@@ -26,22 +25,27 @@ def history_roc(X, y, alpha=0.05):
 def _brownian_motion_pvalue(x, k):
     """ Return pvalue for some given test statistic """
     # TODO: Make generic, add "type='Brownian Motion'"?
-    # TODO: Make numba compatible, so that history_roc can be jitted
     if x < 0.3:
         p = 1 - 0.1464 * x
     else:
         p = 2 * (1 -
-                 pnorm(3 * x) +
-                 np.exp(-4 * x ** 2) * (pnorm(x) + pnorm(5 * x) - 1) -
-                 np.exp(-16 * x ** 2) * (1 - pnorm(x)))
+                 ncdf(3 * x) +
+                 np.exp(-4 * x ** 2) * (ncdf(x) + ncdf(5 * x) - 1) -
+                 np.exp(-16 * x ** 2) * (1 - ncdf(x)))
     return 1 - (1 - p) ** k
 
 
 @numba.jit(nopython=True)
-def _cusum_rec_boundary(x, alpha=0.05):
-    """ Equivalent to ``strucchange::boundary.efp``` for Rec-CUSUM """
+def _cusum_rec_boundary(x, crit=0.9478982340418134):
+    """ Equivalent to ``strucchange::boundary.efp``` for Rec-CUSUM
+
+    Args:
+        x (np.ndarray): Process values
+        crit (float): Critical value as computed by _cusum_rec_test_crit.
+            Default is the value for alpha=0.05
+    """
     n = x.ravel().size
-    bound = _cusum_rec_test_crit(alpha)
+    bound = crit
     boundary = (bound + (2 * bound * np.arange(0, n) / (n - 1)))
 
     return boundary

@@ -4,8 +4,6 @@ from math import pi
 import pandas as pd
 import numpy as np
 
-from nrt.stats import recresid
-
 
 def build_regressors(dates, trend=True, harmonic_order=3):
     """Build the design matrix (X) from a list or an array of datetimes

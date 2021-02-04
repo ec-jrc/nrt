@@ -161,3 +161,26 @@ def is_stable_ccdc(slope, residuals, threshold):
     # It's only stable if all conditions are met
     is_stable = slope_rmse & first & last
     return is_stable
+
+
+@numba.jit(nopython=True)
+def erfcc(x):
+    """Complementary error function."""
+    z = np.abs(x)
+    t = 1. / (1. + 0.5*z)
+    r = t * np.exp(-z*z-1.26551223+t*(1.00002368+t*(.37409196+
+        t*(.09678418+t*(-.18628806+t*(.27886807+
+        t*(-1.13520398+t*(1.48851587+t*(-.82215223+
+        t*.17087277)))))))))
+    if x >= 0.:
+        return r
+    else:
+        return 2. - r
+
+
+@numba.jit(nopython=True)
+def ncdf(x):
+    """Normal cumulative distribution function
+    Source: Stackoverflow Unknown,
+    https://stackoverflow.com/a/809402/12819237"""
+    return 1. - 0.5*erfcc(x/(2**0.5))

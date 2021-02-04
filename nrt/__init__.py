@@ -11,6 +11,7 @@ from affine import Affine
 from nrt.utils import build_regressors
 from nrt.fit_methods import ols, rirls, ccdc_stable_fit, roc_stable_fit
 from nrt.outliers import ccdc_rirls, shewhart
+from nrt.cusum import _cusum_rec_test_crit
 
 __version__ = "0.0.1"
 
@@ -118,8 +119,15 @@ class BaseNrt(metaclass=abc.ABCMeta):
 
         # 2. Fit using specified method
         if method == 'ROC':
+            try:
+                alpha = kwargs.pop('alpha')
+            except KeyError as e:
+                warnings.warn('Parameter `alpha` needs to be '
+                              'passed for ROC fit. Using alpha of 0.05.')
+                alpha = 0.05
+            crit = _cusum_rec_test_crit(alpha)
             beta_flat, residuals_flat, is_stable = \
-                roc_stable_fit(X, y_flat, **kwargs)
+                roc_stable_fit(X, y_flat, alpha=alpha, crit=crit, **kwargs)
             is_stable_2d = is_stable.reshape(y.shape[1], y.shape[2])
             self.mask[~is_stable_2d] = 2
         elif method == 'CCDC-stable':

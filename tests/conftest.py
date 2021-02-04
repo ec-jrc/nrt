@@ -4,7 +4,6 @@ import numpy as np
 
 here = Path(__file__) / '..'
 
-
 @pytest.fixture
 def X_y_clear(X_y_intercept_slope):
     # adds an array indicating 'clear' pixels as True and outliers as False

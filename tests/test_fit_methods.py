@@ -28,5 +28,7 @@ def test_ccdc_is_stable(stability_ccdc, threshold=3):
 
 def test_roc_stable_fit(X_y_dates_romania):
     X, y, dates = X_y_dates_romania
-    beta, resid, is_stable = fm.roc_stable_fit(X, y)
+    beta, resid, is_stable = fm.roc_stable_fit(X.astype(np.float32),
+                                               y.astype(np.float32))
+
 
