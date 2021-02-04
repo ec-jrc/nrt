@@ -205,6 +205,28 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
 
 @numba.jit(nopython=True)
 def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
+    """Fitting stable regressions using Reverse Ordered Cumulative Sums
+
+    Calculates OLS coefficients, residuals and a stability mask based for
+    a stable history period which is provided by ``history_roc()``.
+
+    The pixel will get marked as unstable if:
+    1. The stable period is shorter than 1 year
+    2.
+
+    Similiar implementation to bfastmonitor with the history option 'ROC'.
+
+    Args:
+        X ((M, N) np.ndarray): Matrix of independant variables
+        y ((M, K) np.ndarray): Matrix of dependant variables
+        dates ((M, ) np.ndarray): Corresponding dates to y in numpy datetime64
+        threshold (float): Sensitivity of stability checking. Gets passed to
+            ``is_stable_ccdc()``
+    Returns:
+        beta (numpy.ndarray): The array of regression estimators
+        residuals (numpy.ndarray): The array of residuals
+        is_stable (numpy.ndarray): 1D Boolean array indicating stability
+    """
     is_stable = np.ones(y.shape[1], dtype=numba.boolean)
     beta = np.empty((X.shape[1], y.shape[1]), dtype=np.float32)
     beta.fill(np.nan)
@@ -219,9 +241,17 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
 
         # If there are not enough observations available in the stable period
         # set stability to False and continue
-        # TODO: Maybe also check if more than 1 year of data is available
-        if _y.shape[0] - stable_idx < X.shape[1]*1.5:
-            is_stable[idx] = 0
+        if _y.shape[0] - stable_idx < X.shape[1]:
+            is_stable[idx] = False
+            continue
+
+        # Check if there is more than 1 year (365 days) of data available
+        # If not, set stability to False and continue
+        _dates = dates[~is_nan]
+        last_date = _dates[-1]
+        first_date = _dates[stable_idx]
+        if last_date - first_date < 365:
+            is_stable[idx] = False
             continue
 
         # Subset and fit

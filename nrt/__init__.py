@@ -125,9 +125,13 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 warnings.warn('Parameter `alpha` needs to be '
                               'passed for ROC fit. Using alpha of 0.05.')
                 alpha = 0.05
+            # Convert datetime64 to days, so numba is happy
+            dates = dataarray.time.values.astype('datetime64[D]').astype('int')
+            # crit already calculated here, to allow numba in roc_stable_fit
             crit = _cusum_rec_test_crit(alpha)
             beta_flat, residuals_flat, is_stable = \
-                roc_stable_fit(X, y_flat, alpha=alpha, crit=crit, **kwargs)
+                roc_stable_fit(X, y_flat, dates,
+                               alpha=alpha, crit=crit, **kwargs)
             is_stable_2d = is_stable.reshape(y.shape[1], y.shape[2])
             self.mask[~is_stable_2d] = 2
         elif method == 'CCDC-stable':
