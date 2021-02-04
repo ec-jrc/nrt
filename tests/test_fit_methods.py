@@ -27,6 +27,7 @@ def test_ccdc_is_stable(stability_ccdc, threshold=3):
 
 
 def test_roc_stable_fit(X_y_dates_romania):
+    """Only integration test"""
     X, y, dates = X_y_dates_romania
     dates = dates.astype('datetime64[D]').astype('int')
     beta, resid, is_stable = fm.roc_stable_fit(X.astype(np.float32),

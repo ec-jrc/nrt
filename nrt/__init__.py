@@ -131,7 +131,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
             crit = _cusum_rec_test_crit(alpha)
             beta_flat, residuals_flat, is_stable = \
                 roc_stable_fit(X, y_flat, dates,
-                               alpha=alpha, crit=crit, **kwargs)
+                               alpha=alpha, crit=crit)
             is_stable_2d = is_stable.reshape(y.shape[1], y.shape[2])
             self.mask[~is_stable_2d] = 2
         elif method == 'CCDC-stable':

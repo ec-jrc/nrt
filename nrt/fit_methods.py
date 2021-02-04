@@ -207,21 +207,26 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
 def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
     """Fitting stable regressions using Reverse Ordered Cumulative Sums
 
-    Calculates OLS coefficients, residuals and a stability mask based for
+    Calculates OLS coefficients, residuals and a stability mask based on
     a stable history period which is provided by ``history_roc()``.
 
     The pixel will get marked as unstable if:
     1. The stable period is shorter than 1 year
-    2.
+    2. There are fewer observation than the number of coefficients in X
 
-    Similiar implementation to bfastmonitor with the history option 'ROC'.
+    The implementation roughly corresponds to the fit of bfastmonitor
+    with the history option set to 'ROC'.
 
     Args:
         X ((M, N) np.ndarray): Matrix of independant variables
         y ((M, K) np.ndarray): Matrix of dependant variables
-        dates ((M, ) np.ndarray): Corresponding dates to y in numpy datetime64
-        threshold (float): Sensitivity of stability checking. Gets passed to
-            ``is_stable_ccdc()``
+        dates ((M, ) np.ndarray): Corresponding dates to y in days since epoch
+            (int)
+        alpha (float): Significance level for the boundary
+            (probability of type I error)
+        crit (float): Critical value corresponding to the chosen alpha. Can be
+            calculated with ``_cusum_rec_test_crit``.
+            Default is the value for alpha=0.05
     Returns:
         beta (numpy.ndarray): The array of regression estimators
         residuals (numpy.ndarray): The array of residuals
@@ -241,7 +246,7 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
 
         # If there are not enough observations available in the stable period
         # set stability to False and continue
-        if _y.shape[0] - stable_idx < X.shape[1]:
+        if _y.shape[0] - stable_idx < X.shape[1]+1:
             is_stable[idx] = False
             continue
 

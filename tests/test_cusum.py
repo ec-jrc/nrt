@@ -42,6 +42,8 @@ def test_history_roc(X_y_dates_romania):
 
 
 def test_efp(X_y_dates_romania, strcchng_efp):
+    """Test efp against process value of
+    strucchange::efp with type='Rec-CUSUM'"""
     X, y, dates = X_y_dates_romania
 
     is_nan = np.isnan(y[:, 0])

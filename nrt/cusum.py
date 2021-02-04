@@ -7,6 +7,27 @@ from nrt.stats import ncdf
 
 @numba.jit(nopython=True)
 def history_roc(X, y, alpha=0.05, crit=0.9478982340418134):
+    """Reverse Ordered Rec-CUSUM check for stable periods
+
+    Checks for stable periods by calculating recursive OLS-Residuals
+    (see ``_recresid()``) on the reversed X and y matrices. If the cumulative
+    sum of the residuals crosses a boundary, the index of y where this
+    structural change occured is returned.
+
+    Args:
+        X ((M, ) np.ndarray): Matrix of independant variables
+        y ((M, K) np.ndarray): Matrix of dependant variables
+        alpha (float): Significance level for the boundary
+            (probability of type I error)
+        crit (float): Critical value corresponding to the chosen alpha. Can be
+            calculated with ``_cusum_rec_test_crit``.
+            Default is the value for alpha=0.05
+    Returns:
+        (int) Index of structural change in y.
+             0: y completely stable
+            >0: y stable after this index
+
+    """
     # Index, where instability in time-series is detected
     #  0: time-series completely stable
     # >0: stable after this index
@@ -81,6 +102,56 @@ def _cusum_rec_sctest(x):
 
 @numba.jit(nopython=True)
 def _recresid(X, y, span):
+    """ Return standardized recursive residuals for y ~ X
+    Args:
+        X ((M, N) np.ndarray): Matrix of independant variables
+        y ((M, K) np.ndarray): Matrix of dependant variables
+        span (int): Minimum number of observations for initial regression.
+
+    Returns:
+        (np.ndarray) containing recursive residuals standardized by
+            prediction error variance
+
+    Notes:
+        For a matrix :math:`X_t` of :math:`T` total observations of :math:`n`
+        variables, the :math:`t` th recursive residual is the forecast prediction
+        error for :math:`y_t` using a regression fit on the first :math:`t - 1`
+        observations. Recursive residuals are scaled and standardized so they are
+        :math:`N(0, 1)` distributed.
+        Using notation from Brown, Durbin, and Evans (1975) and Judge, et al
+        (1985):
+        .. math::
+            w_r =
+                \\frac{y_r - \\boldsymbol{x}_r^{\prime}\\boldsymbol{b}_{r-1}}
+                      {\sqrt{(1 + \\boldsymbol{x}_r^{\prime}
+                       S_{r-1}\\boldsymbol{x}_r)}}
+                =
+                \\frac
+                    {y_r - \\boldsymbol{x}_r^{\prime}\\boldsymbol{b}_r}
+                    {\sqrt{1 - \\boldsymbol{x}_r^{\prime}S_r\\boldsymbol{x}_r}}
+            r = k + 1, \ldots, T,
+        where :math:`S_{r}` is the residual sum of squares after
+        fitting the model on :math:`r` observations.
+        A quick way of calculating :math:`\\boldsymbol{b}_r` and
+        :math:`S_r` is using an update formula (Equations 4 and 5 in
+        Brown, Durbin, and Evans; Equation 5.5.14 and 5.5.15 in Judge et al):
+        .. math::
+            \\boldsymbol{b}_r
+                =
+                b_{r-1} +
+                \\frac
+                    {S_{r-1}\\boldsymbol{x}_j
+                        (y_r - \\boldsymbol{x}_r^{\prime}\\boldsymbol{b}_{r-1})}
+                    {1 + \\boldsymbol{x}_r^{\prime}S_{r-1}x_r}
+        .. math::
+            S_r =
+                S_{j-1} -
+                \\frac{S_{j-1}\\boldsymbol{x}_r\\boldsymbol{x}_r^{\prime}S_{j-1}}
+                      {1 + \\boldsymbol{x}_r^{\prime}S_{j-1}\\boldsymbol{x}_r}
+
+    See Also:
+        statsmodels.stats.diagnostic.recursive_olsresiduals
+    """
     nobs, nvars = X.shape
 
     recresid_ = np.nan * np.zeros((nobs))
