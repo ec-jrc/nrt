@@ -8,7 +8,7 @@ import numpy as np
 import numba
 
 from nrt.log import logger
-from nrt.cusum import history_roc
+from nrt.utils_cusum import history_roc
 from nrt.stats import nanlstsq, mad, bisquare, weighted_nanlstsq, is_stable_ccdc
 
 

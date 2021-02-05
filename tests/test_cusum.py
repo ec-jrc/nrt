@@ -1,5 +1,5 @@
 import numpy as np
-import nrt.cusum as cs
+import nrt.utils_cusum as cs
 
 
 def test_history_roc(X_y_dates_romania):

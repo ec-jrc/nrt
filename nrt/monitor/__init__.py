@@ -11,7 +11,7 @@ from affine import Affine
 from nrt.utils import build_regressors
 from nrt.fit_methods import ols, rirls, ccdc_stable_fit, roc_stable_fit
 from nrt.outliers import ccdc_rirls, shewhart
-from nrt.cusum import _cusum_rec_test_crit
+from nrt.utils_cusum import _cusum_rec_test_crit
 
 
 class BaseNrt(metaclass=abc.ABCMeta):
