@@ -1,6 +1,6 @@
 import numpy as np
 
-from nrt.algorithms import BaseNrt
+from nrt.monitor import BaseNrt
 
 
 class EWMA(BaseNrt):

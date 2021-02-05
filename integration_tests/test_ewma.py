@@ -1,7 +1,4 @@
-import pytest
-
-import nrt
-from nrt.ewma import EWMA
+from nrt.monitor.ewma import EWMA
 
 
 def test_fit_monitor(ndvi_history, ndvi_monitoring_numpy):

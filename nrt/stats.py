@@ -15,7 +15,7 @@ def nanlstsq(X, y):
     Examples:
         >>> import numpy as np
         >>> from sklearn.datasets import make_regression
-        >>> from nrt.stats import nanlstsq
+        >>> from nrt import nanlstsq
         >>> # Generate random data
         >>> n_targets = 1000
         >>> n_features = 2

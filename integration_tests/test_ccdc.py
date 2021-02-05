@@ -1,4 +1,4 @@
-from nrt.ccdc import CCDC
+from nrt.monitor.ccdc import CCDC
 
 
 def test_fit_monitor(ndvi_history, green_swir_history, ndvi_monitoring_numpy):
