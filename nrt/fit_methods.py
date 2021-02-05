@@ -211,7 +211,7 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
     a stable history period which is provided by ``history_roc()``.
 
     The pixel will get marked as unstable if:
-    1. The stable period is shorter than 1 year
+    1. The stable period is shorter than 1 year OR
     2. There are fewer observation than the number of coefficients in X
 
     The implementation roughly corresponds to the fit of bfastmonitor
