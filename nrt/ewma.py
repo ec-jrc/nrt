@@ -5,8 +5,8 @@ import numba
 from nrt import BaseNrt
 
 
-class Brooks(BaseNrt):
-    """Monitoring using ewma control chart
+class EWMA(BaseNrt):
+    """Monitoring using EWMA control chart
 
     Implementation following method described in Brooks et al. 2014.
 
