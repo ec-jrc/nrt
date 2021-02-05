@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
 
-from nrt import BaseNrt
+from nrt.algorithms import BaseNrt
 
 
 class CCDC(BaseNrt):

@@ -1,7 +1,6 @@
 import numpy as np
 
 import nrt.fit_methods as fm
-import nrt.stats
 import nrt.stats as st
 
 
@@ -18,12 +17,6 @@ def test_rirls(X_y_intercept_slope):
 
     np.testing.assert_allclose(beta, np.array([[intercept, intercept],
                                                [slope, slope]]))
-
-
-def test_ccdc_is_stable(stability_ccdc, threshold=3):
-    residuals, slope, check_stability = stability_ccdc
-    is_stable = nrt.stats.is_stable_ccdc(slope, residuals, threshold)
-    np.testing.assert_array_equal(is_stable, check_stability)
 
 
 def test_roc_stable_fit(X_y_dates_romania):

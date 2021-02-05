@@ -1,8 +1,6 @@
 import numpy as np
-import xarray as xr
-import numba
 
-from nrt import BaseNrt
+from nrt.algorithms import BaseNrt
 
 
 class EWMA(BaseNrt):
