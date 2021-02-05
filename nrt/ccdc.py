@@ -3,6 +3,7 @@ import xarray as xr
 
 from nrt import BaseNrt
 
+
 class CCDC(BaseNrt):
     """Monitoring using CCDC-like implementation
 
@@ -99,31 +100,13 @@ class CCDC(BaseNrt):
                                          **kwargs)
         self.rmse = np.sqrt(np.nanmean(residuals ** 2, axis=0))
 
-    def monitor(self, array, date):
-        """ Monitoring of forest disturbance
-
-        Args:
-            array (np.ndarray): 2D numpy array in the same format as used in
-                ``fit()``
-            date (np.datetime64): Date of the array
-        """
-        # TODO masking needs to be done in predict()
-        y_pred = self.predict(date)
-        residuals = array - y_pred
+    def _update_process(self, residuals, is_valid):
         # TODO: Calculation is different for multivariate analysis
         # (mean of all bands has to be > sensitivity)
         is_outlier = np.abs(residuals) / self.rmse > self.sensitivity
         # Update process
         if self.process is None:
-            self.process = np.zeros_like(array, dtype=np.uint8)
-        self.process = self.process * is_outlier + is_outlier
-
-    def _report(self):
-        # signals severity of disturbance:
-        #    0 = not disturbed
-        #   >1 = disturbed (bigger number: longer duration)
-        # TODO when masking is implemented in monitor(), change the reporting
-        #   here as well
-        signal = np.floor_divide(self.process,
-                                 self.boundary).astype(np.uint8)
-        return signal
+            self.process = np.zeros_like(residuals, dtype=np.uint8)
+        self.process = np.where(is_valid,
+                                self.process * is_outlier + is_outlier,
+                                self.process)

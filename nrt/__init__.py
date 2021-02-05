@@ -37,6 +37,10 @@ class BaseNrt(metaclass=abc.ABCMeta):
         harmonic_order (int): The harmonic order of the time-series regression
         x (numpy.ndarray): array of x coordinates
         y (numpy.ndarray): array of y coordinates
+        process (numpy.ndarray): 2D numpy array containing the
+            process value for every pixel
+        boundary (Union[numpy.ndarray, int, float]): Process boundary for all
+            pixels or every pixel individually
 
     Args:
         mask (numpy.ndarray): A 2D numpy array containing pixels that should be
@@ -49,23 +53,26 @@ class BaseNrt(metaclass=abc.ABCMeta):
         harmonic_order (int): The harmonic order of the time-series regression
         x_coords (numpy.ndarray): x coordinates
         y_coords (numpy.ndarray): y coordinates
+        process (numpy.ndarray): 2D numpy array containing the
+            process value for every pixel
+        boundary (Union[numpy.ndarray, int, float]): Process boundary for all
+            pixels or every pixel individually
     """
     def __init__(self, mask=None, trend=True, harmonic_order=3, beta=None,
-                 x_coords=None, y_coords=None):
+                 x_coords=None, y_coords=None, process=None, boundary=None):
         self.mask = mask
         self.trend = trend
         self.harmonic_order = harmonic_order
         self.x = x_coords
         self.y = y_coords
         self.beta = beta
+        self.process = process
+        self.boundary = boundary
 
     def _fit(self, X, dataarray,
              method='OLS',
              screen_outliers=None, **kwargs):
         """Fit a regression model on an xarray.DataArray
-
-        #TODO: Not sure whether recresid is implied by ROC or not.
-
         Args:
             X (numpy.ndarray): The design matrix used for the regression
             dataarray (xarray.DataArray): A 3 dimension (time, y, x) DataArray
@@ -159,34 +166,89 @@ class BaseNrt(metaclass=abc.ABCMeta):
     def fit(self):
         pass
 
-    @abc.abstractmethod
-    def monitor(self):
-        pass
+    def monitor(self, array, date):
+        """Monitor given a new acquisition
+
+        The method takes care of (1) predicting the expected pixels values,
+        (2) updating the process value, and (3) updating self.mask in case a
+        break is confirmed
+
+        Args:
+            array (np.ndarray): 2D array containing the new acquisition to be
+                monitored
+            date (datetime.datetime): Date of acquisition of data contained in
+                the array
+        """
+        y_pred = self.predict(date)
+        residuals = array - y_pred
+        # Compute a mask of values that can be worked on
+        is_valid = np.logical_and(self.mask == 1, np.isfinite(array))
+        is_valid = self._detect_extreme_outliers(residuals=residuals,
+                                                 is_valid=is_valid)
+        self._update_process(residuals=residuals, is_valid=is_valid)
+        is_break = self._detect_break()
+        # Update mask (3 value corresponds to a confirmed break)
+        self.mask = np.where(np.logical_and(is_valid, is_break), 3, self.mask)
+
+    def _detect_break(self):
+        """Defines if the current process value is a confirmed break
+
+        This method may be overridden in subclass if required
+        """
+        is_break = np.floor_divide(self.process,
+                                   self.boundary).astype(np.uint8)
+        return is_break
+
+    def _detect_extreme_outliers(self, residuals, is_valid):
+        """Detect extreme outliers in an array of residuals from prediction
+
+        Sometimes used as pre-filtering of incoming new data to discard eventual
+        remaining clouds for instance
+        When implemented in a subclass this method must identify outliers and update
+        the ``is_valid`` input array accordingly
+        The base class provides a fallback that simply return the input ``is_valid``
+        array
+        """
+        return is_valid
 
     @abc.abstractmethod
-    def _report(self):
-        """Abstract method
+    def _update_process(self, residuals, is_valid):
+        """Update process values given an array of residuals
 
-        Must generate a 2D numpy array with unit8 datatype
+        Args:
+            residuals (np.ndarray): A 2D array of residuals
+            is_valid (np.ndarray): A boolean 2D array indicating where process
+                values should be updated
         """
         pass
+
+    def _report(self):
+        """Prepare data to be written to disk by ``self.report``
+
+        In general returns the mask attribute, but may be overridden in subclass
+        to report a different output (for instance mask and disturbance magnitude)
+        Must generate a 2D or 3D numpy array with unit8 datatype
+        In case of multi-band (3D) array, the band should be in the first axis
+        """
+        return self.mask
 
     def report(self, filename, driver='GTiff', crs=CRS.from_epsg(3035)):
         """Write the result of reporting to a raster geospatial file
-
-        TODO: Make writing a window to larger file possible, but check for potential
-            thread safety issues
         """
         r = self._report()
+        count = 1
+        if r.ndim == 3:
+            count = r.shape[0]
         meta = {'driver': driver,
                 'crs': crs,
-                'count': 1,
+                'count': count,
                 'dtype': 'uint8',
                 'transform': self.transform,
-                'height': r.shape[0],
-                'width': r.shape[1]}
+                'height': r.shape[-2],
+                'width': r.shape[-1]}
         with rasterio.open(filename, 'w', **meta) as dst:
-            dst.write(r, 1)
+            # TODO: Not sure this will work for single band without passing 1 to read()
+            dst.write(r)
 
     @property
     def transform(self):
