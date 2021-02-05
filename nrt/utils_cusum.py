@@ -1,3 +1,13 @@
+"""CUSUM utility functions
+
+Functions defined in this module implement functionality necessary for
+CUSUM and MOSUM monitoring as implemented in the R packages strucchange and
+bFast.
+
+Portions of this module are copyright of their respective authors and released
+under the BSD-3 license:
+- pybreakpoints, Copyright 2018 Chris Holden
+"""
 import numpy as np
 import numba
 from scipy.optimize import brentq
@@ -65,7 +75,7 @@ def _cusum_rec_boundary(x, crit=0.9478982340418134):
         crit (float): Critical value as computed by _cusum_rec_test_crit.
             Default is the value for alpha=0.05
     """
-    n = x.ravel().size
+    n = x.size
     bound = crit
     boundary = (bound + (2 * bound * np.arange(0, n) / (n - 1)))
 

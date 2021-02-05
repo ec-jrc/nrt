@@ -76,7 +76,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
             dataarray (xarray.DataArray): A 3 dimension (time, y, x) DataArray
                 containing the dependant variable
             method (str): The fitting method. Possible values include ``'OLS'``,
-                ``'IRLS'``, ``'LASSO'`` and ``'CCDC-stable'``.
+                ``'IRLS'``, ``'LASSO'``, ``'ROC'`` and ``'CCDC-stable'``.
             screen_outliers (str): The screening method. Possible values include
                 ``'Shewhart'`` and ``'CCDC_RIRLS'``.
             **kwargs: Other parameters specific to each fit method
