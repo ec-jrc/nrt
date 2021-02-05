@@ -43,7 +43,8 @@ setup(name='nrt',
           'rasterio',
           'netCDF4',
           'numba',
-          'pandas'
+          'pandas',
+          'affine'
       ],
       extras_require=extra_reqs)
 
