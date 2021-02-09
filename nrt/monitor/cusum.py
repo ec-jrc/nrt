@@ -43,15 +43,16 @@ class CuSum(BaseNrt):
     """
     def __init__(self, mask=None, trend=True, harmonic_order=2, beta=None,
                  x_coords=None, y_coords=None, process=None, sensitivity=0.05,
-                 sigma=None, histsize=None, n=None, **kwargs):
+                 boundary=None, sigma=None, histsize=None, n=None, **kwargs):
         super().__init__(mask=mask,
                          trend=trend,
                          harmonic_order=harmonic_order,
                          beta=beta,
                          x_coords=x_coords,
-                         y_coords=y_coords)
+                         y_coords=y_coords,
+                         process=process,
+                         boundary=boundary)
         self.sensitivity = sensitivity
-        self.process = process
         self.critval = _cusum_ols_test_crit(sensitivity)
         self.sigma = sigma
         self.histsize = histsize
@@ -81,6 +82,7 @@ class CuSum(BaseNrt):
         # n is necessary for boundary calculation
         self.histsize = np.count_nonzero(~np.isnan(residuals), axis=0)
         self.n = self.histsize
+        self.boundary = np.full_like(self.histsize, np.nan, dtype=np.uint16)
         # TODO X.shape might have to be subtracted by 1 because of intercept
         self.sigma = np.nanstd(residuals, axis=0, ddof=X.shape[1])
         # calculate process and normalize it using sigma and histsize
@@ -91,8 +93,12 @@ class CuSum(BaseNrt):
         # calculate boundary
         self.n = self.n + is_valid
         x = self.n / self.histsize
-        self.boundary = np.sqrt(x * (x - 1)
-                                * (self.critval ^ 2 + np.log(x / (x - 1))))
+        # TODO: if n wasn't incremented and so x = 1, boundary calculation will
+        #   return a warning, shouldn't change anything though.
+        self.boundary = np.where(is_valid,
+                                 np.sqrt(x * (x - 1)
+                                    * (self.critval**2 + np.log(x / (x - 1)))),
+                                 self.boundary)
         # normalize residuals
         residuals_norm = residuals / (self.sigma*np.sqrt(self.histsize))
         # Update process
