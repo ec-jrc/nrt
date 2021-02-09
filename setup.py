@@ -25,10 +25,10 @@ setup(name='nrt',
       description=u"Online monitoring with xarray",
       long_description=readme,
       keywords='sentinel2, xarray, datacube, monitoring, change',
-      author=u"Loic Dutrieux",
-      author_email='loic.dutrieux@gmail.com',
-      url='https://jeodpp.jrc.ec.europa.eu/apps/gitlab/dutrilo/nrt.git',
-      license='GPLv3',
+      author=u"Loic Dutrieux, Jonas Viehweger",
+      author_email='loic.dutrieux@ec.europa.eu',
+      url='https://jeodpp.jrc.ec.europa.eu/apps/gitlab/use_cases/canhemon/nrt.git',
+      license='EUPL-v1.2',
       classifiers=[
           'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
@@ -43,7 +43,8 @@ setup(name='nrt',
           'rasterio',
           'netCDF4',
           'numba',
-          'pandas'
+          'pandas',
+          'affine'
       ],
       extras_require=extra_reqs)
 

@@ -56,3 +56,5 @@ def datetimeIndex_to_decimal_dates(dates):
     last_year_day = pd.to_datetime({'year':years, 'day':31, 'month':12})
     ddates = years + (dates - first_year_day)/(last_year_day - first_year_day)
     return np.array(ddates, dtype=np.float)
+
+

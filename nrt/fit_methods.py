@@ -3,12 +3,40 @@
 Functions defined in this module always use a 2D array containing the dependant
 variables (y) and return both coefficient (beta) and residuals matrices
 These functions are meant to be called in ``nrt.BaseNrt._fit()``
+
+The RIRLS fit is derived from Chris Holden's yatsm package. See the
+copyright statement below.
 """
+
+###############################################################################
+# The MIT License (MIT)
+#
+# Copyright (c) 2014 Chris Holden
+#
+# Permission is hereby granted, free of charge, to any person obtaining a copy
+# of this software and associated documentation files (the "Software"), to deal
+# in the Software without restriction, including without limitation the rights
+# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+# copies of the Software, and to permit persons to whom the Software is
+# furnished to do so, subject to the following conditions:
+#
+# The above copyright notice and this permission notice shall be included in all
+# copies or substantial portions of the Software.
+#
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+# SOFTWARE.
+###############################################################################
+
 import numpy as np
 import numba
 
 from nrt.log import logger
-
+from nrt.utils_cusum import history_roc
 from nrt.stats import nanlstsq, mad, bisquare, weighted_nanlstsq, is_stable_ccdc
 
 
@@ -201,3 +229,71 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
         # Remove everything where there isn't enough data
         y_sub = y_sub[:,enough_sub]
     return beta, residuals, is_stable
+
+
+@numba.jit(nopython=True)
+def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
+    """Fitting stable regressions using Reverse Ordered Cumulative Sums
+
+    Calculates OLS coefficients, residuals and a stability mask based on
+    a stable history period which is provided by ``history_roc()``.
+
+    The pixel will get marked as unstable if:
+    1. The stable period is shorter than 1 year OR
+    2. There are fewer observation than the number of coefficients in X
+
+    The implementation roughly corresponds to the fit of bfastmonitor
+    with the history option set to 'ROC'.
+
+    Args:
+        X ((M, N) np.ndarray): Matrix of independant variables
+        y ((M, K) np.ndarray): Matrix of dependant variables
+        dates ((M, ) np.ndarray): Corresponding dates to y in days since epoch
+            (int)
+        alpha (float): Significance level for the boundary
+            (probability of type I error)
+        crit (float): Critical value corresponding to the chosen alpha. Can be
+            calculated with ``_cusum_rec_test_crit``.
+            Default is the value for alpha=0.05
+    Returns:
+        beta (numpy.ndarray): The array of regression estimators
+        residuals (numpy.ndarray): The array of residuals
+        is_stable (numpy.ndarray): 1D Boolean array indicating stability
+    """
+    is_stable = np.ones(y.shape[1], dtype=np.bool_)
+    beta = np.full((X.shape[1], y.shape[1]), np.nan, dtype=np.float32)
+    nreg = X.shape[1]
+    for idx in range(y.shape[1]):
+        # subset and remove nan
+        is_nan = np.isnan(y[:, idx])
+        _y = y[~is_nan, idx]
+        _X = X[~is_nan, :]
+
+        # get the index where the stable period starts
+        stable_idx = history_roc(_X, _y, alpha=alpha, crit=crit)
+
+        # If there are not enough observations available in the stable period
+        # set stability to False and continue
+        if len(_y) - stable_idx < nreg + 1:
+            is_stable[idx] = False
+            continue
+
+        # Check if there is more than 1 year (365 days) of data available
+        # If not, set stability to False and continue
+        _dates = dates[~is_nan]
+        last_date = _dates[-1]
+        first_date = _dates[stable_idx]
+        if last_date - first_date < 365:
+            is_stable[idx] = False
+            continue
+
+        # Subset and fit
+        X_stable = _X[stable_idx:]
+        y_stable = _y[stable_idx:]
+        XTX = np.linalg.inv(np.dot(X_stable.T, X_stable))
+        XTY = np.dot(X_stable.T, y_stable)
+        beta[:, idx] = np.dot(XTX, XTY)
+
+    residuals = np.dot(X, beta) - y
+    return beta, residuals, is_stable
+

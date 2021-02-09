@@ -3,11 +3,8 @@ import tempfile
 import os
 
 import xarray as xr
-import numpy as np
-from numpy.testing import assert_array_equal
-from netCDF4 import Dataset
 
-from nrt.iqr import Iqr
+from nrt.monitor.iqr import Iqr
 
 TMP = tempfile.gettempdir()
 filename = os.path.join(TMP, 'romania_iqr_monitor.nc')

@@ -1,7 +1,4 @@
-import pytest
-
-import nrt
-from nrt.iqr import Iqr
+from nrt.monitor.iqr import Iqr
 
 
 def test_fit_monitor(ndvi_history, ndvi_monitoring_numpy):

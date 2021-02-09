@@ -1,6 +1,6 @@
 import numpy as np
 
-from nrt import BaseNrt
+from nrt.monitor import BaseNrt
 
 
 class Iqr(BaseNrt):
