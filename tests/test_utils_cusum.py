@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import nrt.utils_cusum as cs
 
 
@@ -57,4 +58,12 @@ def test_efp(X_y_dates_romania, strcchng_efp):
     # Relative high tolerance, due to floating point precision
     np.testing.assert_allclose(process[X.shape[1]+2:], result[X.shape[1]+2:],
                                rtol=1e-02)
+
+
+@pytest.mark.parametrize("test_input,expected", [(0.01, 3.368214),
+                                                 (0.05, 2.795483),
+                                                 (0.1, 2.500278)])
+def test_cusum_ols_test_crit(test_input, expected):
+    assert cs._cusum_ols_test_crit(test_input) == pytest.approx(expected)
+
 
