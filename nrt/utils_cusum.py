@@ -44,6 +44,7 @@ See the copyright statement below.
 import numpy as np
 import numba
 from scipy.optimize import brentq
+from scipy.stats import norm
 
 from nrt.stats import ncdf
 
@@ -118,6 +119,13 @@ def _cusum_rec_boundary(x, crit=0.9478982340418134):
 def _cusum_rec_test_crit(alpha):
     """ Return critical test statistic value for some alpha """
     return brentq(lambda _x: _brownian_motion_pvalue(_x, 1) - alpha, 0, 20)
+
+
+def _cusum_ols_test_crit(alpha):
+    """ Return critical test statistic value for some alpha """
+    # TODO test against strucchange
+    return brentq(lambda _x: np.abs(
+        2 * (norm.cdf(_x) - _x * norm.pdf(_x)) + alpha - 2), 0, 10)
 
 
 @numba.jit(nopython=True)
