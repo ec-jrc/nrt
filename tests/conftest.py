@@ -2,7 +2,7 @@ from pathlib import Path
 import pytest
 import numpy as np
 
-here = Path(__file__) / '..'
+here = Path(__file__).parent
 
 @pytest.fixture
 def X_y_clear(X_y_intercept_slope):

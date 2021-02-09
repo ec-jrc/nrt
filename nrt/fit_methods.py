@@ -232,9 +232,9 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
         residuals (numpy.ndarray): The array of residuals
         is_stable (numpy.ndarray): 1D Boolean array indicating stability
     """
-    is_stable = np.ones(y.shape[1], dtype=numba.boolean)
-    beta = np.empty((X.shape[1], y.shape[1]), dtype=np.float32)
-    beta.fill(np.nan)
+    is_stable = np.ones(y.shape[1], dtype=np.bool_)
+    beta = np.full((X.shape[1], y.shape[1]), np.nan, dtype=np.float32)
+    nreg = X.shape[1]
     for idx in range(y.shape[1]):
         # subset and remove nan
         is_nan = np.isnan(y[:, idx])
@@ -246,7 +246,7 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
 
         # If there are not enough observations available in the stable period
         # set stability to False and continue
-        if _y.shape[0] - stable_idx < X.shape[1]+1:
+        if len(_y) - stable_idx < nreg + 1:
             is_stable[idx] = False
             continue
 
