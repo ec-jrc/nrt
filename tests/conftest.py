@@ -92,3 +92,31 @@ def strcchng_rr(request):
 def strcchng_efp(request):
     return np.genfromtxt(here / 'data' / 'efp_result.csv',
                          delimiter=',', dtype=np.float64, missing_values='NA')
+
+
+# Results of monitoring with strucchange
+# res_bound_proc < - apply(y, 2, function(column)
+# {
+#     # convert to dataframe
+#     X_df < - as.data.frame(X)
+#     X_df$y < - column
+#     # Split in history and monitor
+#     history < - X_df[1:100, ]
+#     # Remove nan
+#     history_clear < - history[! is.na(history$y), ]
+#     monitor_clear < - X_df[! is.na(X_df$y), ]
+#
+#     history_efp < - efp(y
+#     ~ V2 + V3 + V4 + V5, data = history, type = "OLS-CUSUM")
+#     history_mefp < - mefp(history_efp)
+#     monitor_data < - monitor(history_mefp, data=monitor_clear)
+#     plot(monitor_data)
+#     return (c(monitor_process = as.numeric(tail(monitor_data$process, 1)),
+#               boundary = history_mefp$border(nrow(monitor_clear)),
+#               histsize = history_mefp$histsize,
+#               sigma = history_efp$sigma))
+# })
+@pytest.fixture
+def strcchng_monitor(request):
+    return np.loadtxt(here / 'data' / 'monitor_result.csv',
+                      delimiter=',', dtype=np.float64)

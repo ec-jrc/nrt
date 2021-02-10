@@ -58,7 +58,7 @@ class CuSum(BaseNrt):
         self.histsize = histsize
         self.n = n
 
-    def fit(self, dataarray, method='ROC', **kwargs):
+    def fit(self, dataarray, method='ROC', alpha=0.05, **kwargs):
         """Stable history model fitting
 
         The stability check will use the same sensitivity as is later used for
@@ -75,7 +75,7 @@ class CuSum(BaseNrt):
                                      harmonic_order=self.harmonic_order)
         self.beta, residuals = self._fit(X, dataarray,
                                          method=method,
-                                         alpha=self.sensitivity,
+                                         alpha=alpha,
                                          **kwargs)
 
         # histsize is necessary for normalization of residuals,
@@ -86,8 +86,8 @@ class CuSum(BaseNrt):
         # TODO X.shape might have to be subtracted by 1 because of intercept
         self.sigma = np.nanstd(residuals, axis=0, ddof=X.shape[1])
         # calculate process and normalize it using sigma and histsize
-        process_ = np.nancumsum(residuals, axis=0)[-1]
-        self.process = process_ / (self.sigma*np.sqrt(self.histsize))
+        residuals_ = residuals / (self.sigma*np.sqrt(self.histsize))
+        self.process = np.nancumsum(residuals_, axis=0)[-1]
 
     def _update_process(self, residuals, is_valid):
         # calculate boundary
@@ -105,3 +105,8 @@ class CuSum(BaseNrt):
         self.process = np.where(is_valid,
                                 self.process+residuals_norm,
                                 self.process)
+
+    def _detect_break(self):
+        """Defines if the current process value is a confirmed break"""
+        is_break = np.abs(self.process)>self.boundary
+        return is_break
