@@ -22,9 +22,16 @@ class CuSum(BaseNrt):
         harmonic_order (int): The harmonic order of the time-series regression
         x (numpy.ndarray): array of x coordinates
         y (numpy.ndarray): array of y coordinates
-        sensitivity (float): sensitivity of the monitoring. Lower numbers are
-            lower sensitivity. Corresponds to significance level alpha with
-            which the boundary is computed. Value need to be between 0 and 1
+        sensitivity (float): sensitivity of the monitoring. Lower numbers
+            correspond to lower sensitivity. Equivalent to significance level
+            'alpha' with which the boundary is computed
+        boundary (numpy.ndarray): process boundary for each time series.
+            Calculated from alpha and length of time series.
+        sigma (numpy.ndarray): Standard deviation for normalized residuals in
+            history period
+        histsize (numpy.ndarray): Number of non-nan observations in history
+            period
+        n (numpy.ndarray): Total number of non-nan observations in time-series
 
     Args:
         mask (numpy.ndarray): A 2D numpy array containing pixels that should be
@@ -37,9 +44,16 @@ class CuSum(BaseNrt):
         harmonic_order (int): The harmonic order of the time-series regression
         x_coords (numpy.ndarray): x coordinates
         y_coords (numpy.ndarray): y coordinates
-        sensitivity (float): sensitivity of the monitoring. Lower numbers are
-            lower sensitivity. Corresponds to significance level alpha with
-            which the boundary is computed. Value need to be between 0 and 1
+        sensitivity (float): sensitivity of the monitoring. Lower numbers
+            correspond to lower sensitivity. Equivalent to significance level
+            'alpha' with which the boundary is computed
+        boundary (numpy.ndarray): process boundary for each time series.
+            Calculated from alpha and length of time series.
+        sigma (numpy.ndarray): Standard deviation for normalized residuals in
+            history period
+        histsize (numpy.ndarray): Number of non-nan observations in history
+            period
+        n (numpy.ndarray): Total number of non-nan observations in time-series
     """
     def __init__(self, mask=None, trend=True, harmonic_order=2, beta=None,
                  x_coords=None, y_coords=None, process=None, sensitivity=0.05,
@@ -68,6 +82,7 @@ class CuSum(BaseNrt):
             dataarray (xr.DataArray): xarray Dataarray including the historic
                 data to be fitted
             method (string): Regression to use. See ``_fit()`` for info.
+            alpha (float): Significance level for ``'ROC'`` stable fit.
             **kwargs: to be passed to ``_fit``
         """
         self.set_xy(dataarray)
@@ -80,10 +95,10 @@ class CuSum(BaseNrt):
 
         # histsize is necessary for normalization of residuals,
         # n is necessary for boundary calculation
-        self.histsize = np.count_nonzero(~np.isnan(residuals), axis=0)
+        self.histsize = np.count_nonzero(~np.isnan(residuals), axis=0)\
+            .astype(np.uint16)
         self.n = self.histsize
         self.boundary = np.full_like(self.histsize, np.nan, dtype=np.uint16)
-        # TODO X.shape might have to be subtracted by 1 because of intercept
         self.sigma = np.nanstd(residuals, axis=0, ddof=X.shape[1])
         # calculate process and normalize it using sigma and histsize
         residuals_ = residuals / (self.sigma*np.sqrt(self.histsize))
@@ -94,7 +109,8 @@ class CuSum(BaseNrt):
         self.n = self.n + is_valid
         x = self.n / self.histsize
         # TODO: if n wasn't incremented and so x = 1, boundary calculation will
-        #   return a warning, shouldn't change anything though.
+        #   return a warning (division by zero). Since those values don't get
+        #   used anyway, this shouldn't change anything though.
         self.boundary = np.where(is_valid,
                                  np.sqrt(x * (x - 1)
                                     * (self.critval**2 + np.log(x / (x - 1)))),
@@ -108,5 +124,5 @@ class CuSum(BaseNrt):
 
     def _detect_break(self):
         """Defines if the current process value is a confirmed break"""
-        is_break = np.abs(self.process)>self.boundary
+        is_break = np.abs(self.process) > self.boundary
         return is_break
