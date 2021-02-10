@@ -32,6 +32,8 @@ class CuSum(BaseNrt):
         histsize (numpy.ndarray): Number of non-nan observations in history
             period
         n (numpy.ndarray): Total number of non-nan observations in time-series
+        critval (float): Critical test value corresponding to the chosen
+            sensitivity
 
     Args:
         mask (numpy.ndarray): A 2D numpy array containing pixels that should be
