@@ -71,7 +71,7 @@ def test_cusum_ols_test_crit(test_input, expected):
 
 def test_process_boundary(X_y_dates_romania, strcchng_monitor):
     X, y, dates = X_y_dates_romania
-    # make y 6 long, because I am stupid
+    # make y 6 long
     y = np.insert(y, 5, values=y[:,0], axis=1)
     y_3d = y.reshape((y.shape[0], 2, -1))
     data = xr.DataArray(y_3d, dims=["time", "x", "y"], coords={"time": dates})
