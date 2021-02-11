@@ -1,4 +1,5 @@
 import os
+import pickle
 
 import xarray as xr
 import rasterio
@@ -59,3 +60,27 @@ def romania_forest_cover_percentage():
         arr = src.read(1)
     return arr
 
+def mre_crit_table():
+    """Contains a dictionary equivalent to strucchange's ``mreCritValTable``
+    Contains a tuple, where the first variable is a list of the available pre-
+    computed significance (1-alpha) values.
+
+    The second variable is a nested dictionary, where the first dict are the
+    available relative window sizes (0.25, 0.5, 1), the second dict are the
+    available periods (2, 4, 6, 8, 10) and the third dict is the functional type
+    ("max", "range").
+
+    For example:
+        >>> sig_level, crit_dict = data.mre_crit_table()
+        >>> win_size = 0.5
+        >>> period = 10
+        >>> functional = "max"
+        >>> alpha=0.025
+        >>> crit_values = crit_dict.get(str(win_size))\
+        ...                        .get(str(period))\
+        ...                        .get(functional)
+        >>> crit_level = np.interp(1-alpha, sig_level, crit_values)
+    """
+    with open(os.path.join(data_dir, "mreCritValTable.bin"), "rb") as crit:
+        crit_table = pickle.load(crit)
+    return crit_table
