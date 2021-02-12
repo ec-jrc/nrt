@@ -246,3 +246,26 @@ def _recresid(X, y, span):
         recvar[j] = f_t.item()
 
     return recresid_ / np.sqrt(recvar)
+
+
+@numba.jit(nopython=True)
+def _init_mosum_window(a, winsize):
+    """Initializes MOSUM moving window
+
+    Args:
+        a (np.ndarray): 2D array containing normalized residuals
+        winsize (np.ndarray): 1D array containing the absolute window size for
+            each time-series in a
+    Returns:
+        (np.ndarray) Array the size of (winsize.max(), a.shape[1]). Contains as
+        many of the last non nan values in the time series as specified by
+        winsize. Padded with 0s if winsize[idx] is shorter than winsize.max().
+    """
+    x = winsize.max()
+    res = np.zeros((x, a.shape[1]))
+    for idx in range(a.shape[1]):
+        a_ = a[:,idx]
+        winsize_ = winsize[idx]
+        a_ = a_[~np.isnan(a_)]
+        res[(x-winsize_):, idx] = a_[-winsize_:]
+    return res

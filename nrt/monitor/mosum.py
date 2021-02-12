@@ -2,8 +2,7 @@ import numpy as np
 import xarray as xr
 
 from nrt.monitor import BaseNrt
-from nrt.utils_cusum import _mosum_ols_test_crit
-from nrt.utils import last_x_non_nan
+from nrt.utils_cusum import _mosum_ols_test_crit, _init_mosum_window
 
 
 class MoSum(BaseNrt):
@@ -101,27 +100,19 @@ class MoSum(BaseNrt):
                                          alpha=alpha,
                                          **kwargs)
         # Flatten
-        residuals = residuals.reshape([len(residuals), -1])
+        residuals_flat = residuals.reshape([len(residuals), -1])
 
         # histsize is necessary for normalization of residuals,
         # n is necessary for boundary calculation
-        self.histsize = np.sum(~np.isnan(residuals), axis=0) \
+        self.histsize = np.sum(~np.isnan(residuals_flat), axis=0) \
             .astype(np.uint16)
         self.winsize = np.floor(self.histsize * self.h).astype(np.int16)
         self.n = self.histsize
         self.boundary = np.full_like(self.histsize, np.nan, dtype=np.float32)
-        self.sigma = np.nanstd(residuals, axis=0, ddof=X.shape[1])
+        self.sigma = np.nanstd(residuals_flat, axis=0, ddof=X.shape[1])
         # calculate normalized residuals
-        residuals_ = residuals / (self.sigma * np.sqrt(self.histsize))
-        # Get values for the maximum window size
-        max_win = self.winsize.max()
-        print(max_win)
-        self.values = last_x_non_nan(residuals_, max_win)
-        # Fill non needed values with 0
-        inverted = max_win - self.winsize
-        idx_1 = np.repeat(np.arange(len(inverted)), inverted)
-        idx_0 = np.concatenate([np.arange(x) for x in inverted])
-        self.values[idx_0, idx_1] = 0
+        residuals_ = residuals_flat / (self.sigma * np.sqrt(self.histsize))
+        self.values = _init_mosum_window(residuals_, self.winsize)
 
     def get_process(self):
         return np.nansum(self.values, axis=0)
