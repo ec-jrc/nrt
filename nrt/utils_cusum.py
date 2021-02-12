@@ -47,6 +47,7 @@ from scipy import optimize
 from scipy.stats import norm
 
 from nrt.stats import ncdf
+from nrt import data
 
 
 @numba.jit(nopython=True)
@@ -125,6 +126,17 @@ def _cusum_ols_test_crit(alpha):
     """ Return critical test statistic value for some alpha """
     return optimize.golden(lambda _x: np.abs(
         2 * (norm.cdf(_x) - _x * norm.pdf(_x)) + alpha - 2), brack=(0, 10))
+
+
+def _mosum_ols_test_crit(alpha):
+    sig_level, crit_dict = data.mre_crit_table()
+    win_size = 0.5
+    period = 10
+    functional = "max"
+    crit_values = crit_dict.get(str(win_size)) \
+                           .get(str(period)) \
+                           .get(functional)
+    return np.interp(1 - alpha, sig_level, crit_values)
 
 
 @numba.jit(nopython=True)
