@@ -58,3 +58,28 @@ def datetimeIndex_to_decimal_dates(dates):
     return np.array(ddates, dtype=np.float)
 
 
+def last_x_non_nan(a, x):
+    """Returns a specified number of non-nan values
+
+    This function returns the last x non-nan values for each column along axis 0.
+    If there are not enough non-nan values, it will pad the remainder with
+    values of the previous columns.
+
+    Args:
+        a ((M, N) np.ndarray): 2D array
+        x (int): number of non-nan values to get per column
+    Returns:
+        ((x, N) np.ndarray): 2D array without np.nan
+    """
+    # end points
+    non_count = np.cumsum(np.count_nonzero(~np.isnan(a), axis=0))
+    rel_idx = np.arange(-x, 0)
+    abs_idx = (rel_idx[:,None] + non_count).ravel('F')
+
+    # non-nan array ordered in column-major
+    arr_raveled = a.ravel('F')
+    arr_clear = arr_raveled[~np.isnan(arr_raveled)]
+
+    # Subset and convert to desired shape
+    return arr_clear[abs_idx].reshape((x, a.shape[1]), order='F')
+

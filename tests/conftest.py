@@ -117,6 +117,13 @@ def strcchng_efp(request):
 #               sigma = history_efp$sigma))
 # })
 @pytest.fixture
-def strcchng_monitor(request):
+def cusum_result(request):
     return np.loadtxt(here / 'data' / 'monitor_result.csv',
+                      delimiter=',', dtype=np.float64)
+
+
+# Same as cusum_result only with type="OLS-MOSUM"
+@pytest.fixture
+def mosum_result(request):
+    return np.loadtxt(here / 'data' / 'mosum_result.csv',
                       delimiter=',', dtype=np.float64)

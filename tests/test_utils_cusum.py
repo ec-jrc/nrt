@@ -3,6 +3,7 @@ import xarray as xr
 import pytest
 import nrt.utils_cusum as cs
 from nrt.monitor.cusum import CuSum
+from nrt.monitor.mosum import MoSum
 
 
 def test_history_roc(X_y_dates_romania):
@@ -69,7 +70,7 @@ def test_cusum_ols_test_crit(test_input, expected):
     assert cs._cusum_ols_test_crit(test_input) == pytest.approx(expected)
 
 
-def test_process_boundary(X_y_dates_romania, strcchng_monitor):
+def test_process_boundary(X_y_dates_romania, cusum_result):
     X, y, dates = X_y_dates_romania
     # make y 6 long
     y = np.insert(y, 5, values=y[:,0], axis=1)
@@ -83,17 +84,42 @@ def test_process_boundary(X_y_dates_romania, strcchng_monitor):
         cusum_monitor.monitor(array=array, date=date)
 
     # Process value
-    np.testing.assert_allclose(strcchng_monitor[0],
+    np.testing.assert_allclose(cusum_result[0],
                                cusum_monitor.process.ravel()[:-1], rtol=1e-4)
     # Boundary value
-    np.testing.assert_allclose(strcchng_monitor[1],
+    np.testing.assert_allclose(cusum_result[1],
                                cusum_monitor.boundary.ravel()[:-1])
     # Histsize
-    np.testing.assert_allclose(strcchng_monitor[2],
+    np.testing.assert_allclose(cusum_result[2],
                                cusum_monitor.histsize.ravel()[:-1])
     # Sigma
-    np.testing.assert_allclose(strcchng_monitor[3],
+    np.testing.assert_allclose(cusum_result[3],
                                cusum_monitor.sigma.ravel()[:-1])
 
 
+def test_process_boundary_mosum(X_y_dates_romania, mosum_result):
+    X, y, dates = X_y_dates_romania
+    # make y 6 long
+    y = np.insert(y, 5, values=y[:,0], axis=1)
+    y_3d = y.reshape((y.shape[0], 2, -1))
+    data = xr.DataArray(y_3d, dims=["time", "x", "y"], coords={"time": dates})
+    fit = data[:100]
+    monitor = data[100:]
+    cusum_monitor = MoSum(trend=False)
+    cusum_monitor.fit(dataarray=fit, method='OLS')
+    for array, date in zip(monitor.values, monitor.time.values):
+        cusum_monitor.monitor(array=array, date=date)
 
+    # Process value (third value has a break and so diverges a lot in the end)
+    np.testing.assert_allclose(np.delete(mosum_result[0], 2),
+                               np.delete(cusum_monitor.process.ravel(), [2,-1]),
+                               rtol=1e-4)
+    # Boundary value
+    np.testing.assert_allclose(mosum_result[1],
+                               cusum_monitor.boundary.ravel()[:-1])
+    # Histsize
+    np.testing.assert_allclose(mosum_result[2],
+                               cusum_monitor.histsize.ravel()[:-1])
+    # Sigma
+    np.testing.assert_allclose(mosum_result[3],
+                               cusum_monitor.sigma.ravel()[:-1])
