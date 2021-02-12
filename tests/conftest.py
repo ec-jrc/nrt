@@ -118,7 +118,7 @@ def strcchng_efp(request):
 # })
 @pytest.fixture
 def cusum_result(request):
-    return np.loadtxt(here / 'data' / 'monitor_result.csv',
+    return np.loadtxt(here / 'data' / 'cusum_result.csv',
                       delimiter=',', dtype=np.float64)
 
 

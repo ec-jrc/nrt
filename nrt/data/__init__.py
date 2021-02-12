@@ -1,5 +1,5 @@
 import os
-import pickle
+import json
 
 import xarray as xr
 import rasterio
@@ -62,25 +62,26 @@ def romania_forest_cover_percentage():
 
 def mre_crit_table():
     """Contains a dictionary equivalent to strucchange's ``mreCritValTable``
-    Contains a tuple, where the first variable is a list of the available pre-
-    computed significance (1-alpha) values.
+    The key 'sig_level' is a list of the available pre-computed significance
+    (1-alpha) values.
 
-    The second variable is a nested dictionary, where the first dict are the
-    available relative window sizes (0.25, 0.5, 1), the second dict are the
-    available periods (2, 4, 6, 8, 10) and the third dict is the functional type
-    ("max", "range").
+    The other keys contain nested dictionary, where the keys are the
+    available relative window sizes (0.25, 0.5, 1), the second keys are the
+    available periods (2, 4, 6, 8, 10) and the third keys are the functional
+    types ("max", "range").
 
     For example:
-        >>> sig_level, crit_dict = data.mre_crit_table()
+        >>> crit_table = data.mre_crit_table()
         >>> win_size = 0.5
         >>> period = 10
         >>> functional = "max"
         >>> alpha=0.025
-        >>> crit_values = crit_dict.get(str(win_size))\
-        ...                        .get(str(period))\
-        ...                        .get(functional)
+        >>> crit_values = crit_table.get(str(win_size))\
+        ...                         .get(str(period))\
+        ...                         .get(functional)
+        >>> sig_level = crit_table.get('sig_levels')
         >>> crit_level = np.interp(1-alpha, sig_level, crit_values)
     """
-    with open(os.path.join(data_dir, "mreCritValTable.bin"), "rb") as crit:
-        crit_table = pickle.load(crit)
+    with open(os.path.join(data_dir, "mreCritValTable.json")) as crit:
+        crit_table = json.load(crit)
     return crit_table

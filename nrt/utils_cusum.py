@@ -129,10 +129,11 @@ def _cusum_ols_test_crit(alpha):
 
 
 def _mosum_ols_test_crit(alpha, win_size=0.5, period=10, functional='max'):
-    sig_level, crit_dict = data.mre_crit_table()
-    crit_values = crit_dict.get(str(win_size)) \
-                           .get(str(period)) \
-                           .get(functional)
+    crit_table = data.mre_crit_table()
+    crit_values = crit_table.get(str(win_size)) \
+                            .get(str(period)) \
+                            .get(functional)
+    sig_level = crit_table.get('sig_levels')
     return np.interp(1 - alpha, sig_level, crit_values)
 
 
