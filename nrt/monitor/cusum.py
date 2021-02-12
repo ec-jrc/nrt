@@ -77,8 +77,8 @@ class CuSum(BaseNrt):
     def fit(self, dataarray, method='ROC', alpha=0.05, **kwargs):
         """Stable history model fitting
 
-        The stability check will use the same sensitivity as is later used for
-        detecting changes (default: 0.05)
+        If method ``'ROC'`` is used for fitting, the argument ``alpha`` has
+        to be passed.
 
         Args:
             dataarray (xr.DataArray): xarray Dataarray including the historic
@@ -97,10 +97,10 @@ class CuSum(BaseNrt):
 
         # histsize is necessary for normalization of residuals,
         # n is necessary for boundary calculation
-        self.histsize = np.count_nonzero(~np.isnan(residuals), axis=0)\
+        self.histsize = np.sum(~np.isnan(residuals), axis=0)\
             .astype(np.uint16)
         self.n = self.histsize
-        self.boundary = np.full_like(self.histsize, np.nan, dtype=np.uint16)
+        self.boundary = np.full_like(self.histsize, np.nan, dtype=np.float32)
         self.sigma = np.nanstd(residuals, axis=0, ddof=X.shape[1])
         # calculate process and normalize it using sigma and histsize
         residuals_ = residuals / (self.sigma*np.sqrt(self.histsize))
@@ -110,13 +110,12 @@ class CuSum(BaseNrt):
         # calculate boundary
         self.n = self.n + is_valid
         x = self.n / self.histsize
-        # TODO: if n wasn't incremented and so x = 1, boundary calculation will
-        #   return a warning (division by zero). Since those values don't get
-        #   used anyway, this shouldn't change anything though.
-        self.boundary = np.where(is_valid,
-                                 np.sqrt(x * (x - 1)
-                                    * (self.critval**2 + np.log(x / (x - 1)))),
-                                 self.boundary)
+        with np.errstate(divide='ignore', invalid='ignore'):
+            self.boundary = np.where(is_valid,
+                                     np.sqrt(x * (x - 1)
+                                        * (self.critval**2
+                                           + np.log(x / (x - 1)))),
+                                     self.boundary)
         # normalize residuals
         residuals_norm = residuals / (self.sigma*np.sqrt(self.histsize))
         # Update process
