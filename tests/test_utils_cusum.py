@@ -1,5 +1,8 @@
 import numpy as np
+import xarray as xr
+import pytest
 import nrt.utils_cusum as cs
+from nrt.monitor.cusum import CuSum
 
 
 def test_history_roc(X_y_dates_romania):
@@ -57,4 +60,40 @@ def test_efp(X_y_dates_romania, strcchng_efp):
     # Relative high tolerance, due to floating point precision
     np.testing.assert_allclose(process[X.shape[1]+2:], result[X.shape[1]+2:],
                                rtol=1e-02)
+
+
+@pytest.mark.parametrize("test_input,expected", [(0.01, 3.368214),
+                                                 (0.05, 2.795483),
+                                                 (0.1, 2.500278)])
+def test_cusum_ols_test_crit(test_input, expected):
+    assert cs._cusum_ols_test_crit(test_input) == pytest.approx(expected)
+
+
+def test_process_boundary(X_y_dates_romania, strcchng_monitor):
+    X, y, dates = X_y_dates_romania
+    # make y 6 long
+    y = np.insert(y, 5, values=y[:,0], axis=1)
+    y_3d = y.reshape((y.shape[0], 2, -1))
+    data = xr.DataArray(y_3d, dims=["time", "x", "y"], coords={"time": dates})
+    fit = data[:100]
+    monitor = data[100:]
+    cusum_monitor = CuSum(trend=False)
+    cusum_monitor.fit(dataarray=fit, method='OLS')
+    for array, date in zip(monitor.values, monitor.time.values):
+        cusum_monitor.monitor(array=array, date=date)
+
+    # Process value
+    np.testing.assert_allclose(strcchng_monitor[0],
+                               cusum_monitor.process.ravel()[:-1], rtol=1e-4)
+    # Boundary value
+    np.testing.assert_allclose(strcchng_monitor[1],
+                               cusum_monitor.boundary.ravel()[:-1])
+    # Histsize
+    np.testing.assert_allclose(strcchng_monitor[2],
+                               cusum_monitor.histsize.ravel()[:-1])
+    # Sigma
+    np.testing.assert_allclose(strcchng_monitor[3],
+                               cusum_monitor.sigma.ravel()[:-1])
+
+
 
