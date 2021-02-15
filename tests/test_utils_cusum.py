@@ -84,7 +84,7 @@ def test_mosum_ols_test_crit(expected, test_input):
         assert cs._mosum_ols_test_crit(**test_input) is not None
 
 
-def test_process_boundary(X_y_dates_romania, cusum_result):
+def test_process_boundary_cusum(X_y_dates_romania, cusum_result):
     X, y, dates = X_y_dates_romania
     # make y 6 long
     y = np.insert(y, 5, values=y[:,0], axis=1)

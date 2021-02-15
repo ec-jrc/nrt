@@ -13,7 +13,7 @@ class MoSum(BaseNrt):
     Attributes:
         mask (numpy.ndarray): A 2D numpy array containing pixels that should
             be monitored (1) and not (0). The mask may be updated following
-            historing period stability check, and after a call to monitor
+            history period stability check, and after a call to monitor
             following a confirmed break. Values are as follow.
             ``{0: 'Not monitored', 1: 'monitored', 2: 'Unstable history',
             3: 'Confirmed break - no longer monitored'}``
@@ -38,7 +38,7 @@ class MoSum(BaseNrt):
             0.5 and 1
         winsize (numpy.ndarray): 2D array with absolute window size. Computed as
             h*histsize
-        window (numpy.ndarray): 2D array containing the current value in the
+        window (numpy.ndarray): 2D array containing the current values in the
             window
 
     Args:
@@ -66,7 +66,7 @@ class MoSum(BaseNrt):
             0.5 and 1
         winsize (numpy.ndarray): 2D array with absolute window size. Computed as
             h*histsize
-        window (numpy.ndarray): 2D array containing the current value in the
+        window (numpy.ndarray): 2D array containing the current values in the
             window
     """
 
@@ -103,8 +103,8 @@ class MoSum(BaseNrt):
     def fit(self, dataarray, method='ROC', alpha=0.05, **kwargs):
         """Stable history model fitting
 
-        The stability check will use the same sensitivity as is later used for
-        detecting changes (default: 0.05)
+        If method ``'ROC'`` is used for fitting, the argument ``alpha`` has
+        to be passed.
 
         Args:
             dataarray (xr.DataArray): xarray Dataarray including the historic
@@ -140,8 +140,8 @@ class MoSum(BaseNrt):
     def _update_process(self, residuals, is_valid):
         """Update process
         (Isn't actually updating process directly, but is updating the values
-        from which the process get's calculated)"""
-        # get valid idx
+        from which the process gets calculated)"""
+        # get valid indices
         is_valid = is_valid.ravel()
         valid_idx = np.where(is_valid)
 

@@ -17,7 +17,7 @@ class CCDC(BaseNrt):
     Attributes:
         mask (numpy.ndarray): A 2D numpy array containing pixels that should
             be monitored (1) and not (0). The mask may be updated following
-            historing period stability check, and after a call to monitor
+            history period stability check, and after a call to monitor
             following a confirmed break. Values are as follow.
             ``{0: 'Not monitored', 1: 'monitored', 2: 'Unstable history',
             3: 'Confirmed break - no longer monitored'}``
