@@ -60,12 +60,13 @@ def romania_forest_cover_percentage():
         arr = src.read(1)
     return arr
 
+
 def mre_crit_table():
     """Contains a dictionary equivalent to strucchange's ``mreCritValTable``
     The key 'sig_level' is a list of the available pre-computed significance
     (1-alpha) values.
 
-    The other keys contain nested dictionary, where the keys are the
+    The other keys contain nested dictionaries, where the keys are the
     available relative window sizes (0.25, 0.5, 1), the second keys are the
     available periods (2, 4, 6, 8, 10) and the third keys are the functional
     types ("max", "range").
