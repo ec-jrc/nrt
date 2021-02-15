@@ -2,7 +2,7 @@ import numpy as np
 import xarray as xr
 
 from nrt.monitor import BaseNrt
-from nrt.utils_cusum import _mosum_ols_test_crit, _init_mosum_window
+from nrt.utils_cusum import _mosum_ols_test_crit, _mosum_init_window
 
 
 class MoSum(BaseNrt):
@@ -34,6 +34,12 @@ class MoSum(BaseNrt):
         n (numpy.ndarray): Total number of non-nan observations in time-series
         critval (float): Critical test value corresponding to the chosen
             sensitivity
+        h (float): Moving window size relative to histsize. Can be one of 0.25,
+            0.5 and 1
+        winsize (numpy.ndarray): 2D array with absolute window size. Computed as
+            h*histsize
+        window (numpy.ndarray): 2D array containing the current value in the
+            window
 
     Args:
         mask (numpy.ndarray): A 2D numpy array containing pixels that should be
@@ -56,12 +62,18 @@ class MoSum(BaseNrt):
         histsize (numpy.ndarray): Number of non-nan observations in history
             period
         n (numpy.ndarray): Total number of non-nan observations in time-series
+        h (float): Moving window size relative to histsize. Can be one of 0.25,
+            0.5 and 1
+        winsize (numpy.ndarray): 2D array with absolute window size. Computed as
+            h*histsize
+        window (numpy.ndarray): 2D array containing the current value in the
+            window
     """
 
     def __init__(self, mask=None, trend=True, harmonic_order=2, beta=None,
                  x_coords=None, y_coords=None, process=None, sensitivity=0.05,
                  boundary=None, sigma=None, histsize=None, n=None, h=0.25,
-                 winsize=None, **kwargs):
+                 winsize=None, window=None, **kwargs):
         super().__init__(mask=mask,
                          trend=trend,
                          harmonic_order=harmonic_order,
@@ -78,6 +90,15 @@ class MoSum(BaseNrt):
         self.n = n
         self.h = h
         self.winsize = winsize
+        self.window = window
+
+    def get_process(self):
+        return np.nansum(self.window, axis=0)
+
+    def set_process(self, x):
+        pass
+
+    process = property(get_process, set_process)
 
     def fit(self, dataarray, method='ROC', alpha=0.05, **kwargs):
         """Stable history model fitting
@@ -112,30 +133,22 @@ class MoSum(BaseNrt):
         self.sigma = np.nanstd(residuals_flat, axis=0, ddof=X.shape[1])
         # calculate normalized residuals
         residuals_ = residuals_flat / (self.sigma * np.sqrt(self.histsize))
-        self.values = _init_mosum_window(residuals_, self.winsize)
-
-    def get_process(self):
-        return np.nansum(self.values, axis=0)
-
-    def set_process(self, x):
-        pass
-
-    process = property(get_process, set_process)
+        # TODO self.window can be converted to property to allow for safe
+        #   application of scaling factor with getter and setter
+        self.window = _mosum_init_window(residuals_, self.winsize)
 
     def _update_process(self, residuals, is_valid):
+        """Update process
+        (Isn't actually updating process directly, but is updating the values
+        from which the process get's calculated)"""
         # get valid idx
         is_valid = is_valid.ravel()
         valid_idx = np.where(is_valid)
 
-        # get remainder, starting at 0 for first update
-        remainder = np.mod(self.n-self.histsize, self.winsize)
-        change_idx = (-self.winsize+remainder)[valid_idx]
-
-        # normalize residuals
+        # get indices which need to be changed and write normalized residuals
+        change_idx = np.mod(self.n-self.histsize, self.winsize)[valid_idx]
         residuals_norm = residuals.ravel() / (self.sigma * np.sqrt(self.histsize))
-
-        # set new residuals at appropriate indices
-        self.values[change_idx, valid_idx] = residuals_norm[valid_idx]
+        self.window[change_idx, valid_idx] = residuals_norm[valid_idx]
 
         # calculate boundary
         self.n = self.n + is_valid
