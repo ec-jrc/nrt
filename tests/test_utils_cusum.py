@@ -105,21 +105,22 @@ def test_process_boundary_mosum(X_y_dates_romania, mosum_result):
     data = xr.DataArray(y_3d, dims=["time", "x", "y"], coords={"time": dates})
     fit = data[:100]
     monitor = data[100:]
-    cusum_monitor = MoSum(trend=False)
-    cusum_monitor.fit(dataarray=fit, method='OLS')
+    mosum_monitor = MoSum(trend=False)
+    mosum_monitor.fit(dataarray=fit, method='OLS')
     for array, date in zip(monitor.values, monitor.time.values):
-        cusum_monitor.monitor(array=array, date=date)
+        mosum_monitor.monitor(array=array, date=date)
 
-    # Process value (third value has a break and so diverges a lot in the end)
+    # Process value (third value has a break and so diverges a lot since
+    # monitoring in bFast does not stop in case there is a break)
     np.testing.assert_allclose(np.delete(mosum_result[0], 2),
-                               np.delete(cusum_monitor.process.ravel(), [2,-1]),
+                               np.delete(mosum_monitor.process.ravel(), [2,-1]),
                                rtol=1e-4)
     # Boundary value
     np.testing.assert_allclose(mosum_result[1],
-                               cusum_monitor.boundary.ravel()[:-1])
+                               mosum_monitor.boundary.ravel()[:-1])
     # Histsize
     np.testing.assert_allclose(mosum_result[2],
-                               cusum_monitor.histsize.ravel()[:-1])
+                               mosum_monitor.histsize.ravel()[:-1])
     # Sigma
     np.testing.assert_allclose(mosum_result[3],
-                               cusum_monitor.sigma.ravel()[:-1])
+                               mosum_monitor.sigma.ravel()[:-1])
