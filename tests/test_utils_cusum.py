@@ -70,6 +70,20 @@ def test_cusum_ols_test_crit(test_input, expected):
     assert cs._cusum_ols_test_crit(test_input) == pytest.approx(expected)
 
 
+mosum_crit_params = {
+    'h': (pytest.raises(ValueError), {'alpha': 0.05, 'h': 0.24}),
+    'alpha': (pytest.raises(ValueError), {'alpha': 0.06}),
+    'period': (pytest.raises(ValueError), {'alpha': 0.05, 'period': 11}),
+}
+
+@pytest.mark.parametrize('expected, test_input', mosum_crit_params.values(),
+                         ids=mosum_crit_params.keys())
+def test_mosum_ols_test_crit(expected, test_input):
+    """Test edge cases"""
+    with expected:
+        assert cs._mosum_ols_test_crit(**test_input) is not None
+
+
 def test_process_boundary(X_y_dates_romania, cusum_result):
     X, y, dates = X_y_dates_romania
     # make y 6 long

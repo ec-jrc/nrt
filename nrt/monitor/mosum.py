@@ -83,7 +83,7 @@ class MoSum(BaseNrt):
                          process=process,
                          boundary=boundary)
         self.sensitivity = sensitivity
-        self.critval = _mosum_ols_test_crit(sensitivity, win_size=h,
+        self.critval = _mosum_ols_test_crit(sensitivity, h=h,
                                             period=10, functional='max')
         self.sigma = sigma
         self.histsize = histsize

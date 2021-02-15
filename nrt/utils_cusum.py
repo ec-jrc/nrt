@@ -128,11 +128,26 @@ def _cusum_ols_test_crit(alpha):
         2 * (norm.cdf(_x) - _x * norm.pdf(_x)) + alpha - 2), brack=(0, 10))
 
 
-def _mosum_ols_test_crit(alpha, win_size=0.5, period=10, functional='max'):
+def _mosum_ols_test_crit(alpha, h=0.5, period=10, functional='max'):
+    """Returns critical test value
+
+    Args:
+        alpha (float): Significance value (0-1)
+        h (float): Relative window size. One of (0.25, 0.5, 1)
+        period (int): Maximum monitoring period (2, 4, 6, 8, 10)
+        functional (str): Functional type (either 'max' or 'range')
+
+    Returns:
+        (float) Critical test value for parameters
+    """
+    if not 0.001 <= alpha <= 0.05:
+        raise ValueError("'alpha' needs to be between [0.001,0.05]")
     crit_table = data.mre_crit_table()
-    crit_values = crit_table.get(str(win_size)) \
-                            .get(str(period)) \
-                            .get(functional)
+    try:
+        crit_values = crit_table[str(h)][str(period)][functional]
+    except KeyError:
+        raise ValueError("'h' needs to be in (0.25, 0.5, 1) and "
+                         "'period' in (2, 4, 6, 8, 10).")
     sig_level = crit_table.get('sig_levels')
     return np.interp(1 - alpha, sig_level, crit_values)
 
