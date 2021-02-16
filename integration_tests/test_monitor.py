@@ -1,5 +1,6 @@
 from pathlib import Path
 import pytest
+import numpy as np
 
 from nrt.monitor import iqr, ewma, cusum, mosum
 
@@ -34,4 +35,6 @@ def test_netcdf(monitor_cls, kwargs, beta, ndvi_history, tmp_path):
     monitor_.fit(dataarray=ndvi_history, **kwargs)
 
     monitor_.to_netcdf(nc_path)
-    monitor_cls.from_netcdf(nc_path)
+    monitor_load = monitor_cls().from_netcdf(nc_path)
+    np.testing.assert_allclose(monitor_.beta, monitor_load.beta)
+

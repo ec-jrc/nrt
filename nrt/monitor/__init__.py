@@ -299,7 +299,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
                     k = 'x_coords'
                 if k == 'y':
                     k = 'y_coords'
-                if k == 'r':
+                if k in ['a', 'b', 'c']:
                     continue
                 d.update({k:v})
         return cls(**d)
@@ -311,24 +311,30 @@ class BaseNrt(metaclass=abc.ABCMeta):
             # define variable
             x_dim = dst.createDimension('x', len(self.x))
             y_dim = dst.createDimension('y', len(self.y))
-            r_dim = dst.createDimension('r', self.beta.shape[0])
             # Create coordinate variables
             x_var = dst.createVariable('x', np.float32, ('x',))
             y_var = dst.createVariable('y', np.float32, ('y',))
-            r_var = dst.createVariable('r', np.uint8, ('r', ))
             # fill values of coordinate variables
             x_var[:] = self.x
             y_var[:] = self.y
-            r_var[:] = np.arange(start=0, stop=self.beta.shape[0],
-                                 dtype=np.uint8)
-            # Add beta variable
-            beta_var = dst.createVariable('beta', np.float32, ('r', 'y', 'x'),
-                                          zlib=True)
-            beta_var[:] = self.beta
+
+            third = 'a'
             # Create other variables
             for k,v in attr.items():
-                if k not in ['x', 'y', 'beta']:
+                if k not in ['x', 'y']:
                     if isinstance(v, np.ndarray):
+                        if v.ndim == 3:
+                            r_dim = dst.createDimension(third, v.shape[0])
+                            r_var = dst.createVariable(third, np.uint16, (third,))
+                            r_var[:] = np.arange(start=0,
+                                                 stop=v.shape[0],
+                                                 dtype=np.uint8)
+                            beta_var = dst.createVariable(k, v.dtype,
+                                                          (third, 'y', 'x'),
+                                                          zlib=True)
+                            beta_var[:] = v
+                            third = chr(ord(third) + 1)
+                            continue
                         # bool array are stored as int8
                         dtype = np.uint8 if v.dtype == bool else v.dtype
                         new_var = dst.createVariable(k, dtype, ('y', 'x'))
