@@ -49,7 +49,7 @@ def ndvi_monitoring_numpy():
                                              datetime.datetime(2021, 1, 15)))
     values = ndvi_monitoring.values
     dates = ndvi_monitoring.time.values.astype('datetime64[s]').tolist()
-    return np.split(values, len(values), axis=0), dates
+    return values, dates
 
 
 
