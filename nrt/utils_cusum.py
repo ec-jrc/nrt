@@ -157,22 +157,22 @@ def _mosum_init_window(residuals, winsize):
     """Initializes MOSUM moving window
 
     Args:
-        residuals (np.ndarray): 2D array containing normalized residuals
-        winsize (np.ndarray): 1D array containing the absolute window size for
+        residuals (np.ndarray): 3D array containing normalized residuals
+        winsize (np.ndarray): 2D array containing the absolute window size for
             each time-series in residuals
     Returns:
-        (np.ndarray) Array the size of (winsize.max(), residuals.shape[1]).
-        Contains as many of the last non nan values in the time series as
-        specified by winsize. Padded with 0s if winsize[idx] is shorter than
-        winsize.max().
+        (np.ndarray) Array with length of winsize.max(). Contains as many of the
+        last non nan values in the time series as specified by winsize. Padded
+        with 0s where winsize is smaller than winsize.max().
     """
     x = winsize.max()
-    res = np.zeros((x, residuals.shape[1]))
-    for idx in range(residuals.shape[1]):
-        residuals_ = residuals[:, idx]
-        winsize_ = winsize[idx]
-        residuals_ = residuals_[~np.isnan(residuals_)]
-        res[:winsize_, idx] = residuals_[-winsize_:]
+    res = np.zeros((x, residuals.shape[1], residuals.shape[2]))
+    for i in range(residuals.shape[1]):
+        for j in range(residuals.shape[2]):
+            residuals_ = residuals[:, i, j]
+            winsize_ = winsize[i, j]
+            residuals_ = residuals_[~np.isnan(residuals_)]
+            res[:winsize_, i, j] = residuals_[-winsize_:]
     return res
 
 

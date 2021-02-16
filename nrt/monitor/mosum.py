@@ -38,7 +38,7 @@ class MoSum(BaseNrt):
             0.5 and 1
         winsize (numpy.ndarray): 2D array with absolute window size. Computed as
             h*histsize
-        window (numpy.ndarray): 2D array containing the current values in the
+        window (numpy.ndarray): 3D array containing the current values in the
             window
 
     Args:
@@ -66,7 +66,7 @@ class MoSum(BaseNrt):
             0.5 and 1
         winsize (numpy.ndarray): 2D array with absolute window size. Computed as
             h*histsize
-        window (numpy.ndarray): 2D array containing the current values in the
+        window (numpy.ndarray): 3D array containing the current values in the
             window
     """
 
@@ -120,19 +120,17 @@ class MoSum(BaseNrt):
                                          method=method,
                                          alpha=alpha,
                                          **kwargs)
-        # Flatten
-        residuals_flat = residuals.reshape([len(residuals), -1])
 
         # histsize is necessary for normalization of residuals,
         # n is necessary for boundary calculation
-        self.histsize = np.sum(~np.isnan(residuals_flat), axis=0) \
+        self.histsize = np.sum(~np.isnan(residuals), axis=0) \
             .astype(np.uint16)
         self.winsize = np.floor(self.histsize * self.h).astype(np.int16)
         self.n = self.histsize
         self.boundary = np.full_like(self.histsize, np.nan, dtype=np.float32)
-        self.sigma = np.nanstd(residuals_flat, axis=0, ddof=X.shape[1])
+        self.sigma = np.nanstd(residuals, axis=0, ddof=X.shape[1])
         # calculate normalized residuals
-        residuals_ = residuals_flat / (self.sigma * np.sqrt(self.histsize))
+        residuals_ = residuals / (self.sigma * np.sqrt(self.histsize))
         # TODO self.window can be converted to property to allow for safe
         #   application of scaling factor with getter and setter
         self.window = _mosum_init_window(residuals_, self.winsize)
@@ -142,13 +140,12 @@ class MoSum(BaseNrt):
         (Isn't actually updating process directly, but is updating the values
         from which the process gets calculated)"""
         # get valid indices
-        is_valid = is_valid.ravel()
         valid_idx = np.where(is_valid)
 
         # get indices which need to be changed and write normalized residuals
         change_idx = np.mod(self.n-self.histsize, self.winsize)[valid_idx]
-        residuals_norm = residuals.ravel() / (self.sigma * np.sqrt(self.histsize))
-        self.window[change_idx, valid_idx] = residuals_norm[valid_idx]
+        residuals_norm = residuals / (self.sigma * np.sqrt(self.histsize))
+        self.window[change_idx, valid_idx[0], valid_idx[1]] = residuals_norm[valid_idx]
 
         # calculate boundary
         self.n = self.n + is_valid
@@ -163,5 +160,4 @@ class MoSum(BaseNrt):
     def _detect_break(self):
         """Defines if the current process value is a confirmed break"""
         is_break = np.abs(self.process) > self.boundary
-        return is_break.reshape((self.beta.shape[1],
-                                 self.beta.shape[2]))
+        return is_break
