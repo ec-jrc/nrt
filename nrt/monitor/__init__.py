@@ -114,7 +114,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
                     .astype(np.float32)[:, mask_bool]
                 swir_flat = kwargs.pop('swir').values\
                     .astype(np.float32)[:, mask_bool]
-            except KeyError as e:
+            except (KeyError, AttributeError) as e:
                 raise ValueError('Parameters `green` and `swir` need to be '
                            'passed for CCDC_RIRLS.')
             y_flat = ccdc_rirls(X, y_flat,
@@ -126,7 +126,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         if method == 'ROC':
             try:
                 alpha = kwargs.pop('alpha')
-            except KeyError as e:
+            except (KeyError, AttributeError) as e:
                 warnings.warn('Parameter `alpha` needs to be '
                               'passed for ROC fit. Using alpha of 0.05.')
                 alpha = 0.05
