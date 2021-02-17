@@ -67,6 +67,22 @@ class BaseNrt(metaclass=abc.ABCMeta):
         self.process = process
         self.boundary = boundary
 
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        try:
+            for key, value in vars(self).items():
+                if isinstance(value, np.ndarray):
+                    is_equal = np.array_equal(value, getattr(other, key),
+                                              equal_nan=True)
+                else:
+                    is_equal = value == getattr(other, key)
+                if not is_equal:
+                    return False
+            return True
+        except AttributeError:
+            return False
+
     def _fit(self, X, dataarray,
              method='OLS',
              screen_outliers=None, **kwargs):
@@ -299,6 +315,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
                     k = 'x_coords'
                 if k == 'y':
                     k = 'y_coords'
+                # TODO A different way to name the third dimensions would be
+                #  good. Right now the names might also clash with other
+                #  attribute names (unlikely, but e.g. n, h in MOSUM)
                 if k in ['a', 'b', 'c']:
                     continue
                 d.update({k:v})
@@ -312,8 +331,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
             x_dim = dst.createDimension('x', len(self.x))
             y_dim = dst.createDimension('y', len(self.y))
             # Create coordinate variables
-            x_var = dst.createVariable('x', np.float32, ('x',))
-            y_var = dst.createVariable('y', np.float32, ('y',))
+            x_var = dst.createVariable('x', self.x.dtype, ('x',))
+            y_var = dst.createVariable('y', self.y.dtype, ('y',))
             # fill values of coordinate variables
             x_var[:] = self.x
             y_var[:] = self.y

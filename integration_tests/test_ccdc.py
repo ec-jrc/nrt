@@ -24,4 +24,5 @@ def test_netcdf(ndvi_history, green_swir_history, tmp_path):
                      scaling_factor=10000)
 
     ccdc_monitor.to_netcdf(nc_path)
-    CCDC.from_netcdf(nc_path)
+    ccdc_load = CCDC.from_netcdf(nc_path)
+    assert ccdc_monitor == ccdc_load

@@ -36,5 +36,5 @@ def test_netcdf(monitor_cls, kwargs, beta, ndvi_history, tmp_path):
 
     monitor_.to_netcdf(nc_path)
     monitor_load = monitor_cls().from_netcdf(nc_path)
-    np.testing.assert_allclose(monitor_.beta, monitor_load.beta)
+    assert monitor_ == monitor_load
 
