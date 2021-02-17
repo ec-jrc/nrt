@@ -71,6 +71,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
         if not isinstance(other, type(self)):
             return False
         try:
+            if vars(self).keys() != vars(other).keys():
+                return False
             for key, value in vars(self).items():
                 if isinstance(value, np.ndarray):
                     is_equal = np.array_equal(value, getattr(other, key),
@@ -318,7 +320,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 # TODO A different way to name the third dimensions would be
                 #  good. Right now the names might also clash with other
                 #  attribute names (unlikely, but e.g. n, h in MOSUM)
-                if k in ['a', 'b', 'c']:
+                if k in src.dimensions.keys():
                     continue
                 d.update({k:v})
         return cls(**d)
@@ -337,21 +339,21 @@ class BaseNrt(metaclass=abc.ABCMeta):
             x_var[:] = self.x
             y_var[:] = self.y
 
+            # Starting letter for third dimensions
             third = 'a'
-            # Create other variables
             for k,v in attr.items():
                 if k not in ['x', 'y']:
                     if isinstance(v, np.ndarray):
                         if v.ndim == 3:
-                            r_dim = dst.createDimension(third, v.shape[0])
-                            r_var = dst.createVariable(third, np.uint16, (third,))
-                            r_var[:] = np.arange(start=0,
+                            dim_3 = dst.createDimension(third, v.shape[0])
+                            var_3 = dst.createVariable(third, np.uint16, (third,))
+                            var_3[:] = np.arange(start=0,
                                                  stop=v.shape[0],
                                                  dtype=np.uint8)
-                            beta_var = dst.createVariable(k, v.dtype,
-                                                          (third, 'y', 'x'),
-                                                          zlib=True)
-                            beta_var[:] = v
+                            var_3d = dst.createVariable(k, v.dtype,
+                                                        (third, 'y', 'x'),
+                                                        zlib=True)
+                            var_3d[:] = v
                             third = chr(ord(third) + 1)
                             continue
                         # bool array are stored as int8
