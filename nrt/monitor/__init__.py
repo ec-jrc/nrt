@@ -1,5 +1,6 @@
 import abc
 import warnings
+import datetime
 
 import numpy as np
 import pandas as pd
@@ -57,7 +58,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
             pixels or every pixel individually
     """
     def __init__(self, mask=None, trend=True, harmonic_order=3, beta=None,
-                 x_coords=None, y_coords=None, process=None, boundary=None):
+                 x_coords=None, y_coords=None, process=None, boundary=None,
+                 detection_date=None):
         self.mask = mask
         self.trend = trend
         self.harmonic_order = harmonic_order
@@ -66,6 +68,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         self.beta = beta
         self.process = process
         self.boundary = boundary
+        self.detection_date = detection_date
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -196,6 +199,10 @@ class BaseNrt(metaclass=abc.ABCMeta):
             date (datetime.datetime): Date of acquisition of data contained in
                 the array
         """
+        if not isinstance(date, datetime.date):
+            raise TypeError("'date' has to be of type datetime.date")
+        if self.detection_date is None:
+            self.detection_date = np.zeros_like(self.mask, dtype=np.uint16)
         y_pred = self.predict(date)
         residuals = array - y_pred
         # Compute a mask of values that can be worked on
@@ -205,7 +212,11 @@ class BaseNrt(metaclass=abc.ABCMeta):
         self._update_process(residuals=residuals, is_valid=is_valid)
         is_break = self._detect_break()
         # Update mask (3 value corresponds to a confirmed break)
-        self.mask = np.where(np.logical_and(is_valid, is_break), 3, self.mask)
+        to_update = np.logical_and(is_valid, is_break)
+        self.mask[to_update] = 3
+        # Update detection date
+        days_since_epoch = (date - datetime.datetime(1970, 1, 1)).days
+        self.detection_date[to_update] = days_since_epoch
 
     def _detect_break(self):
         """Defines if the current process value is a confirmed break
@@ -247,7 +258,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         Must generate a 2D or 3D numpy array with unit8 datatype
         In case of multi-band (3D) array, the band should be in the first axis
         """
-        return self.mask
+        return np.vstack((self.mask, self.detection_date))
 
     def report(self, filename, driver='GTiff', crs=CRS.from_epsg(3035)):
         """Write the result of reporting to a raster geospatial file

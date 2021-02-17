@@ -52,15 +52,15 @@ class CCDC(BaseNrt):
         rmse (np.ndarray): 2D float array indicating RMSE for each pixel
     """
     def __init__(self, mask=None, trend=True, harmonic_order=2, beta=None,
-                 x_coords=None, y_coords=None, sensitivity=3,
-                 boundary=3, process=None, rmse=None,
-                 **kwargs):
+                 x_coords=None, y_coords=None, sensitivity=3, boundary=3,
+                 process=None, rmse=None, detection_date=None, **kwargs):
         super().__init__(mask=mask,
                          trend=trend,
                          harmonic_order=harmonic_order,
                          beta=beta,
                          x_coords=x_coords,
-                         y_coords=y_coords)
+                         y_coords=y_coords,
+                         detection_date=detection_date)
         self.sensitivity = sensitivity
         self.process = process
         self.boundary = boundary

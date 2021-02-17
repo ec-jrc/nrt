@@ -17,13 +17,15 @@ class EWMA(BaseNrt):
     """
     def __init__(self, mask=None, trend=True, harmonic_order=2, beta=None,
                  x_coords=None, y_coords=None, lambda_=0.3, sensitivity=2,
-                 sigma=None, boundary=None, process=None, nodata=None, **kwargs):
+                 sigma=None, boundary=None, process=None, nodata=None,
+                 detection_date=None, **kwargs):
         super().__init__(mask=mask,
                          trend=trend,
                          harmonic_order=harmonic_order,
                          beta=beta,
                          x_coords=x_coords,
-                         y_coords=y_coords)
+                         y_coords=y_coords,
+                         detection_date=detection_date)
         self.lambda_ = lambda_
         self.sensitivity = sensitivity
         self.sigma = sigma

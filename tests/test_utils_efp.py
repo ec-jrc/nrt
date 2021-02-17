@@ -94,7 +94,8 @@ def test_process_boundary_cusum(X_y_dates_romania, cusum_result):
     monitor = data[100:]
     cusum_monitor = CuSum(trend=False)
     cusum_monitor.fit(dataarray=fit, method='OLS')
-    for array, date in zip(monitor.values, monitor.time.values):
+    for array, date in zip(monitor.values,
+                           monitor.time.values.astype('datetime64[s]').tolist()):
         cusum_monitor.monitor(array=array, date=date)
 
     # Process value
@@ -121,7 +122,8 @@ def test_process_boundary_mosum(X_y_dates_romania, mosum_result):
     monitor = data[100:]
     mosum_monitor = MoSum(trend=False)
     mosum_monitor.fit(dataarray=fit, method='OLS')
-    for array, date in zip(monitor.values, monitor.time.values):
+    for array, date in zip(monitor.values,
+                           monitor.time.values.astype('datetime64[s]').tolist()):
         mosum_monitor.monitor(array=array, date=date)
 
     # Process value (third value has a break and so diverges a lot since

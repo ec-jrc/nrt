@@ -72,8 +72,8 @@ class MoSum(BaseNrt):
 
     def __init__(self, mask=None, trend=True, harmonic_order=2, beta=None,
                  x_coords=None, y_coords=None, process=None, sensitivity=0.05,
-                 boundary=None, sigma=None, histsize=None, n=None, h=0.25,
-                 winsize=None, window=None, **kwargs):
+                 boundary=None, detection_date=None, sigma=None, histsize=None,
+                 n=None, h=0.25, winsize=None, window=None, **kwargs):
         super().__init__(mask=mask,
                          trend=trend,
                          harmonic_order=harmonic_order,
@@ -81,7 +81,8 @@ class MoSum(BaseNrt):
                          x_coords=x_coords,
                          y_coords=y_coords,
                          process=process,
-                         boundary=boundary)
+                         boundary=boundary,
+                         detection_date=detection_date)
         self.sensitivity = sensitivity
         self.critval = _mosum_ols_test_crit(sensitivity, h=h,
                                             period=10, functional='max')

@@ -6,7 +6,8 @@ from nrt.monitor import BaseNrt
 class Iqr(BaseNrt):
     def __init__(self, mask=None, trend=True, harmonic_order=3, beta=None,
                  sensitivity=1.5, process=None, q25=None, q75=None,
-                 boundary=3, x_coords=None, y_coords=None, **kwargs):
+                 boundary=3, x_coords=None, y_coords=None,
+                 detection_date=None, **kwargs):
         """Online monitoring of disturbances based on interquartile range
 
         Reference:
@@ -17,7 +18,8 @@ class Iqr(BaseNrt):
                          harmonic_order=harmonic_order,
                          beta=beta,
                          x_coords=x_coords,
-                         y_coords=y_coords)
+                         y_coords=y_coords,
+                         detection_date=detection_date)
         self.monitoring_strategy = 'IQR'
         self.sensitivity = sensitivity
         self.process = process
