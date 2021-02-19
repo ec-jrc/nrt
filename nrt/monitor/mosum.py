@@ -2,11 +2,11 @@ import numpy as np
 import xarray as xr
 
 from nrt.monitor import BaseNrt
-from nrt.utils_efp import _cusum_ols_test_crit
+from nrt.utils_efp import _mosum_ols_test_crit, _mosum_init_window
 
 
-class CuSum(BaseNrt):
-    """Monitoring using cumulative sums (CUSUM) of residuals
+class MoSum(BaseNrt):
+    """Monitoring using moving sums (MOSUM) of residuals
 
     Implementation following method as implemented in R package bFast.
 
@@ -34,6 +34,12 @@ class CuSum(BaseNrt):
         n (numpy.ndarray): Total number of non-nan observations in time-series
         critval (float): Critical test value corresponding to the chosen
             sensitivity
+        h (float): Moving window size relative to histsize. Can be one of 0.25,
+            0.5 and 1
+        winsize (numpy.ndarray): 2D array with absolute window size. Computed as
+            h*histsize
+        window (numpy.ndarray): 3D array containing the current values in the
+            window
 
     Args:
         mask (numpy.ndarray): A 2D numpy array containing pixels that should be
@@ -56,10 +62,18 @@ class CuSum(BaseNrt):
         histsize (numpy.ndarray): Number of non-nan observations in history
             period
         n (numpy.ndarray): Total number of non-nan observations in time-series
+        h (float): Moving window size relative to histsize. Can be one of 0.25,
+            0.5 and 1
+        winsize (numpy.ndarray): 2D array with absolute window size. Computed as
+            h*histsize
+        window (numpy.ndarray): 3D array containing the current values in the
+            window
     """
+
     def __init__(self, mask=None, trend=True, harmonic_order=2, beta=None,
                  x_coords=None, y_coords=None, process=None, sensitivity=0.05,
-                 boundary=None, sigma=None, histsize=None, n=None, **kwargs):
+                 boundary=None, sigma=None, histsize=None, n=None, h=0.25,
+                 winsize=None, window=None, **kwargs):
         super().__init__(mask=mask,
                          trend=trend,
                          harmonic_order=harmonic_order,
@@ -69,10 +83,22 @@ class CuSum(BaseNrt):
                          process=process,
                          boundary=boundary)
         self.sensitivity = sensitivity
-        self.critval = _cusum_ols_test_crit(sensitivity)
+        self.critval = _mosum_ols_test_crit(sensitivity, h=h,
+                                            period=10, functional='max')
         self.sigma = sigma
         self.histsize = histsize
         self.n = n
+        self.h = h
+        self.winsize = winsize
+        self.window = window
+
+    def get_process(self):
+        return np.nansum(self.window, axis=0)
+
+    def set_process(self, x):
+        pass
+
+    process = property(get_process, set_process)
 
     def fit(self, dataarray, method='ROC', alpha=0.05, **kwargs):
         """Stable history model fitting
@@ -97,31 +123,39 @@ class CuSum(BaseNrt):
 
         # histsize is necessary for normalization of residuals,
         # n is necessary for boundary calculation
-        self.histsize = np.sum(~np.isnan(residuals), axis=0)\
+        self.histsize = np.sum(~np.isnan(residuals), axis=0) \
             .astype(np.uint16)
+        self.winsize = np.floor(self.histsize * self.h).astype(np.int16)
         self.n = self.histsize
         self.boundary = np.full_like(self.histsize, np.nan, dtype=np.float32)
         self.sigma = np.nanstd(residuals, axis=0, ddof=X.shape[1])
-        # calculate process and normalize it using sigma and histsize
-        residuals_ = residuals / (self.sigma*np.sqrt(self.histsize))
-        self.process = np.nancumsum(residuals_, axis=0)[-1]
+        # calculate normalized residuals
+        residuals_ = residuals / (self.sigma * np.sqrt(self.histsize))
+        # TODO self.window can be converted to property to allow for safe
+        #   application of scaling factor with getter and setter
+        self.window = _mosum_init_window(residuals_, self.winsize)
 
     def _update_process(self, residuals, is_valid):
+        """Update process
+        (Isn't actually updating process directly, but is updating the values
+        from which the process gets calculated)"""
+        # get valid indices
+        valid_idx = np.where(is_valid)
+
+        # get indices which need to be changed and write normalized residuals
+        change_idx = np.mod(self.n-self.histsize, self.winsize)[valid_idx]
+        residuals_norm = residuals / (self.sigma * np.sqrt(self.histsize))
+        self.window[change_idx, valid_idx[0], valid_idx[1]] = residuals_norm[valid_idx]
+
         # calculate boundary
         self.n = self.n + is_valid
         x = self.n / self.histsize
-        with np.errstate(divide='ignore', invalid='ignore'):
-            self.boundary = np.where(is_valid,
-                                     np.sqrt(x * (x - 1)
-                                        * (self.critval**2
-                                           + np.log(x / (x - 1)))),
-                                     self.boundary)
-        # normalize residuals
-        residuals_norm = residuals / (self.sigma*np.sqrt(self.histsize))
-        # Update process
-        self.process = np.where(is_valid,
-                                self.process+residuals_norm,
-                                self.process)
+        log_out = np.ones_like(x)
+        self.boundary = np.where(is_valid,
+                                 self.critval * np.sqrt(
+                                     2 * np.log(x, out=log_out,
+                                                where=(x > np.exp(1)))),
+                                 self.boundary)
 
     def _detect_break(self):
         """Defines if the current process value is a confirmed break"""

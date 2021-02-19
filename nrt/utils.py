@@ -57,4 +57,3 @@ def datetimeIndex_to_decimal_dates(dates):
     ddates = years + (dates - first_year_day)/(last_year_day - first_year_day)
     return np.array(ddates, dtype=np.float)
 
-

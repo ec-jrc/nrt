@@ -47,6 +47,7 @@ from scipy import optimize
 from scipy.stats import norm
 
 from nrt.stats import ncdf
+from nrt import data
 
 
 @numba.jit(nopython=True)
@@ -125,6 +126,54 @@ def _cusum_ols_test_crit(alpha):
     """ Return critical test statistic value for some alpha """
     return optimize.golden(lambda _x: np.abs(
         2 * (norm.cdf(_x) - _x * norm.pdf(_x)) + alpha - 2), brack=(0, 10))
+
+
+def _mosum_ols_test_crit(alpha, h=0.5, period=10, functional='max'):
+    """Returns critical test value
+
+    Args:
+        alpha (float): Significance value (0-1)
+        h (float): Relative window size. One of (0.25, 0.5, 1)
+        period (int): Maximum monitoring period (2, 4, 6, 8, 10)
+        functional (str): Functional type (either 'max' or 'range')
+
+    Returns:
+        (float) Critical test value for parameters
+    """
+    if not 0.001 <= alpha <= 0.05:
+        raise ValueError("'alpha' needs to be between [0.001,0.05]")
+    crit_table = data.mre_crit_table()
+    try:
+        crit_values = crit_table[str(h)][str(period)][functional]
+    except KeyError:
+        raise ValueError("'h' needs to be in (0.25, 0.5, 1) and "
+                         "'period' in (2, 4, 6, 8, 10).")
+    sig_level = crit_table.get('sig_levels')
+    return np.interp(1 - alpha, sig_level, crit_values)
+
+
+@numba.jit(nopython=True)
+def _mosum_init_window(residuals, winsize):
+    """Initializes MOSUM moving window
+
+    Args:
+        residuals (np.ndarray): 3D array containing normalized residuals
+        winsize (np.ndarray): 2D array containing the absolute window size for
+            each time-series in residuals
+    Returns:
+        (np.ndarray) Array with length of winsize.max(). Contains as many of the
+        last non nan values in the time series as specified by winsize. Padded
+        with 0s where winsize is smaller than winsize.max().
+    """
+    x = winsize.max()
+    res = np.zeros((x, residuals.shape[1], residuals.shape[2]))
+    for i in range(residuals.shape[1]):
+        for j in range(residuals.shape[2]):
+            residuals_ = residuals[:, i, j]
+            winsize_ = winsize[i, j]
+            residuals_ = residuals_[~np.isnan(residuals_)]
+            res[:winsize_, i, j] = residuals_[-winsize_:]
+    return res
 
 
 @numba.jit(nopython=True)
