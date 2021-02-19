@@ -22,7 +22,7 @@ from nrt.fit_methods import rirls, ols
 from nrt.log import logger
 
 
-def shewhart(X, y, L):
+def shewhart(X, y, L, **kwargs):
     """Remove outliers using a Shewhart control chart
 
     As described in Brooks et al. 2014, following an initial OLS fit, outliers are
@@ -32,7 +32,8 @@ def shewhart(X, y, L):
         X ((M, N) np.ndarray): Matrix of independant variables
         y ({(M,), (M, K)} np.ndarray): Matrix of dependant variables
         L (float): control limit used for outlier filtering. Must be a positive
-            float. Lower values indicate stricter filtering
+            float. Lower values indicate stricter filtering. Residuals larger
+            than L*sigma will get screened out
 
     Returns:
         y(np.ndarray): Dependant variables with outliers set to np.nan

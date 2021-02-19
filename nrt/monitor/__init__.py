@@ -59,7 +59,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
     """
     def __init__(self, mask=None, trend=True, harmonic_order=3, beta=None,
                  x_coords=None, y_coords=None, process=None, boundary=None,
-                 detection_date=None):
+                 detection_date=None, **kwargs):
         self.mask = mask
         self.trend = trend
         self.harmonic_order = harmonic_order

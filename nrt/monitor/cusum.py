@@ -44,37 +44,21 @@ class CuSum(BaseNrt):
         trend (bool): Indicate whether stable period fit is performed with
             trend or not
         harmonic_order (int): The harmonic order of the time-series regression
-        x_coords (numpy.ndarray): x coordinates
-        y_coords (numpy.ndarray): y coordinates
         sensitivity (float): sensitivity of the monitoring. Lower numbers
             correspond to lower sensitivity. Equivalent to significance level
             'alpha' with which the boundary is computed
-        boundary (numpy.ndarray): process boundary for each time series.
-            Calculated from alpha and length of time series.
-        sigma (numpy.ndarray): Standard deviation for normalized residuals in
-            history period
-        histsize (numpy.ndarray): Number of non-nan observations in history
-            period
-        n (numpy.ndarray): Total number of non-nan observations in time-series
     """
-    def __init__(self, mask=None, trend=True, harmonic_order=2, beta=None,
-                 x_coords=None, y_coords=None, process=None, sensitivity=0.05,
-                 boundary=None, sigma=None, histsize=None, n=None,
-                 detection_date=None, **kwargs):
+    def __init__(self, trend=True, harmonic_order=2, sensitivity=0.05,
+                 mask=None, **kwargs):
         super().__init__(mask=mask,
                          trend=trend,
                          harmonic_order=harmonic_order,
-                         beta=beta,
-                         x_coords=x_coords,
-                         y_coords=y_coords,
-                         process=process,
-                         boundary=boundary,
-                         detection_date=detection_date)
+                         **kwargs)
         self.sensitivity = sensitivity
         self.critval = _cusum_ols_test_crit(sensitivity)
-        self.sigma = sigma
-        self.histsize = histsize
-        self.n = n
+        self.sigma = kwargs.get('sigma')
+        self.histsize = kwargs.get('histsize')
+        self.n = kwargs.get('n')
 
     def fit(self, dataarray, method='ROC', alpha=0.05, **kwargs):
         """Stable history model fitting
