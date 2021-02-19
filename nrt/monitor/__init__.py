@@ -133,8 +133,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 swir_flat = kwargs.pop('swir').values\
                     .astype(np.float32)[:, mask_bool]
             except (KeyError, AttributeError) as e:
-                raise ValueError('Parameters `green` and `swir` need to be '
-                           'passed for CCDC_RIRLS.')
+                raise ValueError('green and swir xarray.Dataarray(s) need to be'
+                                 ' provided using green and swir arguments'
+                                 ' respectively')
             y_flat = ccdc_rirls(X, y_flat,
                                 green=green_flat, swir=swir_flat, **kwargs)
         elif screen_outliers:
@@ -144,7 +145,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         if method == 'ROC':
             try:
                 alpha = kwargs.pop('alpha')
-            except (KeyError, AttributeError) as e:
+            except KeyError as e:
                 warnings.warn('Parameter `alpha` needs to be '
                               'passed for ROC fit. Using alpha of 0.05.')
                 alpha = 0.05
