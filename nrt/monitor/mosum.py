@@ -2,7 +2,7 @@ import numpy as np
 import xarray as xr
 
 from nrt.monitor import BaseNrt
-from nrt.utils_cusum import _mosum_ols_test_crit, _mosum_init_window
+from nrt.utils_efp import _mosum_ols_test_crit, _mosum_init_window
 
 
 class MoSum(BaseNrt):

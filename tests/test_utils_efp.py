@@ -1,7 +1,7 @@
 import numpy as np
 import xarray as xr
 import pytest
-import nrt.utils_cusum as cs
+import nrt.utils_efp as cs
 from nrt.monitor.cusum import CuSum
 from nrt.monitor.mosum import MoSum
 

@@ -2,7 +2,7 @@ import numpy as np
 import xarray as xr
 
 from nrt.monitor import BaseNrt
-from nrt.utils_cusum import _cusum_ols_test_crit
+from nrt.utils_efp import _cusum_ols_test_crit
 
 
 class CuSum(BaseNrt):
