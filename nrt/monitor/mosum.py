@@ -40,6 +40,8 @@ class MoSum(BaseNrt):
             h*histsize
         window (numpy.ndarray): 3D array containing the current values in the
             window
+        detection_date (numpy.ndarray): 2D array signalling detection date of
+            disturbances in days since 1970-01-01
 
     Args:
         mask (numpy.ndarray): A 2D numpy array containing pixels that should be
@@ -72,6 +74,7 @@ class MoSum(BaseNrt):
         self.h = h
         self.winsize = kwargs.get('winsize')
         self.window = kwargs.get('window')
+        self.monitoring_strategy = 'MOSUM'
 
     def get_process(self):
         return np.nansum(self.window, axis=0)

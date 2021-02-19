@@ -40,6 +40,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
             process value for every pixel
         boundary (Union[numpy.ndarray, int, float]): Process boundary for all
             pixels or every pixel individually
+        detection_date (numpy.ndarray): 2D array signalling detection date of
+            disturbances in days since 1970-01-01
 
     Args:
         mask (numpy.ndarray): A 2D numpy array containing pixels that should be
@@ -56,6 +58,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
             process value for every pixel
         boundary (Union[numpy.ndarray, int, float]): Process boundary for all
             pixels or every pixel individually
+        detection_date (numpy.ndarray): 2D array signalling detection date of
+            disturbances in days since 1970-01-01
     """
     def __init__(self, mask=None, trend=True, harmonic_order=3, beta=None,
                  x_coords=None, y_coords=None, process=None, boundary=None,

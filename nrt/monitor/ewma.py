@@ -32,6 +32,7 @@ class EWMA(BaseNrt):
         self.lambda_ = lambda_
         self.sensitivity = sensitivity
         self.sigma = kwargs.get('sigma')
+        self.monitoring_strategy = 'EWMA'
 
     def fit(self, dataarray, method='OLS',
             screen_outliers='Shewhart', L=5, **kwargs):

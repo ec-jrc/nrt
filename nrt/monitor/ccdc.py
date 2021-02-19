@@ -32,6 +32,8 @@ class CCDC(BaseNrt):
         boundary (int): Number of consecutive observations identified as outliers
             to signal as disturbance
         rmse (np.ndarray): 2D float array indicating RMSE for each pixel
+        detection_date (numpy.ndarray): 2D array signalling detection date of
+            disturbances in days since 1970-01-01
 
     Args:
         mask (numpy.ndarray): A 2D numpy array containing pixels that should be
@@ -56,6 +58,7 @@ class CCDC(BaseNrt):
                          **kwargs)
         self.sensitivity = sensitivity
         self.rmse = kwargs.get('rmse')
+        self.monitoring_strategy = 'CCDC'
 
     def fit(self, dataarray, method='CCDC-stable', screen_outliers='CCDC_RIRLS',
             green=None, swir=None, scaling_factor=1, **kwargs):

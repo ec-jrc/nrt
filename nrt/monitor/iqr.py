@@ -28,6 +28,8 @@ class Iqr(BaseNrt):
             to signal as disturbance
         q25 (numpy.ndarray): 25th percentile of residuals
         q75 (numpy.ndarray): 75th percentile of residuals
+        detection_date (numpy.ndarray): 2D array signalling detection date of
+            disturbances in days since 1970-01-01
 
     Args:
         mask (numpy.ndarray): A 2D numpy array containing pixels that should be
@@ -50,10 +52,10 @@ class Iqr(BaseNrt):
                          harmonic_order=harmonic_order,
                          boundary=boundary,
                          **kwargs)
-        self.monitoring_strategy = 'IQR'
         self.sensitivity = sensitivity
         self.q25 = kwargs.get('q25')
         self.q75 = kwargs.get('q75')
+        self.monitoring_strategy = 'IQR'
 
     def fit(self, dataarray, method='OLS', **kwargs):
         self.set_xy(dataarray)

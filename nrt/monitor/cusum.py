@@ -34,6 +34,8 @@ class CuSum(BaseNrt):
         n (numpy.ndarray): Total number of non-nan observations in time-series
         critval (float): Critical test value corresponding to the chosen
             sensitivity
+        detection_date (numpy.ndarray): 2D array signalling detection date of
+            disturbances in days since 1970-01-01
 
     Args:
         mask (numpy.ndarray): A 2D numpy array containing pixels that should be
@@ -59,6 +61,7 @@ class CuSum(BaseNrt):
         self.sigma = kwargs.get('sigma')
         self.histsize = kwargs.get('histsize')
         self.n = kwargs.get('n')
+        self.monitoring_strategy = 'CUSUM'
 
     def fit(self, dataarray, method='ROC', alpha=0.05, **kwargs):
         """Stable history model fitting
