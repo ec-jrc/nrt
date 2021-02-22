@@ -262,7 +262,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         Must generate a 2D or 3D numpy array with unit8 datatype
         In case of multi-band (3D) array, the band should be in the first axis
         """
-        return np.vstack((self.mask, self.detection_date))
+        return np.stack((self.mask, self.detection_date), axis=0)
 
     def report(self, filename, driver='GTiff', crs=CRS.from_epsg(3035)):
         """Write the result of reporting to a raster geospatial file
@@ -274,7 +274,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         meta = {'driver': driver,
                 'crs': crs,
                 'count': count,
-                'dtype': 'uint8',
+                'dtype': r.dtype,
                 'transform': self.transform,
                 'height': r.shape[-2],
                 'width': r.shape[-1]}
