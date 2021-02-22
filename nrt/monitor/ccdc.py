@@ -48,6 +48,8 @@ class CCDC(BaseNrt):
             high sensitivity. Value can't be zero.
         boundary (int): Number of consecutive observations identified as outliers
             to signal as disturbance
+        **kwargs: Used to set internal attributes when initializing with
+            ``.from_netcdf()``
     """
     def __init__(self, trend=True, harmonic_order=2, sensitivity=3,
                  mask=None, boundary=3, **kwargs):

@@ -49,6 +49,8 @@ class CuSum(BaseNrt):
         sensitivity (float): sensitivity of the monitoring. Lower numbers
             correspond to lower sensitivity. Equivalent to significance level
             'alpha' with which the boundary is computed
+        **kwargs: Used to set internal attributes when initializing with
+            ``.from_netcdf()``
     """
     def __init__(self, trend=True, harmonic_order=2, sensitivity=0.05,
                  mask=None, **kwargs):

@@ -22,6 +22,8 @@ class EWMA(BaseNrt):
             full memory
         sensitivity (float): Sensitivity parameter used in the computation of the
             monitoring boundaries. Lower values imply more sensitive monitoring
+        **kwargs: Used to set internal attributes when initializing with
+            ``.from_netcdf()``
     """
     def __init__(self, trend=True, harmonic_order=2, sensitivity=2, mask=None,
                  lambda_=0.3, **kwargs):

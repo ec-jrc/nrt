@@ -57,6 +57,8 @@ class MoSum(BaseNrt):
             'alpha' with which the boundary is computed
         h (float): Moving window size relative to length of the history period.
             Can be one of 0.25, 0.5 and 1
+        **kwargs: Used to set internal attributes when initializing with
+            ``.from_netcdf()``
     """
 
     def __init__(self, trend=True, harmonic_order=2, sensitivity=0.05,
