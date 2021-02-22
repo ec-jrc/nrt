@@ -67,6 +67,24 @@ class BaseNrt(metaclass=abc.ABCMeta):
         self.process = process
         self.boundary = boundary
 
+    def __eq__(self, other):
+        if not isinstance(other, type(self)):
+            return False
+        try:
+            if vars(self).keys() != vars(other).keys():
+                return False
+            for key, value in vars(self).items():
+                if isinstance(value, np.ndarray):
+                    is_equal = np.array_equal(value, getattr(other, key),
+                                              equal_nan=True)
+                else:
+                    is_equal = value == getattr(other, key)
+                if not is_equal:
+                    return False
+            return True
+        except AttributeError:
+            return False
+
     def _fit(self, X, dataarray,
              method='OLS',
              screen_outliers=None, **kwargs):
@@ -114,9 +132,10 @@ class BaseNrt(metaclass=abc.ABCMeta):
                     .astype(np.float32)[:, mask_bool]
                 swir_flat = kwargs.pop('swir').values\
                     .astype(np.float32)[:, mask_bool]
-            except KeyError as e:
-                raise ValueError('Parameters `green` and `swir` need to be '
-                           'passed for CCDC_RIRLS.')
+            except (KeyError, AttributeError) as e:
+                raise ValueError('green and swir xarray.Dataarray(s) need to be'
+                                 ' provided using green and swir arguments'
+                                 ' respectively')
             y_flat = ccdc_rirls(X, y_flat,
                                 green=green_flat, swir=swir_flat, **kwargs)
         elif screen_outliers:
@@ -299,7 +318,10 @@ class BaseNrt(metaclass=abc.ABCMeta):
                     k = 'x_coords'
                 if k == 'y':
                     k = 'y_coords'
-                if k == 'r':
+                # TODO A different way to name the third dimensions would be
+                #  good. Right now the names might also clash with other
+                #  attribute names (unlikely, but e.g. n, h in MOSUM)
+                if k in src.dimensions.keys():
                     continue
                 d.update({k:v})
         return cls(**d)
@@ -311,24 +333,30 @@ class BaseNrt(metaclass=abc.ABCMeta):
             # define variable
             x_dim = dst.createDimension('x', len(self.x))
             y_dim = dst.createDimension('y', len(self.y))
-            r_dim = dst.createDimension('r', self.beta.shape[0])
             # Create coordinate variables
-            x_var = dst.createVariable('x', np.float32, ('x',))
-            y_var = dst.createVariable('y', np.float32, ('y',))
-            r_var = dst.createVariable('r', np.uint8, ('r', ))
+            x_var = dst.createVariable('x', self.x.dtype, ('x',))
+            y_var = dst.createVariable('y', self.y.dtype, ('y',))
             # fill values of coordinate variables
             x_var[:] = self.x
             y_var[:] = self.y
-            r_var[:] = np.arange(start=0, stop=self.beta.shape[0],
-                                 dtype=np.uint8)
-            # Add beta variable
-            beta_var = dst.createVariable('beta', np.float32, ('r', 'y', 'x'),
-                                          zlib=True)
-            beta_var[:] = self.beta
-            # Create other variables
+
+            # Starting letter for third dimensions
+            third = 'a'
             for k,v in attr.items():
-                if k not in ['x', 'y', 'beta']:
+                if k not in ['x', 'y']:
                     if isinstance(v, np.ndarray):
+                        if v.ndim == 3:
+                            dim_3 = dst.createDimension(third, v.shape[0])
+                            var_3 = dst.createVariable(third, np.uint16, (third,))
+                            var_3[:] = np.arange(start=0,
+                                                 stop=v.shape[0],
+                                                 dtype=np.uint8)
+                            var_3d = dst.createVariable(k, v.dtype,
+                                                        (third, 'y', 'x'),
+                                                        zlib=True)
+                            var_3d[:] = v
+                            third = chr(ord(third) + 1)
+                            continue
                         # bool array are stored as int8
                         dtype = np.uint8 if v.dtype == bool else v.dtype
                         new_var = dst.createVariable(k, dtype, ('y', 'x'))
