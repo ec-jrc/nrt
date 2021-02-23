@@ -259,7 +259,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
 
         In general returns the mask attribute, but may be overridden in subclass
         to report a different output (for instance mask and disturbance magnitude)
-        Must generate a 2D or 3D numpy array with unit8 datatype
+        Must generate a 2D or 3D numpy array with geotiff compatible datatype.
         In case of multi-band (3D) array, the band should be in the first axis
         """
         return np.stack((self.mask, self.detection_date), axis=0)
