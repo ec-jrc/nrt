@@ -132,7 +132,12 @@ class BaseNrt(metaclass=abc.ABCMeta):
         # 1. Optionally screen outliers
         #   This just updats y_flat
         if screen_outliers == 'Shewhart':
-            y_flat = shewhart(X, y_flat, **kwargs)
+            try:
+                L = kwargs.pop('L')
+            except KeyError:
+                raise ValueError('"L" has to be passed for "Shewhart" outlier '
+                                 'screening.')
+            y_flat = shewhart(X, y_flat, L=L)
         elif screen_outliers == 'CCDC_RIRLS':
             try:
                 green_flat = kwargs.pop('green').values\

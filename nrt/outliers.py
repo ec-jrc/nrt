@@ -22,7 +22,7 @@ from nrt.fit_methods import rirls, ols
 from nrt.log import logger
 
 
-def shewhart(X, y, L, **kwargs):
+def shewhart(X, y, L):
     """Remove outliers using a Shewhart control chart
 
     As described in Brooks et al. 2014, following an initial OLS fit, outliers are
