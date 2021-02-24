@@ -9,43 +9,47 @@ class EWMA(BaseNrt):
     Implementation following method described in Brooks et al. 2014.
 
     Args:
+        mask (numpy.ndarray): A 2D numpy array containing pixels that should be
+            monitored marked as ``1`` and pixels that should be excluded (marked
+            as ``0``). Typically a stable forest mask when doing forest disturbance
+            monitoring. If no mask is supplied all pixels are considered and
+            a mask is created following the ``fit()`` call
+        trend (bool): Indicate whether stable period fit is performed with
+            trend or not
+        harmonic_order (int): The harmonic order of the time-series regression
         lambda_ (float): Weight of previous observation in the monitoring process
             (memory). Valid range is [0,1], 1 corresponding to no memory and 0 to
             full memory
         sensitivity (float): Sensitivity parameter used in the computation of the
             monitoring boundaries. Lower values imply more sensitive monitoring
+        **kwargs: Used to set internal attributes when initializing with
+            ``.from_netcdf()``
     """
-    def __init__(self, mask=None, trend=True, harmonic_order=2, beta=None,
-                 x_coords=None, y_coords=None, lambda_=0.3, sensitivity=2,
-                 sigma=None, boundary=None, process=None, nodata=None, **kwargs):
+    def __init__(self, trend=True, harmonic_order=2, sensitivity=2, mask=None,
+                 lambda_=0.3, **kwargs):
         super().__init__(mask=mask,
                          trend=trend,
                          harmonic_order=harmonic_order,
-                         beta=beta,
-                         x_coords=x_coords,
-                         y_coords=y_coords)
+                         **kwargs)
         self.lambda_ = lambda_
         self.sensitivity = sensitivity
-        self.sigma = sigma
-        self.boundary = boundary  # control limit
-        self.process = process  # array with most recent EWMA values
-        self.nodata = nodata  # Only necessary for singalling missing data
+        self.sigma = kwargs.get('sigma')
+        self.monitoring_strategy = 'EWMA'
 
     def fit(self, dataarray, method='OLS',
-            screen_outliers='Shewhart', **kwargs):
+            screen_outliers='Shewhart', L=5, **kwargs):
         """Stable history model fitting
 
         The preferred fitting method for this monitoring type is ``'Shewhart'``.
-        It requires a control limit parameter ``L``. See ``nrt.fit_methods.shewart``
+        It requires a control limit parameter ``L``. See ``nrt.outliers.shewart``
         for more details
         """
         self.set_xy(dataarray)
         X = self.build_design_matrix(dataarray, trend=self.trend,
                                      harmonic_order=self.harmonic_order)
         beta, residuals = self._fit(X, dataarray=dataarray,
-                                    method=method, **kwargs)
+                                    method=method, L=L)
         self.beta = beta
-        self.nodata = np.isnan(residuals[-1])
         # get new standard deviation
         self.sigma = np.nanstd(residuals, axis=0)
         # calculate EWMA control limits and save them
@@ -64,13 +68,14 @@ class EWMA(BaseNrt):
         """Update process value (EWMA in this case) with new acquisition
 
         Args:
-            residuals (numpy.ndarray): 2 dimensional array corresponding to the residuals
-                of a new acquisition
+            residuals (numpy.ndarray): 2 dimensional array corresponding to the
+                residuals of a new acquisition
             is_valid (np.ndarray): A boolean 2D array indicating where process
                 values should be updated
 
         Returns:
-            numpy.ndarray: A 2 dimensional array containing the updated EWMA values
+            numpy.ndarray: A 2 dimensional array containing the updated EWMA
+                values
         """
         # If the monitoring has not been initialized yet, raise an error
         if self.process is None:
@@ -93,8 +98,6 @@ class EWMA(BaseNrt):
                             (1 - lambda_) * ewma + lambda_ * array)
         return ewma_new
 
-    # TODO: only static methods can be jitted, make _update_ewma external to the class
-    # and _init_process static
     def _init_process(self, array):
         """Initialize the ewma process value using the residuals of the fitted values
 

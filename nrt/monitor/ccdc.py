@@ -24,15 +24,16 @@ class CCDC(BaseNrt):
         trend (bool): Indicate whether stable period fit is performed with
             trend or not
         harmonic_order (int): The harmonic order of the time-series regression
+        beta (np.ndarray): 3D array containing the model coefficients
         x (numpy.ndarray): array of x coordinates
         y (numpy.ndarray): array of y coordinates
         sensitivity (float): sensitivity of the monitoring. Lower numbers are
             high sensitivity. Value can't be zero.
         boundary (int): Number of consecutive observations identified as outliers
             to signal as disturbance
-        nodata (np.ndarray): 2D Boolean array. Signals missing data in the newest
-            acquisition
         rmse (np.ndarray): 2D float array indicating RMSE for each pixel
+        detection_date (numpy.ndarray): 2D array signalling detection date of
+            disturbances in days since 1970-01-01
 
     Args:
         mask (numpy.ndarray): A 2D numpy array containing pixels that should be
@@ -43,28 +44,23 @@ class CCDC(BaseNrt):
         trend (bool): Indicate whether stable period fit is performed with
             trend or not
         harmonic_order (int): The harmonic order of the time-series regression
-        x_coords (numpy.ndarray): x coordinates
-        y_coords (numpy.ndarray): y coordinates
         sensitivity (float): sensitivity of the monitoring. Lower numbers are
             high sensitivity. Value can't be zero.
         boundary (int): Number of consecutive observations identified as outliers
             to signal as disturbance
-        rmse (np.ndarray): 2D float array indicating RMSE for each pixel
+        **kwargs: Used to set internal attributes when initializing with
+            ``.from_netcdf()``
     """
-    def __init__(self, mask=None, trend=True, harmonic_order=2, beta=None,
-                 x_coords=None, y_coords=None, sensitivity=3,
-                 boundary=3, process=None, rmse=None,
-                 **kwargs):
+    def __init__(self, trend=True, harmonic_order=2, sensitivity=3,
+                 mask=None, boundary=3, **kwargs):
         super().__init__(mask=mask,
                          trend=trend,
                          harmonic_order=harmonic_order,
-                         beta=beta,
-                         x_coords=x_coords,
-                         y_coords=y_coords)
+                         boundary=boundary,
+                         **kwargs)
         self.sensitivity = sensitivity
-        self.process = process
-        self.boundary = boundary
-        self.rmse = rmse
+        self.rmse = kwargs.get('rmse')
+        self.monitoring_strategy = 'CCDC'
 
     def fit(self, dataarray, method='CCDC-stable', screen_outliers='CCDC_RIRLS',
             green=None, swir=None, scaling_factor=1, **kwargs):

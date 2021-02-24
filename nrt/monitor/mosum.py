@@ -34,12 +34,14 @@ class MoSum(BaseNrt):
         n (numpy.ndarray): Total number of non-nan observations in time-series
         critval (float): Critical test value corresponding to the chosen
             sensitivity
-        h (float): Moving window size relative to histsize. Can be one of 0.25,
-            0.5 and 1
+        h (float): Moving window size relative to length of the history period.
+            Can be one of 0.25, 0.5 and 1
         winsize (numpy.ndarray): 2D array with absolute window size. Computed as
             h*histsize
         window (numpy.ndarray): 3D array containing the current values in the
             window
+        detection_date (numpy.ndarray): 2D array signalling detection date of
+            disturbances in days since 1970-01-01
 
     Args:
         mask (numpy.ndarray): A 2D numpy array containing pixels that should be
@@ -50,47 +52,31 @@ class MoSum(BaseNrt):
         trend (bool): Indicate whether stable period fit is performed with
             trend or not
         harmonic_order (int): The harmonic order of the time-series regression
-        x_coords (numpy.ndarray): x coordinates
-        y_coords (numpy.ndarray): y coordinates
         sensitivity (float): sensitivity of the monitoring. Lower numbers
             correspond to lower sensitivity. Equivalent to significance level
             'alpha' with which the boundary is computed
-        boundary (numpy.ndarray): process boundary for each time series.
-            Calculated from alpha and length of time series.
-        sigma (numpy.ndarray): Standard deviation for normalized residuals in
-            history period
-        histsize (numpy.ndarray): Number of non-nan observations in history
-            period
-        n (numpy.ndarray): Total number of non-nan observations in time-series
-        h (float): Moving window size relative to histsize. Can be one of 0.25,
-            0.5 and 1
-        winsize (numpy.ndarray): 2D array with absolute window size. Computed as
-            h*histsize
-        window (numpy.ndarray): 3D array containing the current values in the
-            window
+        h (float): Moving window size relative to length of the history period.
+            Can be one of 0.25, 0.5 and 1
+        **kwargs: Used to set internal attributes when initializing with
+            ``.from_netcdf()``
     """
 
-    def __init__(self, mask=None, trend=True, harmonic_order=2, beta=None,
-                 x_coords=None, y_coords=None, process=None, sensitivity=0.05,
-                 boundary=None, sigma=None, histsize=None, n=None, h=0.25,
-                 winsize=None, window=None, **kwargs):
+    def __init__(self, trend=True, harmonic_order=2, sensitivity=0.05,
+                 mask=None, h=0.25, **kwargs):
         super().__init__(mask=mask,
                          trend=trend,
                          harmonic_order=harmonic_order,
-                         beta=beta,
-                         x_coords=x_coords,
-                         y_coords=y_coords,
-                         process=process,
-                         boundary=boundary)
+                         **kwargs)
         self.sensitivity = sensitivity
         self.critval = _mosum_ols_test_crit(sensitivity, h=h,
                                             period=10, functional='max')
-        self.sigma = sigma
-        self.histsize = histsize
-        self.n = n
+        self.sigma = kwargs.get('sigma')
+        self.histsize = kwargs.get('histsize')
+        self.n = kwargs.get('n')
         self.h = h
-        self.winsize = winsize
-        self.window = window
+        self.winsize = kwargs.get('winsize')
+        self.window = kwargs.get('window')
+        self.monitoring_strategy = 'MOSUM'
 
     def get_process(self):
         return np.nansum(self.window, axis=0)

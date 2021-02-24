@@ -32,7 +32,8 @@ def shewhart(X, y, L):
         X ((M, N) np.ndarray): Matrix of independant variables
         y ({(M,), (M, K)} np.ndarray): Matrix of dependant variables
         L (float): control limit used for outlier filtering. Must be a positive
-            float. Lower values indicate stricter filtering
+            float. Lower values indicate stricter filtering. Residuals larger
+            than L*sigma will get screened out
 
     Returns:
         y(np.ndarray): Dependant variables with outliers set to np.nan
