@@ -16,6 +16,7 @@ Citations:
   Sensing of Environment 144 (March): 152–71.
   https://doi.org/10.1016/j.rse.2014.01.011.
 """
+import warnings
 import numpy as np
 
 from nrt.fit_methods import rirls, ols
@@ -59,7 +60,7 @@ def ccdc_rirls(X, y, green, swir, scaling_factor=1, **kwargs):
         **kwargs: arguments to be passed to fit_methods.rirls()
 
     Returns:
-        np.ndarray: 2D (flat) boolean array with True = clear
+        np.ndarray: 2D (flat) boolean array with outliers set to np.nan
     """
     # 1. estimate time series model using rirls for green and swir
     # TODO could be sped up, since masking is the same for green and swir
@@ -68,9 +69,13 @@ def ccdc_rirls(X, y, green, swir, scaling_factor=1, **kwargs):
     # Update mask using thresholds
     is_outlier = np.logical_or(g_residuals > 0.04*scaling_factor,
                                s_residuals < -0.04*scaling_factor)
-    y[is_outlier] = np.nan
 
-    logger.debug('%.2f%% of (non nan) pixels removed.',
-                 (np.count_nonzero(is_outlier)
-                  / np.count_nonzero(~np.isnan(green)))*100)
+    removed = np.count_nonzero(is_outlier) / np.count_nonzero(~np.isnan(green))
+    if removed > 0.5:
+        logger.warn('More than 50% of pixels have been removed as outliers. '
+                    'Check if scaling_factor has been set correctly.')
+        logger.debug('%.2f%% of (non nan) pixels removed.',
+                     removed * 100)
+
+    y[is_outlier] = np.nan
     return y
