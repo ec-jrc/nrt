@@ -15,7 +15,6 @@ from nrt.outliers import ccdc_rirls, shewhart
 from nrt.utils_efp import _cusum_rec_test_crit
 
 
-
 class BaseNrt(metaclass=abc.ABCMeta):
     """Abstract class for Near Real Time change detection
 
