@@ -3,6 +3,7 @@ import datetime
 
 import pytest
 import xarray as xr
+import rasterio
 import numpy as np
 import pandas as pd
 
@@ -52,4 +53,12 @@ def ndvi_monitoring_numpy():
     return values, dates
 
 
-
+@pytest.fixture
+def forest_mask():
+    """Forest density over romania
+    """
+    filename = pkg_resources.resource_filename('nrt',
+                                               'data/tree_cover_density_2018_romania.tif')
+    with rasterio.open(filename) as src:
+        arr = src.read(1)
+    return (arr > 30).astype(np.int8)
