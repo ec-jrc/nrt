@@ -59,7 +59,7 @@ def ccdc_rirls(X, y, green, swir, scaling_factor=1, **kwargs):
         **kwargs: arguments to be passed to fit_methods.rirls()
 
     Returns:
-        np.ndarray: 2D (flat) boolean array with outliers set to np.nan
+        np.ndarray: y with outliers set to np.nan
     """
     # 1. estimate time series model using rirls for green and swir
     # TODO could be sped up, since masking is the same for green and swir
