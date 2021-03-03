@@ -7,4 +7,4 @@ _handler.setFormatter(_formatter)
 
 logger = logging.getLogger('nrt')
 logger.addHandler(_handler)
-logger.setLevel(logging.DEBUG)
+logger.setLevel(logging.INFO)

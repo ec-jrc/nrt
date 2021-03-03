@@ -167,12 +167,11 @@ def _mosum_init_window(residuals, winsize):
     """
     x = winsize.max()
     res = np.zeros((x, residuals.shape[1], residuals.shape[2]))
-    for i in range(residuals.shape[1]):
-        for j in range(residuals.shape[2]):
-            residuals_ = residuals[:, i, j]
-            winsize_ = winsize[i, j]
-            residuals_ = residuals_[~np.isnan(residuals_)]
-            res[:winsize_, i, j] = residuals_[-winsize_:]
+    for i, j in zip(*np.where(winsize > 0)):
+        residuals_ = residuals[:, i, j]
+        winsize_ = winsize[i, j]
+        residuals_ = residuals_[~np.isnan(residuals_)]
+        res[:winsize_, i, j] = residuals_[-winsize_:]
     return res
 
 

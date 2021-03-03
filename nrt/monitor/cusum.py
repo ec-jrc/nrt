@@ -94,27 +94,23 @@ class CuSum(BaseNrt):
         self.boundary = np.full_like(self.histsize, np.nan, dtype=np.float32)
         self.sigma = np.nanstd(residuals, axis=0, ddof=X.shape[1])
         # calculate process and normalize it using sigma and histsize
-        residuals_ = residuals / (self.sigma*np.sqrt(self.histsize))
+        with np.errstate(divide='ignore', invalid='ignore'):
+            residuals_ = residuals / (self.sigma*np.sqrt(self.histsize))
         self.process = np.nancumsum(residuals_, axis=0)[-1]
 
     def _update_process(self, residuals, is_valid):
-        # calculate boundary
-        self.n = self.n + is_valid
-        x = self.n / self.histsize
         with np.errstate(divide='ignore', invalid='ignore'):
+            # calculate boundary
+            self.n = self.n + is_valid
+            x = self.n / self.histsize
             self.boundary = np.where(is_valid,
                                      np.sqrt(x * (x - 1)
                                         * (self.critval**2
                                            + np.log(x / (x - 1)))),
                                      self.boundary)
-        # normalize residuals
-        residuals_norm = residuals / (self.sigma*np.sqrt(self.histsize))
+            # normalize residuals
+            residuals_norm = residuals / (self.sigma*np.sqrt(self.histsize))
         # Update process
         self.process = np.where(is_valid,
                                 self.process+residuals_norm,
                                 self.process)
-
-    def _detect_break(self):
-        """Defines if the current process value is a confirmed break"""
-        is_break = np.abs(self.process) > self.boundary
-        return is_break

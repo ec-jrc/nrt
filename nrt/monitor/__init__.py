@@ -64,7 +64,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
     def __init__(self, mask=None, trend=True, harmonic_order=3, beta=None,
                  x_coords=None, y_coords=None, process=None, boundary=None,
                  detection_date=None, **kwargs):
-        self.mask = mask
+        self.mask = np.copy(mask) if isinstance(mask, np.ndarray) else mask
         self.trend = trend
         self.harmonic_order = harmonic_order
         self.x = x_coords
@@ -144,7 +144,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
                     .astype(np.float32)[:, mask_bool]
                 swir_flat = kwargs.pop('swir').values\
                     .astype(np.float32)[:, mask_bool]
-            except (KeyError, AttributeError) as e:
+            except (KeyError, AttributeError):
                 raise ValueError('green and swir xarray.Dataarray(s) need to be'
                                  ' provided using green and swir arguments'
                                  ' respectively')
@@ -165,19 +165,20 @@ class BaseNrt(metaclass=abc.ABCMeta):
             dates = dataarray.time.values.astype('datetime64[D]').astype('int')
             # crit already calculated here, to allow numba in roc_stable_fit
             crit = _cusum_rec_test_crit(alpha)
-            beta_flat, residuals_flat, is_stable = \
-                roc_stable_fit(X, y_flat, dates,
-                               alpha=alpha, crit=crit)
-            is_stable_2d = is_stable.reshape(y.shape[1], y.shape[2])
-            self.mask[~is_stable_2d] = 2
+            # Suppress numba np.dot() warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                beta_flat, residuals_flat, is_stable = \
+                    roc_stable_fit(X, y_flat, dates,
+                                   alpha=alpha, crit=crit)
+            self.mask[self.mask > 0][~is_stable] = 2
         elif method == 'CCDC-stable':
             if not self.trend:
                 raise ValueError('Method "CCDC" requires "trend" to be true.')
             dates = dataarray.time.values
             beta_flat, residuals_flat, is_stable = \
                 ccdc_stable_fit(X, y_flat, dates, **kwargs)
-            is_stable_2d = is_stable.reshape(y.shape[1], y.shape[2])
-            self.mask[~is_stable_2d] = 2
+            self.mask[self.mask > 0][~is_stable] = 2
         elif method == 'OLS':
             beta_flat, residuals_flat = ols(X, y_flat)
         elif method == 'LASSO':
@@ -232,9 +233,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
 
         This method may be overridden in subclass if required
         """
-        is_break = np.floor_divide(self.process,
-                                   self.boundary).astype(np.uint8)
-        return is_break
+        return np.abs(self.process) > self.boundary
 
     def _detect_extreme_outliers(self, residuals, is_valid):
         """Detect extreme outliers in an array of residuals from prediction
