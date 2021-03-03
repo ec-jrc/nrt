@@ -15,6 +15,7 @@ from nrt.outliers import ccdc_rirls, shewhart
 from nrt.utils_efp import _cusum_rec_test_crit
 
 
+
 class BaseNrt(metaclass=abc.ABCMeta):
     """Abstract class for Near Real Time change detection
 
@@ -126,7 +127,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         beta_shape = (X.shape[1], shape[1], shape[2])
         # Create empty arrays with output shapes to store reg coefficients and residuals
         beta = np.zeros(beta_shape, dtype=np.float32)
-        residuals = np.full_like(y, np.nan, dtype=np.float32)
+        residuals = np.zeros_like(y, dtype=np.float32)
         y_flat = y[:, mask_bool]
 
         # 1. Optionally screen outliers
@@ -233,9 +234,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
 
         This method may be overridden in subclass if required
         """
-        is_break = np.floor_divide(self.process,
-                                   self.boundary).astype(np.uint8)
-        return is_break
+        return np.abs(self.process) > self.boundary
 
     def _detect_extreme_outliers(self, residuals, is_valid):
         """Detect extreme outliers in an array of residuals from prediction

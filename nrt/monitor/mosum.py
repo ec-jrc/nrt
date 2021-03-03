@@ -111,6 +111,7 @@ class MoSum(BaseNrt):
         # n is necessary for boundary calculation
         self.histsize = np.sum(~np.isnan(residuals), axis=0) \
             .astype(np.uint16)
+        self.histsize[self.mask == 0] = 0
         self.winsize = np.floor(self.histsize * self.h).astype(np.int16)
         self.n = self.histsize
         self.boundary = np.full_like(self.histsize, np.nan, dtype=np.float32)
@@ -142,8 +143,3 @@ class MoSum(BaseNrt):
                                      2 * np.log(x, out=log_out,
                                                 where=(x > np.exp(1)))),
                                  self.boundary)
-
-    def _detect_break(self):
-        """Defines if the current process value is a confirmed break"""
-        is_break = np.abs(self.process) > self.boundary
-        return is_break

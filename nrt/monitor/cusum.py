@@ -113,8 +113,3 @@ class CuSum(BaseNrt):
         self.process = np.where(is_valid,
                                 self.process+residuals_norm,
                                 self.process)
-
-    def _detect_break(self):
-        """Defines if the current process value is a confirmed break"""
-        is_break = np.abs(self.process) > self.boundary
-        return is_break
