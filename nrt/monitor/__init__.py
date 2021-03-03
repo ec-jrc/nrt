@@ -64,7 +64,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
     def __init__(self, mask=None, trend=True, harmonic_order=3, beta=None,
                  x_coords=None, y_coords=None, process=None, boundary=None,
                  detection_date=None, **kwargs):
-        self.mask = mask
+        self.mask = np.copy(mask)
         self.trend = trend
         self.harmonic_order = harmonic_order
         self.x = x_coords
@@ -126,7 +126,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         beta_shape = (X.shape[1], shape[1], shape[2])
         # Create empty arrays with output shapes to store reg coefficients and residuals
         beta = np.zeros(beta_shape, dtype=np.float32)
-        residuals = np.zeros_like(y, dtype=np.float32)
+        residuals = np.full_like(y, np.nan, dtype=np.float32)
         y_flat = y[:, mask_bool]
 
         # 1. Optionally screen outliers
@@ -165,19 +165,20 @@ class BaseNrt(metaclass=abc.ABCMeta):
             dates = dataarray.time.values.astype('datetime64[D]').astype('int')
             # crit already calculated here, to allow numba in roc_stable_fit
             crit = _cusum_rec_test_crit(alpha)
-            beta_flat, residuals_flat, is_stable = \
-                roc_stable_fit(X, y_flat, dates,
-                               alpha=alpha, crit=crit)
-            is_stable_2d = is_stable.reshape(y.shape[1], y.shape[2])
-            self.mask[~is_stable_2d] = 2
+            # Suppress numba np.dot() warnings
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                beta_flat, residuals_flat, is_stable = \
+                    roc_stable_fit(X, y_flat, dates,
+                                   alpha=alpha, crit=crit)
+            self.mask[self.mask > 0][~is_stable] = 2
         elif method == 'CCDC-stable':
             if not self.trend:
                 raise ValueError('Method "CCDC" requires "trend" to be true.')
             dates = dataarray.time.values
             beta_flat, residuals_flat, is_stable = \
                 ccdc_stable_fit(X, y_flat, dates, **kwargs)
-            is_stable_2d = is_stable.reshape(y.shape[1], y.shape[2])
-            self.mask[~is_stable_2d] = 2
+            self.mask[self.mask > 0][~is_stable] = 2
         elif method == 'OLS':
             beta_flat, residuals_flat = ols(X, y_flat)
         elif method == 'LASSO':
