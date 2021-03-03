@@ -117,7 +117,8 @@ class MoSum(BaseNrt):
         self.boundary = np.full_like(self.histsize, np.nan, dtype=np.float32)
         self.sigma = np.nanstd(residuals, axis=0, ddof=X.shape[1])
         # calculate normalized residuals
-        residuals_ = residuals / (self.sigma * np.sqrt(self.histsize))
+        with np.errstate(divide='ignore', invalid='ignore'):
+            residuals_ = residuals / (self.sigma * np.sqrt(self.histsize))
         # TODO self.window can be converted to property to allow for safe
         #   application of scaling factor with getter and setter
         self.window = _mosum_init_window(residuals_, self.winsize)
@@ -130,13 +131,14 @@ class MoSum(BaseNrt):
         valid_idx = np.where(is_valid)
 
         # get indices which need to be changed and write normalized residuals
-        change_idx = np.mod(self.n-self.histsize, self.winsize)[valid_idx]
-        residuals_norm = residuals / (self.sigma * np.sqrt(self.histsize))
-        self.window[change_idx, valid_idx[0], valid_idx[1]] = residuals_norm[valid_idx]
+        with np.errstate(divide='ignore', invalid='ignore'):
+            change_idx = np.mod(self.n-self.histsize, self.winsize)[valid_idx]
+            residuals_norm = residuals / (self.sigma * np.sqrt(self.histsize))
+            self.window[change_idx, valid_idx[0], valid_idx[1]] = residuals_norm[valid_idx]
 
-        # calculate boundary
-        self.n = self.n + is_valid
-        x = self.n / self.histsize
+            # calculate boundary
+            self.n = self.n + is_valid
+            x = self.n / self.histsize
         log_out = np.ones_like(x)
         self.boundary = np.where(is_valid,
                                  self.critval * np.sqrt(
