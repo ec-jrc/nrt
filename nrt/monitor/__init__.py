@@ -145,7 +145,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
                     .astype(np.float32)[:, mask_bool]
                 swir_flat = kwargs.pop('swir').values\
                     .astype(np.float32)[:, mask_bool]
-            except (KeyError, AttributeError) as e:
+            except (KeyError, AttributeError):
                 raise ValueError('green and swir xarray.Dataarray(s) need to be'
                                  ' provided using green and swir arguments'
                                  ' respectively')

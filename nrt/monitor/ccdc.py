@@ -99,7 +99,8 @@ class CCDC(BaseNrt):
     def _update_process(self, residuals, is_valid):
         # TODO: Calculation is different for multivariate analysis
         # (mean of all bands has to be > sensitivity)
-        is_outlier = np.abs(residuals) / self.rmse > self.sensitivity
+        with np.errstate(divide='ignore'):
+            is_outlier = np.abs(residuals) / self.rmse > self.sensitivity
         # Update process
         if self.process is None:
             self.process = np.zeros_like(residuals, dtype=np.uint8)
