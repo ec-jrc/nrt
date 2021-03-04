@@ -233,7 +233,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
 
         This method may be overridden in subclass if required
         """
-        return np.abs(self.process) > self.boundary
+        return np.abs(self.process) >= self.boundary
 
     def _detect_extreme_outliers(self, residuals, is_valid):
         """Detect extreme outliers in an array of residuals from prediction
