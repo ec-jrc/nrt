@@ -23,7 +23,8 @@ class EWMA(BaseNrt):
         sensitivity (float): Sensitivity parameter used in the computation of the
             monitoring boundaries. Lower values imply more sensitive monitoring
         threshold_outlier (float): Values bigger than threshold_outlier*sigma
-            will get screened out during monitoring
+            (extreme outliers) will get screened out during monitoring and will
+            not contribute to updating the EWMA process value
         **kwargs: Used to set internal attributes when initializing with
             ``.from_netcdf()``
     """
