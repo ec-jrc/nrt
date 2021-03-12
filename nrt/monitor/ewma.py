@@ -62,6 +62,9 @@ class EWMA(BaseNrt):
             self.lambda_ / (2 - self.lambda_)))
         # calculate the EWMA value for the end of the training period and save it
         self.process = self._init_process(residuals)
+        # Mark everything as unstable that already crosses the boundary after
+        # fitting
+        self.mask[self.process > self.boundary] = 2
 
     def _detect_extreme_outliers(self, residuals, is_valid):
         is_eoutlier = np.abs(residuals) > self.threshold * self.sigma
@@ -99,8 +102,8 @@ class EWMA(BaseNrt):
         """Initialize the ewma process value using the residuals of the fitted values
 
         Args:
-            array (np.ndarray): 3 dimensional array of residuals. Usually the residuals
-                from the model fitting
+            array (np.ndarray): 3 dimensional array of residuals. Usually the
+                residuals from the model fitting
 
         Returns:
             numpy.ndarray: A 2 dimensional array corresponding to the last slice
