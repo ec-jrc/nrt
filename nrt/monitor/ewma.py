@@ -22,17 +22,21 @@ class EWMA(BaseNrt):
             full memory
         sensitivity (float): Sensitivity parameter used in the computation of the
             monitoring boundaries. Lower values imply more sensitive monitoring
+        threshold_outlier (float): Values bigger than threshold_outlier*sigma
+            (extreme outliers) will get screened out during monitoring and will
+            not contribute to updating the EWMA process value
         **kwargs: Used to set internal attributes when initializing with
             ``.from_netcdf()``
     """
     def __init__(self, trend=True, harmonic_order=2, sensitivity=2, mask=None,
-                 lambda_=0.3, **kwargs):
+                 lambda_=0.3, threshold_outlier=2, **kwargs):
         super().__init__(mask=mask,
                          trend=trend,
                          harmonic_order=harmonic_order,
                          **kwargs)
         self.lambda_ = lambda_
         self.sensitivity = sensitivity
+        self.threshold = threshold_outlier
         self.sigma = kwargs.get('sigma')
         self.monitoring_strategy = 'EWMA'
 
@@ -40,15 +44,16 @@ class EWMA(BaseNrt):
             screen_outliers='Shewhart', L=5, **kwargs):
         """Stable history model fitting
 
-        The preferred fitting method for this monitoring type is ``'Shewhart'``.
-        It requires a control limit parameter ``L``. See ``nrt.outliers.shewart``
-        for more details
+        The preferred fitting method for this monitoring type is ``'OLS'`` with
+        outlier screening ``'Shewhart'``. It requires a control limit parameter
+        ``L``. See ``nrt.outliers.shewart`` for more details
         """
         self.set_xy(dataarray)
         X = self.build_design_matrix(dataarray, trend=self.trend,
                                      harmonic_order=self.harmonic_order)
-        beta, residuals = self._fit(X, dataarray=dataarray,
-                                    method=method, L=L)
+        beta, residuals = self._fit(X, dataarray=dataarray, method=method,
+                                    screen_outliers=screen_outliers, L=L,
+                                    **kwargs)
         self.beta = beta
         # get new standard deviation
         self.sigma = np.nanstd(residuals, axis=0)
@@ -59,9 +64,12 @@ class EWMA(BaseNrt):
             self.lambda_ / (2 - self.lambda_)))
         # calculate the EWMA value for the end of the training period and save it
         self.process = self._init_process(residuals)
+        # Mark everything as unstable that already crosses the boundary after
+        # fitting
+        self.mask[self.process > self.boundary] = 2
 
     def _detect_extreme_outliers(self, residuals, is_valid):
-        is_eoutlier = np.abs(residuals) > self.sensitivity * self.sigma
+        is_eoutlier = np.abs(residuals) > self.threshold * self.sigma
         return np.logical_and(~is_eoutlier, is_valid)
 
     def _update_process(self, residuals, is_valid):
@@ -96,8 +104,8 @@ class EWMA(BaseNrt):
         """Initialize the ewma process value using the residuals of the fitted values
 
         Args:
-            array (np.ndarray): 3 dimensional array of residuals. Usually the residuals
-                from the model fitting
+            array (np.ndarray): 3 dimensional array of residuals. Usually the
+                residuals from the model fitting
 
         Returns:
             numpy.ndarray: A 2 dimensional array corresponding to the last slice
