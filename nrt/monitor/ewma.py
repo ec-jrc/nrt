@@ -44,15 +44,16 @@ class EWMA(BaseNrt):
             screen_outliers='Shewhart', L=5, **kwargs):
         """Stable history model fitting
 
-        The preferred fitting method for this monitoring type is ``'Shewhart'``.
-        It requires a control limit parameter ``L``. See ``nrt.outliers.shewart``
-        for more details
+        The preferred fitting method for this monitoring type is ``'OLS'`` with
+        outlier screening ``'Shewhart'``. It requires a control limit parameter
+        ``L``. See ``nrt.outliers.shewart`` for more details
         """
         self.set_xy(dataarray)
         X = self.build_design_matrix(dataarray, trend=self.trend,
                                      harmonic_order=self.harmonic_order)
         beta, residuals = self._fit(X, dataarray=dataarray, method=method,
-                                    screen_outliers=screen_outliers, L=L)
+                                    screen_outliers=screen_outliers, L=L,
+                                    **kwargs)
         self.beta = beta
         # get new standard deviation
         self.sigma = np.nanstd(residuals, axis=0)
