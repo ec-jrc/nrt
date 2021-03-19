@@ -260,6 +260,8 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
         residuals (numpy.ndarray): The array of residuals
         is_stable (numpy.ndarray): 1D Boolean array indicating stability
     """
+    X = X.astype(np.float64)
+    y = y.astype(np.float64)
     is_stable = np.ones(y.shape[1], dtype=np.bool_)
     beta = np.full((X.shape[1], y.shape[1]), np.nan, dtype=np.float64)
     nreg = X.shape[1]

@@ -170,8 +170,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 warnings.simplefilter("ignore")
                 # ROC requires double precision when using numba
                 beta_flat, residuals_flat, is_stable = roc_stable_fit(
-                    X.astype(np.float64), y_flat.astype(np.float64), dates,
-                    alpha=alpha, crit=crit)
+                    X, y_flat, dates, alpha=alpha, crit=crit)
             self.mask[self.mask > 0][~is_stable] = 2
         elif method == 'CCDC-stable':
             if not self.trend:
