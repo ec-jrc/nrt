@@ -261,7 +261,7 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
         is_stable (numpy.ndarray): 1D Boolean array indicating stability
     """
     is_stable = np.ones(y.shape[1], dtype=np.bool_)
-    beta = np.full((X.shape[1], y.shape[1]), np.nan, dtype=np.float32)
+    beta = np.full((X.shape[1], y.shape[1]), np.nan, dtype=np.float64)
     nreg = X.shape[1]
     for idx in range(y.shape[1]):
         # subset and remove nan
@@ -295,5 +295,5 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
         beta[:, idx] = np.dot(XTX, XTY)
 
     residuals = np.dot(X, beta) - y
-    return beta, residuals, is_stable
+    return beta.astype(np.float32), residuals.astype(np.float32), is_stable
 

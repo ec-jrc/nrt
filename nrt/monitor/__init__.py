@@ -168,9 +168,10 @@ class BaseNrt(metaclass=abc.ABCMeta):
             # Suppress numba np.dot() warnings
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                beta_flat, residuals_flat, is_stable = \
-                    roc_stable_fit(X, y_flat, dates,
-                                   alpha=alpha, crit=crit)
+                # ROC requires double precision when using numba
+                beta_flat, residuals_flat, is_stable = roc_stable_fit(
+                    X.astype(np.float64), y_flat.astype(np.float64), dates,
+                    alpha=alpha, crit=crit)
             self.mask[self.mask > 0][~is_stable] = 2
         elif method == 'CCDC-stable':
             if not self.trend:
