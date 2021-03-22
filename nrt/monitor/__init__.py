@@ -115,9 +115,11 @@ class BaseNrt(metaclass=abc.ABCMeta):
             ValueError: Unknown value for `method`
         """
         # lower level functions using numba may require that X and y have the same
-        # datatype (e.g. float32, float32 signature)
-        y = dataarray.values.astype(np.float32)
-        X = X.astype(np.float32)
+        # datatype (e.g. float64, float64 signature)
+        # If the precision is below float64, occurences of singular matrices get
+        # more likely with short time series (i.e. especially for stable fits)
+        y = dataarray.values.astype(np.float64)
+        X = X.astype(np.float64)
         # If no mask has been set at class instantiation, assume everything is forest
         if self.mask is None:
             self.mask = np.ones_like(y[0,:,:], dtype=np.uint8)
@@ -130,7 +132,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         y_flat = y[:, mask_bool]
 
         # 1. Optionally screen outliers
-        #   This just updats y_flat
+        #   This just updates y_flat
         if screen_outliers == 'Shewhart':
             try:
                 L = kwargs.pop('L')
@@ -141,9 +143,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
         elif screen_outliers == 'CCDC_RIRLS':
             try:
                 green_flat = kwargs.pop('green').values\
-                    .astype(np.float32)[:, mask_bool]
+                    .astype(np.float64)[:, mask_bool]
                 swir_flat = kwargs.pop('swir').values\
-                    .astype(np.float32)[:, mask_bool]
+                    .astype(np.float64)[:, mask_bool]
             except (KeyError, AttributeError):
                 raise ValueError('green and swir xarray.Dataarray(s) need to be'
                                  ' provided using green and swir arguments'

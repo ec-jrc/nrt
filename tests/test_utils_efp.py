@@ -109,7 +109,7 @@ def test_process_boundary_cusum(X_y_dates_romania, cusum_result):
                                cusum_monitor.histsize.ravel()[:-1])
     # Sigma
     np.testing.assert_allclose(cusum_result[3],
-                               cusum_monitor.sigma.ravel()[:-1])
+                               cusum_monitor.sigma.ravel()[:-1], rtol=1e-6)
 
 
 def test_process_boundary_mosum(X_y_dates_romania, mosum_result):
@@ -139,4 +139,4 @@ def test_process_boundary_mosum(X_y_dates_romania, mosum_result):
                                mosum_monitor.histsize.ravel()[:-1])
     # Sigma
     np.testing.assert_allclose(mosum_result[3],
-                               mosum_monitor.sigma.ravel()[:-1])
+                               mosum_monitor.sigma.ravel()[:-1], rtol=1e-6)
