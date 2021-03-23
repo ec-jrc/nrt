@@ -2,7 +2,7 @@ import numba
 import numpy as np
 
 
-@numba.jit(nopython=True)
+@numba.jit(nopython=True, cache=True)
 def nanlstsq(X, y):
     """Return the least-squares solution to a linear matrix equation
 
@@ -43,7 +43,7 @@ def nanlstsq(X, y):
     return beta
 
 
-@numba.jit(nopython=True)
+@numba.jit(nopython=True, cache=True)
 def weighted_nanlstsq(X, y):
     """Return the weighted least-squares solution to a linear matrix equation
 
@@ -73,7 +73,7 @@ def weighted_nanlstsq(X, y):
     return beta
 
 
-@numba.jit(nopython=True)
+@numba.jit(nopython=True, cache=True)
 def nanmedian_along_axis(arr, axis):
     """Returns Mean along selected axis
 
@@ -96,7 +96,7 @@ def nanmedian_along_axis(arr, axis):
     return res
 
 
-@numba.jit(nopython=True)
+@numba.jit(nopython=True, cache=True)
 def mad(resid, c=0.6745):
     """Returns Median-Absolute-Deviation (MAD) for residuals
 
@@ -115,7 +115,7 @@ def mad(resid, c=0.6745):
         np.fabs(resid - nanmedian_along_axis(resid, axis=1)), axis=1) / c
 
 # Weight scaling methods
-@numba.jit(nopython=True)
+@numba.jit(nopython=True, cache=True)
 def bisquare(resid, c=4.685):
     """Weight residuals using bisquare weight function
 
@@ -163,7 +163,7 @@ def is_stable_ccdc(slope, residuals, threshold):
     return is_stable
 
 
-@numba.jit(nopython=True)
+@numba.jit(nopython=True, cache=True)
 def erfcc(x):
     """Complementary error function."""
     z = np.abs(x)
@@ -178,7 +178,7 @@ def erfcc(x):
         return 2. - r
 
 
-@numba.jit(nopython=True)
+@numba.jit(nopython=True, cache=True)
 def ncdf(x):
     """Normal cumulative distribution function
     Source: Stackoverflow Unknown,

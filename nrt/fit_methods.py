@@ -69,7 +69,6 @@ def rirls(X, y, M=bisquare, tune=4.685,
     Args:
         X (np.ndarray): 2D (n_obs x n_features) design matrix
         y (np.ndarray): 1D independent variable
-        scale_est (callable): function for scaling residuals
         tune (float): tuning constant for scale estimate
         maxiter (int, optional): maximum number of iterations (default: 50)
         tol (float, optional): convergence tolerance of estimate
@@ -231,7 +230,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
     return beta, residuals, is_stable
 
 
-@numba.jit(nopython=True)
+@numba.jit(nopython=True, cache=True)
 def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
     """Fitting stable regressions using Reverse Ordered Cumulative Sums
 
@@ -261,7 +260,7 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
         is_stable (numpy.ndarray): 1D Boolean array indicating stability
     """
     is_stable = np.ones(y.shape[1], dtype=np.bool_)
-    beta = np.full((X.shape[1], y.shape[1]), np.nan, dtype=np.float32)
+    beta = np.full((X.shape[1], y.shape[1]), np.nan, dtype=np.float64)
     nreg = X.shape[1]
     for idx in range(y.shape[1]):
         # subset and remove nan
