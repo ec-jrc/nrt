@@ -69,7 +69,6 @@ def rirls(X, y, M=bisquare, tune=4.685,
     Args:
         X (np.ndarray): 2D (n_obs x n_features) design matrix
         y (np.ndarray): 1D independent variable
-        scale_est (callable): function for scaling residuals
         tune (float): tuning constant for scale estimate
         maxiter (int, optional): maximum number of iterations (default: 50)
         tol (float, optional): convergence tolerance of estimate
