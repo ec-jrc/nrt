@@ -294,5 +294,5 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
         beta[:, idx] = np.dot(XTX, XTY)
 
     residuals = np.dot(X, beta) - y
-    return beta.astype(np.float32), residuals.astype(np.float32), is_stable
+    return beta, residuals, is_stable
 
