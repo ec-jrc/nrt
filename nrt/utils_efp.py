@@ -50,7 +50,7 @@ from nrt.stats import ncdf
 from nrt import data
 
 
-@numba.jit(nopython=True)
+@numba.jit(nopython=True, cache=True)
 def history_roc(X, y, alpha=0.05, crit=0.9478982340418134):
     """Reverse Ordered Rec-CUSUM check for stable periods
 
@@ -87,7 +87,7 @@ def history_roc(X, y, alpha=0.05, crit=0.9478982340418134):
 
 
 # REC-CUSUM
-@numba.jit(nopython=True)
+@numba.jit(nopython=True, cache=True)
 def _brownian_motion_pvalue(x, k):
     """ Return pvalue for some given test statistic """
     # TODO: Make generic, add "type='Brownian Motion'"?
@@ -101,7 +101,7 @@ def _brownian_motion_pvalue(x, k):
     return 1 - (1 - p) ** k
 
 
-@numba.jit(nopython=True)
+@numba.jit(nopython=True, cache=True)
 def _cusum_rec_boundary(x, crit=0.9478982340418134):
     """ Equivalent to ``strucchange::boundary.efp``` for Rec-CUSUM
 
@@ -152,7 +152,7 @@ def _mosum_ols_test_crit(alpha, h=0.5, period=10, functional='max'):
     return np.interp(1 - alpha, sig_level, crit_values)
 
 
-@numba.jit(nopython=True)
+@numba.jit(nopython=True, cache=True)
 def _mosum_init_window(residuals, winsize):
     """Initializes MOSUM moving window
 
@@ -175,7 +175,7 @@ def _mosum_init_window(residuals, winsize):
     return res
 
 
-@numba.jit(nopython=True)
+@numba.jit(nopython=True, cache=True)
 def _cusum_rec_efp(X, y):
     """ Equivalent to ``strucchange::efp`` for Rec-CUSUM """
     # Run "efp"
@@ -187,7 +187,7 @@ def _cusum_rec_efp(X, y):
     return np.cumsum(w) / (sigma * (n - k) ** 0.5)
 
 
-@numba.jit(nopython=True)
+@numba.jit(nopython=True, cache=True)
 def _cusum_rec_sctest(x):
     """ Equivalent to ``strucchange::sctest`` for Rec-CUSUM """
     x = x[1:]
@@ -198,7 +198,7 @@ def _cusum_rec_sctest(x):
     return stat
 
 
-@numba.jit(nopython=True)
+@numba.jit(nopython=True, cache=True)
 def _recresid(X, y, span):
     """ Return standardized recursive residuals for y ~ X
     Args:
