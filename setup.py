@@ -35,7 +35,7 @@ setup(name='nrt',
           'Programming Language :: Python :: 3.8',
       ],
       packages=find_packages(),
-      package_data={'nrt': ['data/*.nc']},
+      package_data={'nrt': ['data/*.nc', 'data/*.tif', 'data/*.json']},
       install_requires=[
           'numpy',
           'scipy',
