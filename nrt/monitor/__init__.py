@@ -280,7 +280,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         meta = {'driver': driver,
                 'crs': crs,
                 'count': count,
-                'dtype': r.dtype,
+                'dtype': 'uint16',
                 'transform': self.transform,
                 'height': r.shape[-2],
                 'width': r.shape[-1]}
