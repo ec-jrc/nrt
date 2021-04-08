@@ -1,8 +1,8 @@
 """Model fitting
 
 Functions defined in this module always use a 2D array containing the dependant
-variables (y) and return both coefficient (beta) and residuals matrices
-These functions are meant to be called in ``nrt.BaseNrt._fit()``
+variables (y) and return both coefficient (beta) and residuals matrices.
+These functions are meant to be called in ``nrt.BaseNrt._fit()``.
 
 The RIRLS fit is derived from Chris Holden's yatsm package. See the
 copyright statement below.

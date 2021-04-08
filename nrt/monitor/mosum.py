@@ -145,3 +145,5 @@ class MoSum(BaseNrt):
                                      2 * np.log(x, out=log_out,
                                                 where=(x > np.exp(1)))),
                                  self.boundary)
+        print(self.boundary)
+        #print(self.process.max())
