@@ -129,7 +129,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         amount = np.count_nonzero(likely_singular)
         if amount:
             self.mask[likely_singular] = 0
-            warnings.warn(f'{amount} time-series were shorter than 1.5x the'
+            warnings.warn(f'{amount} time-series were shorter than 1.5x the '
                           f'number of regressors and were masked.')
         mask_bool = self.mask == 1
         shape = y.shape
