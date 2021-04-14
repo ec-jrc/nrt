@@ -11,6 +11,7 @@ Welcome to nrt's documentation!
    :caption: Contents:
    
    quickstart
+   classes
 .. automodule:: nrt
 
 

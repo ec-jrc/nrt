@@ -14,7 +14,7 @@ The following algorithms are implemented:
 - CCDC (Zhu et al., 2014)
 - IQR
 
-For more information on the basic function of each monitoring method see ::ref:`monitoring`.
+For more information on the basic function of each monitoring method see ::ref:`classes`.
 
 Installation
 ============
@@ -56,7 +56,7 @@ later supplied for fitting.
 
 All available monitoring classes accept the parameters ``mask``, ``trend``, ``harmonic_order``
 and ``sensitivity``. Some monitoring classes also accept additional parameters.
-For more information see ::ref:`monitoring`?
+For more information see ::ref:`classes`?
 
 .. note::
     ``sensitivity`` takes different values depending on the monitoring class.
