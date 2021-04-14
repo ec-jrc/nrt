@@ -219,3 +219,10 @@ is flagged as a possible disturbance.
 The boundary value then specifies, how many consecutive observations need to be
 above the threshold to confirm a disturbance.
 
+
+Fitting
+-------------
+
+By default IQR is using an OLS fit.
+
+For more details see :ref:`fitting`
