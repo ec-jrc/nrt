@@ -12,6 +12,7 @@ Welcome to nrt's documentation!
    
    quickstart
    classes
+   fit
 .. automodule:: nrt
 
 

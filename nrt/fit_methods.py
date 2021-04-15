@@ -63,8 +63,7 @@ def rirls(X, y, M=bisquare, tune=4.685,
 
     Perform robust fitting regression via iteratively reweighted least squares
     according to weight function and tuning parameter.
-    Basically a clone from `statsmodels` that should be much faster and follows
-    the scikit-learn __init__/fit/predict paradigm.
+    Basically a clone from `statsmodels` that should be much faster.
 
     Args:
         X (np.ndarray): 2D (n_obs x n_features) design matrix

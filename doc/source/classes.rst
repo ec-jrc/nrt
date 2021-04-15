@@ -1,3 +1,4 @@
+.. _classes:
 Monitoring Classes
 ******************
 
@@ -14,12 +15,13 @@ an example, healthy forests exhibit a high reflectivity in the Near Infrared (NI
 scattering in that wavelength caused by the structure and water content of the leaves. 
 The number of leaves and thus of scattering in the NIR is highest in summer and
 spring and lowest during winter. This seasonal pattern can be modelled and used to detect
-disturbances (Fig. 1).
+disturbances.
 
 .. image:: images/concept.png
 
-All algorithms implemented are based on this. They first fit a model to the stable forest,
-then monitor for unusual values compared to that model.
+All implemented algorithms are based on this concept. They first fit a model to the stable forest,
+then monitor for unusual values compared to that model. How exactly this monitoring happens is one of
+the main differences between the algorithms.
 
 
 EWMA
@@ -42,20 +44,20 @@ Instantiation
 This shows the parameters specific to the EWMA class in the second row during instantiating.
 In particular this is ``sensitivity``, ``lambda_`` and ``threshold_outlier``.
 
-Let's first talk about ``lambda_``. .. math::`\lambda` (.. math::`0<\lambda<=1`) is used as the exponent for the
+Let's first talk about ``lambda_``. Lambda (0<λ<=1) is used as the exponent for the
 exponentially weighted moving average and basically controls how much influence the historic data has on the average.
 
-So for a time series where .. math::`x_t` is the value at time period t,
-the EWMA value ..math::`s` at time t is given as:
+So for a time series where :math:`x_t` is the value at time period t,
+the EWMA value :math:`s` at time t is given as:
 
 .. math::
 
     s_t = \lambda \cdot x_t + (1-\lambda) \cdot s_{t-1}
     
-First the value at time t is weighted by .. math::`\lambda` and then added to the previous EWMA value,
-which got weighted by the inverse of the new value. That means, that for small .. math::`\lambda` the impact
+First the value at time t is weighted by λ and then added to the previous EWMA value,
+which got weighted by the inverse of λ. That means, that for small λ the impact
 of single values on the average are low. So if the time series is very noisy, low values for lambda around
-0.05 to 0.25 are recommended. This ensures that for example a single cloud which was missed by the masking
+0.05 to 0.25 are recommended. This ensures that for example a single cloud which wasn't masked
 doesn't have a long lasting impact on the EWMA value.
 
 The parameter ``sensitivity`` is used to calculate the process boundary (also called control limit) 
@@ -66,16 +68,16 @@ The boundary is calculated as follows:
 
     CL = L\cdot\sigma\sqrt{(\frac{\lambda}{2-\lambda})}
     
-with CL as Control Limits, L as the sensitivity and .. math::`\sigma` as the standard deviation of
+with CL as Control Limits, L as the sensitivity and :math:`\sigma` as the standard deviation of
 the population. Basically the lower L is, the higher the sensitivity since the boundary will be lower.
 This is a very simplified formula since a few expectations are made. For a more detailed look at the formula, see
-the `Wikipedia page <https://en.wikipedia.org/wiki/EWMA_chart>`.
+the `Wikipedia page <https://en.wikipedia.org/wiki/EWMA_chart>`_.
  
 Lastly ``threshold_outlier`` provides a way to reduce noise of the time series while monitoring.
 It discards all residuals during monitoring which are larger than the standard 
 deviation of the residuals during fitting multiplied by ``threshold_outlier``. This means that no disturbances which exhibit
-consistently higher residuals than .. math::`threshold_outlier \cdot \sigma`` will signal, but it also means that most clouds
-and cloud shadows which aren't caught by masking will can get handled during monitoring.
+consistently higher residuals than :math:`threshold \cdot \sigma`` will signal, but it also means that most clouds
+and cloud shadows which aren't caught by masking will get handled during monitoring.
 
 Fitting
 -------------
@@ -88,7 +90,7 @@ For more details see :ref:`fitting`.
 CCDC
 ====
 
-CCDC is short for Continuous Change Detection and Classification and is described in `Zhu & Woodcock (2014) <https://doi.org/10.1016/j.rse.2014.01.011>`.
+CCDC is short for Continuous Change Detection and Classification and is described in `Zhu & Woodcock (2014) <https://doi.org/10.1016/j.rse.2014.01.011>`_.
 The implementation in this package is not a strict implementation of the algorithm. It was also not validated against
 the original implementation.
 
@@ -113,7 +115,7 @@ influence how sensitive the monitoring with CCDC will be.
 The parameter ``sensitivity`` in this case influences how high the threshold is after which
 an observation will get flagged as a possible disturbance. This threshold also
 depends on the residual mean square error (RMSE) which is calculated during fitting.
-With CCDC everything which is higher than .. math::`sensitivity \cdot RMSE` is flagged as a possible
+With CCDC everything which is higher than :math:`sensitivity \cdot RMSE` is flagged as a possible
 disturbance.
 
 The boundary value then specifies, how many consecutive observations need to be
@@ -135,8 +137,8 @@ CuSum and MoSum
 ===============
 
 Monitoring with cumulative sums (CuSum) and moving sums (MoSum) is based 
-on `Verbesselt et al. (2013) <http://dx.doi.org/10.1016/j.rse.2012.02.022>` and more particularly
-the `bfast <https://bfast.r-forge.r-project.org/>` and `strucchange <https://cran.r-project.org/web/packages/strucchange/index.html>` R packages.
+on `Verbesselt et al. (2013) <http://dx.doi.org/10.1016/j.rse.2012.02.022>`_ and more particularly
+the `bfast <https://bfast.r-forge.r-project.org/>`_ and `strucchange <https://cran.r-project.org/web/packages/strucchange/index.html>`_ R packages.
 
 Both algorithms have the same underlying principle. The assumption is, that if a model was fitted on a time-series of a stable forest,
 the residuals will have a mean of 0. So summing all residuals up, the value should stay close to zero. If however then a disturbance happens,
@@ -213,7 +215,8 @@ The flagging of residuals works similar to CCDC.
 The parameter ``sensitivity`` in this case influences how high the threshold is after which
 an observation will get flagged as a possible disturbance. This threshold also
 depends on the IQR as well as the 25th and 75th percentile which are calculated during fitting.
-With this monitor everything which is higher than .. math::`q75 + sensitivity \cdot IQR` or lower than .. math::`q25 - sensitivity \cdot IQR` 
+With this monitor everything which is higher than 
+:math:`q75 + sensitivity \cdot IQR` or lower than :math:`q25 - sensitivity \cdot IQR` 
 is flagged as a possible disturbance.
 
 The boundary value then specifies, how many consecutive observations need to be
