@@ -6,6 +6,8 @@
 Welcome to nrt's documentation!
 ===============================
 
+.. automodule:: nrt
+
 .. toctree::
    :maxdepth: 2
    :caption: Contents:
@@ -13,8 +15,7 @@ Welcome to nrt's documentation!
    quickstart
    classes
    fit
-.. automodule:: nrt
-
+   nrt
 
 
 Indices and tables

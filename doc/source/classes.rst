@@ -1,4 +1,5 @@
 .. _classes:
+
 Monitoring Classes
 ******************
 

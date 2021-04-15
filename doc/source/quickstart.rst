@@ -14,7 +14,7 @@ The following algorithms are implemented:
 - CCDC (Zhu et al., 2014)
 - IQR
 
-For more information on the basic function of each monitoring method see ::ref:`classes`.
+For more information on the basic function of each monitoring method see :ref:`classes`.
 
 Installation
 ============
@@ -56,7 +56,7 @@ later supplied for fitting.
 
 All available monitoring classes accept the parameters ``mask``, ``trend``, ``harmonic_order``
 and ``sensitivity``. Some monitoring classes also accept additional parameters.
-For more information see ::ref:`classes`?
+For more information see :ref:`classes`.
 
 .. note::
     ``sensitivity`` takes different values depending on the monitoring class.
@@ -85,7 +85,7 @@ In this example some sample data is created first, which is used for fitting and
 later for monitoring. 
 ``.fit()`` has only one non optional parameter ``dataarray`` which expects an 
 ``xarray.DataArray``. During fitting there are other optional parameters which can be set. 
-See ::ref:`fitting` for more detail.
+See :ref:`fitting` for more detail.
 
 If the next observation is not immediately available, the model can be dumped
 to a NetCDF file which can then be loaded once the next observation is available.
