@@ -21,7 +21,7 @@ def build_regressors(dates, trend=True, harmonic_order=3):
     """
     dates = dates.sort_values()
     shape = (len(dates), 1 + trend + 2*harmonic_order)
-    X = np.zeros(shape, dtype=np.float)
+    X = np.zeros(shape, dtype=float)
     # Add intercept (Is that actually required?)
     X[:,0] = 1
     if trend:
@@ -55,5 +55,5 @@ def datetimeIndex_to_decimal_dates(dates):
     first_year_day = pd.to_datetime({'year':years, 'day':1, 'month':1})
     last_year_day = pd.to_datetime({'year':years, 'day':31, 'month':12})
     ddates = years + (dates - first_year_day)/(last_year_day - first_year_day)
-    return np.array(ddates, dtype=np.float)
+    return np.array(ddates, dtype=float)
 
