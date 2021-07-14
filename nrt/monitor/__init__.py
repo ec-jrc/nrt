@@ -29,8 +29,11 @@ class BaseNrt(metaclass=abc.ABCMeta):
             be monitored (1) and not (0). The mask may be updated following
             historing period stability check, and after a call to monitor
             following a confirmed break. Values are as follow.
-            ``{0: 'Not monitored', 1: 'monitored', 2: 'Unstable history',
-            3: 'Confirmed break - no longer monitored'}``
+            ``{0: 'Not monitored',
+               1: 'monitored',
+               2: 'Unstable history',
+               3: 'Confirmed break - no longer monitored',
+               4: 'Not enough observations - not monitored'}``
         trend (bool): Indicate whether stable period fit is performed with
             trend or not
         harmonic_order (int): The harmonic order of the time-series regression
@@ -126,9 +129,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
         # If any of the time series are shorter than 2x the number of
         # regressors, mask them and give a warning
         likely_singular = np.count_nonzero(~np.isnan(y), axis=0) < (X.shape[1]*2)
-        amount = np.count_nonzero(likely_singular[self.mask == 1])
+        amount = np.sum(likely_singular[self.mask == 1])
         if amount:
-            self.mask[likely_singular] = 0
+            self.mask[likely_singular] = 4
             warnings.warn(f'{amount} time-series were shorter than 2x the '
                           f'number of regressors and were masked.')
             if not np.any(self.mask == 1):
