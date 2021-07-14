@@ -125,7 +125,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
             self.mask = np.ones_like(y[0,:,:], dtype=np.uint8)
         # If any of the time series are shorter than 1.5x the number of
         # regressors, mask them and give a warning
-        likely_singular = np.count_nonzero(~np.isnan(y), axis=0) < (X.shape[1]*1.5)
+        likely_singular = np.count_nonzero(~np.isnan(y[:, self.mask == 1]), axis=0) < (X.shape[1]*1.5)
         amount = np.count_nonzero(likely_singular)
         if amount:
             self.mask[likely_singular] = 0
