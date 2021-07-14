@@ -21,7 +21,7 @@ def history_dataarray():
     ds['ndvi'] = (ds.B8A - ds.B4) / (ds.B8A + ds.B4)
     ds = ds.where(ds.SCL.isin([4,5,7]))
     history = ds.sel(time=slice(datetime.datetime(2015, 1, 1),
-                                     datetime.datetime(2018, 12, 31)))
+                                     datetime.datetime(2016, 12, 31)))
     return history
 
 
@@ -46,7 +46,7 @@ def ndvi_monitoring_numpy():
     ds = xr.open_dataset(filename)
     ds['ndvi'] = (ds.B8A - ds.B4) / (ds.B8A + ds.B4)
     ds = ds.where(ds.SCL.isin([4,5,7]))
-    ndvi_monitoring = ds.ndvi.sel(time=slice(datetime.datetime(2019, 1, 1),
+    ndvi_monitoring = ds.ndvi.sel(time=slice(datetime.datetime(2017, 1, 1),
                                              datetime.datetime(2021, 1, 15)))
     values = ndvi_monitoring.values
     dates = ndvi_monitoring.time.values.astype('datetime64[s]').tolist()
