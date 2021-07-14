@@ -177,7 +177,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
     # Minimum 1.5 times the number of coefficients
     obs_count = np.count_nonzero(~np.isnan(y), axis=0)
     enough = obs_count > X.shape[1] * 1.5
-    is_stable = np.full(enough.shape, False, dtype=np.bool)
+    is_stable = np.full(enough.shape, False, dtype=bool)
     y_sub = y[:, enough]
     X_sub = X
 
