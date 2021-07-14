@@ -123,14 +123,16 @@ class BaseNrt(metaclass=abc.ABCMeta):
         # If no mask has been set at class instantiation, assume everything is forest
         if self.mask is None:
             self.mask = np.ones_like(y[0,:,:], dtype=np.uint8)
-        # If any of the time series are shorter than 1.5x the number of
+        # If any of the time series are shorter than 2x the number of
         # regressors, mask them and give a warning
-        likely_singular = np.count_nonzero(~np.isnan(y[:, self.mask == 1]), axis=0) < (X.shape[1]*1.5)
-        amount = np.count_nonzero(likely_singular)
+        likely_singular = np.count_nonzero(~np.isnan(y), axis=0) < (X.shape[1]*2)
+        amount = np.count_nonzero(likely_singular[self.mask == 1])
         if amount:
             self.mask[likely_singular] = 0
-            warnings.warn(f'{amount} time-series were shorter than 1.5x the '
+            warnings.warn(f'{amount} time-series were shorter than 2x the '
                           f'number of regressors and were masked.')
+            if not np.any(self.mask == 1):
+                raise ValueError(f'There are no time-series with sufficient ({int(X.shape[1]*2)}) data points.')
         mask_bool = self.mask == 1
         shape = y.shape
         beta_shape = (X.shape[1], shape[1], shape[2])
