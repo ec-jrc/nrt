@@ -131,7 +131,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         likely_singular = np.count_nonzero(~np.isnan(y), axis=0) < (X.shape[1]*2)
         amount = np.sum(likely_singular[self.mask == 1])
         if amount:
-            self.mask[likely_singular] = 4
+            self.mask[np.logical_and(likely_singular, self.mask == 1)] = 4
             warnings.warn(f'{amount} time-series were shorter than 2x the '
                           f'number of regressors and were masked.')
             if not np.any(self.mask == 1):
