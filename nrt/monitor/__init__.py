@@ -186,14 +186,14 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 # ROC requires double precision when using numba
                 beta_flat, residuals_flat, is_stable = roc_stable_fit(
                     X, y_flat, dates, alpha=alpha, crit=crit)
-            self.mask[self.mask > 0][~is_stable] = 2
+            self.mask[self.mask == 1][~is_stable] = 2
         elif method == 'CCDC-stable':
             if not self.trend:
                 raise ValueError('Method "CCDC" requires "trend" to be true.')
             dates = dataarray.time.values
             beta_flat, residuals_flat, is_stable = \
                 ccdc_stable_fit(X, y_flat, dates, **kwargs)
-            self.mask[self.mask > 0][~is_stable] = 2
+            self.mask[self.mask == 1][~is_stable] = 2
         elif method == 'OLS':
             beta_flat, residuals_flat = ols(X, y_flat)
         elif method == 'LASSO':
