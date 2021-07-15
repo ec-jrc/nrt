@@ -129,7 +129,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         # If any of the time series are shorter than 2x the number of
         # regressors, mask them and give a warning
         likely_singular = np.count_nonzero(~np.isnan(y), axis=0) < (X.shape[1]*2)
-        amount = np.sum(likely_singular[self.mask == 1])
+        amount = np.count_nonzero(likely_singular[self.mask == 1])
         if amount:
             self.mask[np.logical_and(likely_singular, self.mask == 1)] = 4
             warnings.warn(f'{amount} time-series were shorter than 2x the '
