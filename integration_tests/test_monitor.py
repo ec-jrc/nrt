@@ -7,7 +7,7 @@ from nrt.monitor import iqr, ewma, cusum, mosum
 monitor_params = {
     'EWMA': pytest.param(ewma.EWMA, {'trend': False, 'L': 5}, 5,
                          marks=pytest.mark.ewma),
-    'IQR': pytest.param(iqr.Iqr, {'trend': False, 'harmonic_order': 1}, 3,
+    'IQR': pytest.param(iqr.IQR, {'trend': False, 'harmonic_order': 1}, 3,
                         marks=pytest.mark.iqr),
     'CUSUM': pytest.param(cusum.CuSum, {}, 6,
                           marks=pytest.mark.cusum),

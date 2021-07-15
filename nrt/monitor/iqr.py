@@ -3,7 +3,7 @@ import numpy as np
 from nrt.monitor import BaseNrt
 
 
-class Iqr(BaseNrt):
+class IQR(BaseNrt):
     """Online monitoring of disturbances based on interquartile range
 
         Reference:

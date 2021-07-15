@@ -1,8 +1,8 @@
 """Model fitting
 
 Functions defined in this module always use a 2D array containing the dependant
-variables (y) and return both coefficient (beta) and residuals matrices
-These functions are meant to be called in ``nrt.BaseNrt._fit()``
+variables (y) and return both coefficient (beta) and residuals matrices.
+These functions are meant to be called in ``nrt.BaseNrt._fit()``.
 
 The RIRLS fit is derived from Chris Holden's yatsm package. See the
 copyright statement below.
@@ -177,7 +177,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
     # Minimum 1.5 times the number of coefficients
     obs_count = np.count_nonzero(~np.isnan(y), axis=0)
     enough = obs_count > X.shape[1] * 1.5
-    is_stable = np.full(enough.shape, False, dtype=np.bool)
+    is_stable = np.full(enough.shape, False, dtype=bool)
     y_sub = y[:, enough]
     X_sub = X
 

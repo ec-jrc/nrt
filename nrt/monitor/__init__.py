@@ -29,8 +29,11 @@ class BaseNrt(metaclass=abc.ABCMeta):
             be monitored (1) and not (0). The mask may be updated following
             historing period stability check, and after a call to monitor
             following a confirmed break. Values are as follow.
-            ``{0: 'Not monitored', 1: 'monitored', 2: 'Unstable history',
-            3: 'Confirmed break - no longer monitored'}``
+            ``{0: 'Not monitored',
+               1: 'monitored',
+               2: 'Unstable history',
+               3: 'Confirmed break - no longer monitored',
+               4: 'Not enough observations - not monitored'}``
         trend (bool): Indicate whether stable period fit is performed with
             trend or not
         harmonic_order (int): The harmonic order of the time-series regression
@@ -123,6 +126,16 @@ class BaseNrt(metaclass=abc.ABCMeta):
         # If no mask has been set at class instantiation, assume everything is forest
         if self.mask is None:
             self.mask = np.ones_like(y[0,:,:], dtype=np.uint8)
+        # If any of the time series are shorter than 2x the number of
+        # regressors, mask them and give a warning
+        likely_singular = np.count_nonzero(~np.isnan(y), axis=0) < (X.shape[1]*2)
+        amount = np.count_nonzero(likely_singular[self.mask == 1])
+        if amount:
+            self.mask[np.logical_and(likely_singular, self.mask == 1)] = 4
+            warnings.warn(f'{amount} time-series were shorter than 2x the '
+                          f'number of regressors and were masked.')
+        if not np.any(self.mask == 1):
+            raise ValueError(f'There are no time-series with sufficient ({int(X.shape[1]*2)}) data points.')
         mask_bool = self.mask == 1
         shape = y.shape
         beta_shape = (X.shape[1], shape[1], shape[2])
@@ -173,14 +186,14 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 # ROC requires double precision when using numba
                 beta_flat, residuals_flat, is_stable = roc_stable_fit(
                     X, y_flat, dates, alpha=alpha, crit=crit)
-            self.mask[self.mask > 0][~is_stable] = 2
+            self.mask[self.mask == 1][~is_stable] = 2
         elif method == 'CCDC-stable':
             if not self.trend:
                 raise ValueError('Method "CCDC" requires "trend" to be true.')
             dates = dataarray.time.values
             beta_flat, residuals_flat, is_stable = \
                 ccdc_stable_fit(X, y_flat, dates, **kwargs)
-            self.mask[self.mask > 0][~is_stable] = 2
+            self.mask[self.mask == 1][~is_stable] = 2
         elif method == 'OLS':
             beta_flat, residuals_flat = ols(X, y_flat)
         elif method == 'LASSO':
@@ -268,7 +281,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         Must generate a 2D or 3D numpy array with geotiff compatible datatype.
         In case of multi-band (3D) array, the band should be in the first axis
         """
-        return np.stack((self.mask, self.detection_date), axis=0)
+        return np.stack((self.mask, self.detection_date), axis=0).astype(np.int16)
 
     def report(self, filename, driver='GTiff', crs=CRS.from_epsg(3035)):
         """Write the result of reporting to a raster geospatial file
