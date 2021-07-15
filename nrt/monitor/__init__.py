@@ -134,8 +134,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
             self.mask[np.logical_and(likely_singular, self.mask == 1)] = 4
             warnings.warn(f'{amount} time-series were shorter than 2x the '
                           f'number of regressors and were masked.')
-            if not np.any(self.mask == 1):
-                raise ValueError(f'There are no time-series with sufficient ({int(X.shape[1]*2)}) data points.')
+        if not np.any(self.mask == 1):
+            raise ValueError(f'There are no time-series with sufficient ({int(X.shape[1]*2)}) data points.')
         mask_bool = self.mask == 1
         shape = y.shape
         beta_shape = (X.shape[1], shape[1], shape[2])
