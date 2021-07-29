@@ -126,16 +126,6 @@ class BaseNrt(metaclass=abc.ABCMeta):
         # If no mask has been set at class instantiation, assume everything is forest
         if self.mask is None:
             self.mask = np.ones_like(y[0,:,:], dtype=np.uint8)
-        # If any of the time series are shorter than 2x the number of
-        # regressors, mask them and give a warning
-        likely_singular = np.count_nonzero(~np.isnan(y), axis=0) < (X.shape[1]*2)
-        amount = np.count_nonzero(likely_singular[self.mask == 1])
-        if amount:
-            self.mask[np.logical_and(likely_singular, self.mask == 1)] = 4
-            warnings.warn(f'{amount} time-series were shorter than 2x the '
-                          f'number of regressors and were masked.')
-        if not np.any(self.mask == 1):
-            raise ValueError(f'There are no time-series with sufficient ({int(X.shape[1]*2)}) data points.')
         mask_bool = self.mask == 1
         shape = y.shape
         beta_shape = (X.shape[1], shape[1], shape[2])
@@ -143,6 +133,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         beta = np.zeros(beta_shape, dtype=np.float32)
         residuals = np.zeros_like(y, dtype=np.float32)
         y_flat = y[:, mask_bool]
+        self._mask_short_series(y_flat, X)
 
         # 1. Optionally screen outliers
         #   This just updates y_flat
@@ -153,6 +144,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 raise ValueError('"L" has to be passed for "Shewhart" outlier '
                                  'screening.')
             y_flat = shewhart(X, y_flat, L=L)
+            self._mask_short_series(y_flat, X)
         elif screen_outliers == 'CCDC_RIRLS':
             try:
                 green_flat = kwargs.pop('green').values\
@@ -165,6 +157,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
                                  ' respectively')
             y_flat = ccdc_rirls(X, y_flat,
                                 green=green_flat, swir=swir_flat, **kwargs)
+            self._mask_short_series(y_flat, X)
         elif screen_outliers:
             raise ValueError('Unknown screen_outliers')
 
@@ -446,4 +439,22 @@ class BaseNrt(metaclass=abc.ABCMeta):
                              harmonic_order=self.harmonic_order)
         return X
 
+    def _mask_short_series(self, y_flat, X):
+        """ Masks short time series
 
+        Time series shorter than 2x the number of regressors are masked
+        and a warning is given.
+        If after this no time series are left a ValueError is raised
+
+        Args:
+            y_flat (np.ndarray): 2D matrix of observations
+            X (np.ndarray): 2D Matrix of regressors
+        """
+        likely_singular = np.count_nonzero(~np.isnan(y_flat), axis=0) < (X.shape[1]*2)
+        amount = np.count_nonzero(likely_singular)
+        if amount:
+            self.mask[self.mask == 1][likely_singular] = 4
+            warnings.warn(f'{amount} time-series were shorter than 2x the '
+                          f'number of regressors and were masked.')
+        if not np.any(self.mask == 1):
+            raise ValueError(f'There are no time-series with sufficient ({int(X.shape[1]*2)}) data points.')
