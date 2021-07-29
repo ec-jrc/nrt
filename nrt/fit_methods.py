@@ -158,7 +158,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
     as all of the following 3 conditions are met:
 
     1. There are unstable timeseries left.
-    2. There are enough cloud-free acquisitions left (threshold is 1.5x the
+    2. There are enough cloud-free acquisitions left (threshold is 2x the
         number of parameters in the design matrix).
     3. There is still data of more than 1 year available.
 
@@ -174,9 +174,9 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
         is_stable (numpy.ndarray): 1D Boolean array indicating stability
     """
     # 0. Remove observations with too little data
-    # Minimum 1.5 times the number of coefficients
+    # Minimum 2 times the number of coefficients
     obs_count = np.count_nonzero(~np.isnan(y), axis=0)
-    enough = obs_count > X.shape[1] * 1.5
+    enough = obs_count > X.shape[1] * 2
     is_stable = np.full(enough.shape, False, dtype=bool)
     y_sub = y[:, enough]
     X_sub = X
@@ -223,7 +223,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
             break
         # Check where there isn't enough data left
         obs_count = np.count_nonzero(~np.isnan(y_sub), axis=0)
-        enough_sub = obs_count > X.shape[1] * 1.5
+        enough_sub = obs_count > X.shape[1] * 2
         enough[~is_stable & enough] = enough_sub
         # Remove everything where there isn't enough data
         y_sub = y_sub[:,enough_sub]
