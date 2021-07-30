@@ -450,11 +450,11 @@ class BaseNrt(metaclass=abc.ABCMeta):
             y_flat (np.ndarray): 2D matrix of observations
             X (np.ndarray): 2D Matrix of regressors
         """
-        likely_singular = np.count_nonzero(~np.isnan(y_flat), axis=0) < (X.shape[1]*2)
+        likely_singular = np.count_nonzero(~np.isnan(y_flat), axis=0) < (X.shape[1]*1.5)
         amount = np.count_nonzero(likely_singular)
         if amount:
             self.mask[self.mask == 1][likely_singular] = 4
-            warnings.warn(f'{amount} time-series were shorter than 2x the '
+            warnings.warn(f'{amount} time-series were shorter than 1.5x the '
                           f'number of regressors and were masked.')
         if not np.any(self.mask == 1):
-            raise ValueError(f'There are no time-series with sufficient ({int(X.shape[1]*2)}) data points.')
+            raise ValueError(f'There are no time-series with sufficient ({int(X.shape[1]*1.5)}) data points.')
