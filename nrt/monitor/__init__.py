@@ -133,7 +133,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         beta = np.zeros(beta_shape, dtype=np.float32)
         residuals = np.zeros_like(y, dtype=np.float32)
         y_flat = y[:, mask_bool]
-        self._mask_short_series(y_flat, X)
+        y_flat = self._mask_short_series(y_flat, X)
 
         # 1. Optionally screen outliers
         #   This just updates y_flat
@@ -144,7 +144,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 raise ValueError('"L" has to be passed for "Shewhart" outlier '
                                  'screening.')
             y_flat = shewhart(X, y_flat, L=L)
-            self._mask_short_series(y_flat, X)
+            y_flat = self._mask_short_series(y_flat, X)
+            print(np.count_nonzero(self.mask == 4))
         elif screen_outliers == 'CCDC_RIRLS':
             try:
                 green_flat = kwargs.pop('green').values\
@@ -157,9 +158,11 @@ class BaseNrt(metaclass=abc.ABCMeta):
                                  ' respectively')
             y_flat = ccdc_rirls(X, y_flat,
                                 green=green_flat, swir=swir_flat, **kwargs)
-            self._mask_short_series(y_flat, X)
+            y_flat = self._mask_short_series(y_flat, X)
         elif screen_outliers:
             raise ValueError('Unknown screen_outliers')
+
+        mask_bool = self.mask == 1
 
         # 2. Fit using specified method
         if method == 'ROC':
@@ -179,14 +182,14 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 # ROC requires double precision when using numba
                 beta_flat, residuals_flat, is_stable = roc_stable_fit(
                     X, y_flat, dates, alpha=alpha, crit=crit)
-            self.mask[self.mask == 1][~is_stable] = 2
+            self.mask.flat[np.flatnonzero(mask_bool)[~is_stable]] = 2
         elif method == 'CCDC-stable':
             if not self.trend:
                 raise ValueError('Method "CCDC" requires "trend" to be true.')
             dates = dataarray.time.values
             beta_flat, residuals_flat, is_stable = \
                 ccdc_stable_fit(X, y_flat, dates, **kwargs)
-            self.mask[self.mask == 1][~is_stable] = 2
+            self.mask.flat[np.flatnonzero(mask_bool)[~is_stable]] = 2
         elif method == 'OLS':
             beta_flat, residuals_flat = ols(X, y_flat)
         elif method == 'LASSO':
@@ -449,12 +452,16 @@ class BaseNrt(metaclass=abc.ABCMeta):
         Args:
             y_flat (np.ndarray): 2D matrix of observations
             X (np.ndarray): 2D Matrix of regressors
+
+        Returns:
+            (np.ndarray) y_flat with short time-series removed
         """
         likely_singular = np.count_nonzero(~np.isnan(y_flat), axis=0) < (X.shape[1]*1.5)
         amount = np.count_nonzero(likely_singular)
         if amount:
-            self.mask[self.mask == 1][likely_singular] = 4
+            self.mask.flat[np.flatnonzero(self.mask == 1)[likely_singular]] = 4
             warnings.warn(f'{amount} time-series were shorter than 1.5x the '
                           f'number of regressors and were masked.')
         if not np.any(self.mask == 1):
             raise ValueError(f'There are no time-series with sufficient ({int(X.shape[1]*1.5)}) data points.')
+        return y_flat[:,~likely_singular]
