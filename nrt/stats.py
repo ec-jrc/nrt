@@ -131,3 +131,30 @@ def ncdf(x):
     Source: Stackoverflow Unknown,
     https://stackoverflow.com/a/809402/12819237"""
     return 1. - 0.5*erfcc(x/(2**0.5))
+
+
+@numba.jit(nopython=True, cache=True)
+def nan_percentile_axis0(arr, percentiles):
+    """Faster implementation of np.nanpercentile
+    
+    This implementation always takes the percentile along axis 0.
+    Uses numba to speed up the calculation by more than 7x.
+
+    Function is equivalent to np.nanpercentile(arr, <percentiles>, axis=0)
+
+    Params:
+        arr (np.array): 2D array to calculate percentiles for
+        percentiles (np.array): 1D array of percentiles to calculate
+
+    Returns:
+        (np.array) Array with first dimension corresponding to
+            values passed in percentiles
+
+    """
+    shape = arr.shape
+    arr = arr.reshape((arr.shape[0], -1))
+    out = np.empty((len(percentiles), arr.shape[1]))
+    for i in range(arr.shape[1]):
+        out[:,i] = np.nanpercentile(arr[:,i], percentiles)
+    shape = (out.shape[0], *shape[1:])
+    return out.reshape(shape)
