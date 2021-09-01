@@ -444,7 +444,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
     def _mask_short_series(self, y_flat, X):
         """ Masks short time series
 
-        Time series shorter than 2x the number of regressors are masked
+        Time series shorter than 1.5x the number of regressors are masked
         and a warning is given.
         If after this no time series are left a ValueError is raised
 
