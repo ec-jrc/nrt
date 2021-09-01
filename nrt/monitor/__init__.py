@@ -145,7 +145,6 @@ class BaseNrt(metaclass=abc.ABCMeta):
                                  'screening.')
             y_flat = shewhart(X, y_flat, L=L)
             y_flat = self._mask_short_series(y_flat, X)
-            print(np.count_nonzero(self.mask == 4))
         elif screen_outliers == 'CCDC_RIRLS':
             try:
                 green_flat = kwargs.pop('green').values\
