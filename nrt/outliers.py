@@ -63,8 +63,8 @@ def ccdc_rirls(X, y, green, swir, scaling_factor=1, **kwargs):
     """
     # 1. estimate time series model using rirls for green and swir
     # TODO could be sped up, since masking is the same for green and swir
-    g_beta, g_residuals = rirls(X, green, **kwargs)
-    s_beta, s_residuals = rirls(X, swir, **kwargs)
+    g_beta, g_residuals = rirls(X, green)
+    s_beta, s_residuals = rirls(X, swir)
     # Update mask using thresholds
     is_outlier = np.logical_or(g_residuals > 0.04*scaling_factor,
                                s_residuals < -0.04*scaling_factor)

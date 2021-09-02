@@ -194,7 +194,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         elif method == 'LASSO':
             raise NotImplementedError('Method not yet implemented')
         elif method == 'RIRLS':
-            beta_flat, residuals_flat = rirls(X, y_flat, **kwargs)
+            beta_flat, residuals_flat = rirls(X, y_flat)
         else:
             raise ValueError('Unknown method')
 
