@@ -148,9 +148,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
         elif screen_outliers == 'CCDC_RIRLS':
             try:
                 green_flat = kwargs.pop('green').values\
-                    .astype(np.float64)[:, mask_bool]
+                    .astype(np.float64)[:, self.mask == 1]
                 swir_flat = kwargs.pop('swir').values\
-                    .astype(np.float64)[:, mask_bool]
+                    .astype(np.float64)[:, self.mask == 1]
             except (KeyError, AttributeError):
                 raise ValueError('green and swir xarray.Dataarray(s) need to be'
                                  ' provided using green and swir arguments'
