@@ -127,3 +127,38 @@ def cusum_result(request):
 def mosum_result(request):
     return np.loadtxt(here / 'data' / 'mosum_result.csv',
                       delimiter=',', dtype=np.float64)
+
+# Test data for robust fit.
+#
+# First time-series can become singular if accuracy isn't sufficient
+@pytest.fixture
+def X_y_RLM(request):
+    X = np.loadtxt(here / 'data' / 'RLM_X.csv',
+                      delimiter=',', dtype=np.float64)
+    y = np.loadtxt(here / 'data' / 'RLM_y.csv',
+                      delimiter=',', dtype=np.float64)
+    return X, y
+
+# Result of Robust Fit with statsmodels
+#
+# With X, y = X_y_RLM()
+    # import statsmodels as sm
+    #
+    # for idx in range(y.shape[1]):
+    #     y_sub = y[:, idx]
+    #     isna = np.isnan(y_sub)
+    #     X_sub = X[~isna]
+    #     endog = y_sub[~isna]
+    #     rlm_model = sm.RLM(endog, X_sub, M=sm.robust.norms.TukeyBiweight())
+    #     rlm_results = rlm_model.fit(update_scale=True)
+    #     beta[:,idx] = rlm_results.params
+@pytest.fixture
+def sm_RLM_result(request):
+    return np.array([['2.3757569983999076', '-51.621207292381314'],
+       ['1.5919053949452396e-05', '-0.00019788972214892546'],
+       ['4.960483948314601', '-73.95341088849317'],
+       ['4.0427485592574195', '-17.66452192456504'],
+       ['1.0676653146683237', '0.579422996703399'],
+       ['-0.7172424822211365', '-49.52111301879781'],
+       ['1.2701246101474761', '-38.324020145702654'],
+       ['1.1329168669944791', '-9.034638787625045']], dtype='<U32').astype(np.float64)
