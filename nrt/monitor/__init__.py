@@ -151,12 +151,14 @@ class BaseNrt(metaclass=abc.ABCMeta):
                     .astype(np.float64)[:, self.mask == 1]
                 swir_flat = kwargs.pop('swir').values\
                     .astype(np.float64)[:, self.mask == 1]
+                scaling_factor = kwargs.get('scaling_factor', 1)
             except (KeyError, AttributeError):
                 raise ValueError('green and swir xarray.Dataarray(s) need to be'
                                  ' provided using green and swir arguments'
                                  ' respectively')
             y_flat = ccdc_rirls(X, y_flat,
-                                green=green_flat, swir=swir_flat, **kwargs)
+                                green=green_flat, swir=swir_flat,
+                                scaling_factor=scaling_factor)
             y_flat = self._mask_short_series(y_flat, X)
         elif screen_outliers:
             raise ValueError('Unknown screen_outliers')
