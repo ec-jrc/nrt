@@ -134,9 +134,7 @@ def weighted_ols(X, y, w):
     Xw = X * np.expand_dims(sw, -1)
     yw = y * sw
 
-    XTX = np.linalg.inv(np.dot(Xw.T, Xw))
-    XTY = np.dot(Xw.T, yw)
-    beta = np.dot(XTX, XTY)
+    beta,_,_,_ = np.linalg.lstsq(Xw, yw)
 
     resid = y - np.dot(X, beta)
 
@@ -290,4 +288,3 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
 
     residuals = np.dot(X, beta) - y
     return beta, residuals, is_stable
-
