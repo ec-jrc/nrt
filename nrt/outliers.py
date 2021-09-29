@@ -46,7 +46,7 @@ def shewhart(X, y, L):
     return y
 
 
-def ccdc_rirls(X, y, green, swir, scaling_factor=1, **kwargs):
+def ccdc_rirls(X, y, green, swir, scaling_factor=1):
     """Screen for missed clouds and other outliers using green and SWIR band
 
     Args:
@@ -56,7 +56,6 @@ def ccdc_rirls(X, y, green, swir, scaling_factor=1, **kwargs):
         swir (np.ndarray): 2D array containing spectral values (~1.55-1.75um)
         scaling_factor (int): Scaling factor to bring green and swir values
             to reflectance values between 0 and 1
-        **kwargs: arguments to be passed to fit_methods.rirls()
 
     Returns:
         np.ndarray: y with outliers set to np.nan
