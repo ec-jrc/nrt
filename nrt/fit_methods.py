@@ -151,7 +151,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
     as all of the following 3 conditions are met:
 
     1. There are unstable timeseries left.
-    2. There are enough cloud-free acquisitions left (threshold is 2x the
+    2. There are enough cloud-free acquisitions left (threshold is 1.5x the
         number of parameters in the design matrix).
     3. There is still data of more than 1 year available.
 
