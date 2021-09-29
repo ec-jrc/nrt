@@ -59,7 +59,7 @@ def ols(X, y):
 @numba.jit(nopython=True, cache=True)
 def rirls(X, y, M=bisquare, tune=4.685,
           scale_est=mad, scale_constant=0.6745,
-          update_scale=False, maxiter=50, tol=1e-8):
+          update_scale=True, maxiter=50, tol=1e-8):
     """Robust Linear Model using Iterative Reweighted Least Squares (RIRLS)
 
     Perform robust fitting regression via iteratively reweighted least squares
