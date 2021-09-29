@@ -136,19 +136,19 @@ def ncdf(x):
 @numba.jit(nopython=True, cache=True)
 def nan_percentile_axis0(arr, percentiles):
     """Faster implementation of np.nanpercentile
-    
+
     This implementation always takes the percentile along axis 0.
     Uses numba to speed up the calculation by more than 7x.
 
     Function is equivalent to np.nanpercentile(arr, <percentiles>, axis=0)
 
-    Params:
-        arr (np.array): 2D array to calculate percentiles for
-        percentiles (np.array): 1D array of percentiles to calculate
+    Args:
+        arr (np.ndarray): 2D array to calculate percentiles for
+        percentiles (np.ndarray): 1D array of percentiles to calculate
 
     Returns:
-        (np.array) Array with first dimension corresponding to
-            values passed in percentiles
+        np.ndarray: Array with first dimension corresponding to values passed
+        in percentiles
 
     """
     shape = arr.shape
