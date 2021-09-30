@@ -66,7 +66,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
     """
     def __init__(self, mask=None, trend=True, harmonic_order=3, beta=None,
                  x_coords=None, y_coords=None, process=None, boundary=None,
-                 detection_date=None, **kwargs):
+                 detection_date=None, fit_start=None, **kwargs):
         self.mask = np.copy(mask) if isinstance(mask, np.ndarray) else mask
         self.trend = trend
         self.harmonic_order = harmonic_order
@@ -76,6 +76,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         self.process = process
         self.boundary = boundary
         self.detection_date = detection_date
+        self.fit_start = fit_start
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -126,6 +127,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
         # If no mask has been set at class instantiation, assume everything is forest
         if self.mask is None:
             self.mask = np.ones_like(y[0,:,:], dtype=np.uint8)
+        start_date = dataarray.time[0].values.astype('datetime64[D]').astype('int')
+        if self.fit_start is None:
+            self.fit_start = np.full_like(self.mask, start_date, dtype=np.uint16)
         mask_bool = self.mask == 1
         shape = y.shape
         beta_shape = (X.shape[1], shape[1], shape[2])
@@ -186,11 +190,12 @@ class BaseNrt(metaclass=abc.ABCMeta):
             self.mask.flat[np.flatnonzero(mask_bool)[~is_stable]] = 2
         elif method == 'CCDC-stable':
             if not self.trend:
-                raise ValueError('Method "CCDC" requires "trend" to be true.')
-            dates = dataarray.time.values
-            beta_flat, residuals_flat, is_stable = \
-                ccdc_stable_fit(X, y_flat, dates, **kwargs)
+                raise ValueError('Method "CCDC-stable" requires "trend" to be true.')
+            dates = dataarray.time.values.astype('datetime64[D]').astype('int')
+            beta_flat, residuals_flat, is_stable, fit_start = \
+                ccdc_stable_fit(X, y_flat, dates)
             self.mask.flat[np.flatnonzero(mask_bool)[~is_stable]] = 2
+            self.fit_start.flat[np.flatnonzero(mask_bool)] = fit_start
         elif method == 'OLS':
             beta_flat, residuals_flat = ols(X, y_flat)
         elif method == 'LASSO':
