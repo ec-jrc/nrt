@@ -32,14 +32,27 @@ def X_y_intercept_slope(request):
 @pytest.fixture
 def stability_ccdc(request):
     np.random.seed(0)
-    # build an example, where one pixel has a large first value,
-    # one a large last value one a large slope and one just random residuals
-    residuals = np.random.rand(20, 4) - 0.5
+    a_len = 30
+    # build an example, where one time series has a large last value,
+    # one a large first value, one a large slope and one just random residuals
+    residuals = (np.random.rand(a_len, 4) - 0.5)*2
     residuals[0, 0] = 100
     residuals[-1, 1] = 100
-    slope = np.array([0, 0, 10, 0])
-    stability = np.array([False, False, False, True])
-    return residuals, slope, stability
+
+    ts = np.array([
+        np.ones(a_len),
+        np.ones(a_len),
+        np.arange(a_len)*20+5, # Large slope
+        np.ones(a_len)
+    ]).T
+    # add a np.nan in there:
+    ts[int(a_len/2),3] = np.nan
+
+    X = np.array([np.ones(a_len), np.arange(a_len)]).T
+    y = ts+residuals
+    dates = np.linspace(1, 365, a_len)
+    result = np.array([True, False, False, True])
+    return X, y, dates, result
 
 
 @pytest.fixture
