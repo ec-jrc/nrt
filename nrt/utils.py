@@ -1,4 +1,5 @@
 import datetime
+import inspect
 from math import pi
 
 import pandas as pd
@@ -57,3 +58,19 @@ def datetimeIndex_to_decimal_dates(dates):
     ddates = years + (dates - first_year_day)/(last_year_day - first_year_day)
     return np.array(ddates, dtype=float)
 
+
+def numba_kwargs(func):
+    """
+    Decorator which enables passing of kwargs to jitted functions by selecting
+    only those kwargs that are available in the decorated functions signature
+    """
+    def wrapper(*args, **kwargs):
+        # Only pass those kwargs that func takes
+        # as positional or keyword arguments
+        select_kwargs = {
+            k: kwargs[k]
+            for k in kwargs.keys()
+            if k in inspect.signature(func).parameters.keys()
+        }
+        return func(*args, **select_kwargs)
+    return wrapper
