@@ -37,7 +37,7 @@ import numba
 
 from nrt.log import logger
 from nrt.utils_efp import history_roc
-from nrt.stats import nanlstsq, mad, bisquare, weighted_nanlstsq, is_stable_ccdc
+from nrt.stats import nanlstsq, mad, bisquare, is_stable_ccdc
 
 
 def ols(X, y):
@@ -56,9 +56,10 @@ def ols(X, y):
     return beta, residuals
 
 
+@numba.jit(nopython=True, cache=True)
 def rirls(X, y, M=bisquare, tune=4.685,
           scale_est=mad, scale_constant=0.6745,
-          update_scale=True, maxiter=50, tol=1e-8, **kwargs):
+          update_scale=True, maxiter=50, tol=1e-8):
     """Robust Linear Model using Iterative Reweighted Least Squares (RIRLS)
 
     Perform robust fitting regression via iteratively reweighted least squares
@@ -84,52 +85,41 @@ def rirls(X, y, M=bisquare, tune=4.685,
     Returns:
         tuple: beta-coefficients and residual vector
     """
-    is_1d = y.ndim == 1
-    if is_1d:
-        y = y[:, np.newaxis]
+    beta = np.zeros((X.shape[1], y.shape[1]), dtype=np.float64)
+    resid = np.full_like(y, np.nan, dtype=np.float64)
+    for idx in range(y.shape[1]):
+        y_sub = y[:,idx]
+        isna = np.isnan(y_sub)
+        X_sub = X[~isna]
+        y_sub = y_sub[~isna]
+        beta_, resid_ = weighted_ols(X_sub, y_sub, np.ones_like(y_sub))
+        scale = scale_est(resid_, c=scale_constant)
 
-    beta, resid = weighted_ols(X, y, np.ones_like(y))
-    scale = scale_est(resid, c=scale_constant)
+        EPS = np.finfo(np.float32).eps
+        if scale < EPS:
+            beta[:,idx] = beta_
+            resid[~isna,idx] = resid_
+            continue
 
-    EPS = np.finfo('float').eps
-
-    # Initializing array signaling converged models and setting everything
-    # True where scale is smaller epsilon, to avoid singular matrices during
-    # weighted fit
-    converged = np.zeros_like(scale).astype('bool')
-    converged[scale < EPS] = True
-
-    iteration = 1
-    while not all(converged) and iteration < maxiter:
-        # 1. Get all non-converged timeseries
-        y_sub = y[:, ~converged]
-        _beta = beta.copy()
-
-        # 2. Calculate new weights and do a weighted fit
-        weights = M(resid[:, ~converged] / scale, c=tune)
-        beta[:, ~converged], resid[:, ~converged] = weighted_ols(X, y_sub,
-                                                                 weights)
-        iteration += 1
-
-        # 3. For all time series where the change in beta is smaller than the
-        #   tolerance set convergence to True
-        is_converged = ~np.any(np.fabs(beta - _beta > tol), axis=0)
-        converged[is_converged] = True
-
-        # If chosen repeat initialization by recalculating the scale
-        if update_scale:
-            est = scale_est(resid[:, ~converged], c=scale_constant)
-            scale = np.where(EPS > est, EPS, est)
-
-    if is_1d:
-        resid = resid.squeeze(axis=-1)
-        beta = beta.squeeze(axis=-1)
+        iteration = 1
+        converged = 0
+        while not converged and iteration < maxiter:
+            last_beta = beta_.copy()
+            weights = M(resid_ / scale, c=tune)
+            beta_, resid_ = weighted_ols(X_sub, y_sub, weights)
+            if update_scale:
+                scale = max(EPS,scale_est(resid_, c=scale_constant))
+            iteration += 1
+            converged = not np.any(np.fabs(beta_ - last_beta > tol))
+        beta[:,idx] = beta_
+        resid[~isna,idx] = resid_
 
     return beta, resid
 
 
+@numba.jit(nopython=True, cache=True)
 def weighted_ols(X, y, w):
-    """Apply a weighted OLS fit to data
+    """Apply a weighted OLS fit to 1D data
 
     Args:
         X (np.ndarray): independent variables
@@ -140,11 +130,14 @@ def weighted_ols(X, y, w):
         tuple: coefficients and residual vector
     """
     sw = np.sqrt(w)
-    X_big = np.tile(X, (y.shape[1], 1, 1))
-    Xw = X_big * sw.T[:, :, None]
+
+    Xw = X * np.expand_dims(sw, -1)
     yw = y * sw
-    beta = weighted_nanlstsq(Xw, yw)
+
+    beta,_,_,_ = np.linalg.lstsq(Xw, yw)
+
     resid = y - np.dot(X, beta)
+
     return beta, resid
 
 
@@ -295,4 +288,3 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
 
     residuals = np.dot(X, beta) - y
     return beta, residuals, is_stable
-

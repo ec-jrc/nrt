@@ -4,19 +4,16 @@ import nrt.fit_methods as fm
 import nrt.stats as st
 
 
-def test_rirls(X_y_intercept_slope):
+def test_rirls(X_y_RLM, sm_RLM_result):
     """
-    Compare against implementation in yatsm
-    https://github.com/ceholden/yatsm/blob/
-    8e328f366c8fd94d5cc57cd2cc42080c43d1f391/yatsm/regression/robust_fit.py
+    Compare against implementation in statsmodels
     """
-    X, y, intercept, slope = X_y_intercept_slope
+    X, y = X_y_RLM
     beta, residuals = fm.rirls(X, y, M=st.bisquare, tune=4.685,
                scale_est=st.mad, scale_constant=0.6745, update_scale=True,
                maxiter=50, tol=1e-8)
 
-    np.testing.assert_allclose(beta, np.array([[intercept, intercept],
-                                               [slope, slope]]))
+    np.testing.assert_allclose(beta, sm_RLM_result, rtol=1e-02)
 
 
 def test_roc_stable_fit(X_y_dates_romania):
@@ -26,5 +23,3 @@ def test_roc_stable_fit(X_y_dates_romania):
     beta, resid, is_stable = fm.roc_stable_fit(X.astype(np.float64),
                                                y.astype(np.float64),
                                                dates)
-
-

@@ -1,6 +1,7 @@
 import numpy as np
 
 from nrt.monitor import BaseNrt
+from nrt.stats import nan_percentile_axis0
 
 
 class IQR(BaseNrt):
@@ -66,7 +67,7 @@ class IQR(BaseNrt):
         beta, residuals = self._fit(X, dataarray=dataarray, method=method,
                                     **kwargs)
         self.beta = beta
-        q75, q25 = np.nanpercentile(residuals, [75 ,25], 0)
+        q75, q25 = nan_percentile_axis0(residuals, np.array([75 ,25]))
         self.q25 = q25
         self.q75 = q75
 

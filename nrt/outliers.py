@@ -46,7 +46,7 @@ def shewhart(X, y, L):
     return y
 
 
-def ccdc_rirls(X, y, green, swir, scaling_factor=1, **kwargs):
+def ccdc_rirls(X, y, green, swir, scaling_factor=1):
     """Screen for missed clouds and other outliers using green and SWIR band
 
     Args:
@@ -56,15 +56,14 @@ def ccdc_rirls(X, y, green, swir, scaling_factor=1, **kwargs):
         swir (np.ndarray): 2D array containing spectral values (~1.55-1.75um)
         scaling_factor (int): Scaling factor to bring green and swir values
             to reflectance values between 0 and 1
-        **kwargs: arguments to be passed to fit_methods.rirls()
 
     Returns:
         np.ndarray: y with outliers set to np.nan
     """
     # 1. estimate time series model using rirls for green and swir
     # TODO could be sped up, since masking is the same for green and swir
-    g_beta, g_residuals = rirls(X, green, **kwargs)
-    s_beta, s_residuals = rirls(X, swir, **kwargs)
+    g_beta, g_residuals = rirls(X, green)
+    s_beta, s_residuals = rirls(X, swir)
     # Update mask using thresholds
     is_outlier = np.logical_or(g_residuals > 0.04*scaling_factor,
                                s_residuals < -0.04*scaling_factor)

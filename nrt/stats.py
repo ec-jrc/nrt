@@ -43,58 +43,6 @@ def nanlstsq(X, y):
     return beta
 
 
-@numba.jit(nopython=True, cache=True)
-def weighted_nanlstsq(X, y):
-    """Return the weighted least-squares solution to a linear matrix equation
-
-    Analog to ``nanlstsq`` but X is unique for every observation in y
-
-    Args:
-        X ((K, M, N) np.ndarray): Weighted Matrix of independant variables,
-            unique for each timeseries K in y
-        y ((M, K) np.ndarray): Matrix of dependant variables
-
-    Returns:
-        np.ndarray: Least-squares solution for every y with unique X
-    """
-    beta = np.zeros((X.shape[2], y.shape[1]), dtype=np.float32)
-    for idx in range(y.shape[1]):
-        # Indexing one after the other, because Numba isn't supporting
-        # multiple advanced indices
-        y_ = y[:,idx]
-        X_ = X[idx]
-        isna = np.isnan(y_)
-        X_sub = X_[~isna]
-        y_sub = y_[~isna]
-
-        XTX = np.linalg.inv(np.dot(X_sub.T, X_sub))
-        XTY = np.dot(X_sub.T, y_sub)
-        beta[:,idx] = np.dot(XTX, XTY)
-    return beta
-
-
-@numba.jit(nopython=True, cache=True)
-def nanmedian_along_axis(arr, axis):
-    """Returns Mean along selected axis
-
-    Implementation to work with numba
-
-    Args:
-        arr (np.ndarray): N-Dimensional array
-        axis (int): Axis to calculate the median along
-
-    Returns:
-        np.ndarray: Median excluding nan along the axis
-
-    Reference:
-        http://en.wikipedia.org/wiki/Median_absolute_deviation
-    """
-    res = np.empty(arr.shape[axis], dtype=arr.dtype)
-    for idx in range(arr.shape[axis]):
-        arr_sub = arr[:, idx]
-        res[idx] = np.nanmedian(arr_sub)
-    return res
-
 
 @numba.jit(nopython=True, cache=True)
 def mad(resid, c=0.6745):
@@ -111,8 +59,7 @@ def mad(resid, c=0.6745):
         http://en.wikipedia.org/wiki/Median_absolute_deviation
     """
     # Return median absolute deviation adjusted sigma
-    return nanmedian_along_axis(
-        np.fabs(resid - nanmedian_along_axis(resid, axis=1)), axis=1) / c
+    return np.nanmedian(np.fabs(resid - np.nanmedian(resid))) / c
 
 # Weight scaling methods
 @numba.jit(nopython=True, cache=True)
@@ -184,3 +131,30 @@ def ncdf(x):
     Source: Stackoverflow Unknown,
     https://stackoverflow.com/a/809402/12819237"""
     return 1. - 0.5*erfcc(x/(2**0.5))
+
+
+@numba.jit(nopython=True, cache=True)
+def nan_percentile_axis0(arr, percentiles):
+    """Faster implementation of np.nanpercentile
+
+    This implementation always takes the percentile along axis 0.
+    Uses numba to speed up the calculation by more than 7x.
+
+    Function is equivalent to np.nanpercentile(arr, <percentiles>, axis=0)
+
+    Args:
+        arr (np.ndarray): 2D array to calculate percentiles for
+        percentiles (np.ndarray): 1D array of percentiles to calculate
+
+    Returns:
+        np.ndarray: Array with first dimension corresponding to values passed
+        in percentiles
+
+    """
+    shape = arr.shape
+    arr = arr.reshape((arr.shape[0], -1))
+    out = np.empty((len(percentiles), arr.shape[1]))
+    for i in range(arr.shape[1]):
+        out[:,i] = np.nanpercentile(arr[:,i], percentiles)
+    shape = (out.shape[0], *shape[1:])
+    return out.reshape(shape)
