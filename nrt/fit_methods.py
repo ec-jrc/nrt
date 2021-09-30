@@ -145,14 +145,15 @@ def ccdc_stable_fit(X, y, dates, threshold=3):
     """Fitting stable regressions using an adapted CCDC method
 
     Models are first fit using OLS regression. Those models are then checked for
-    stability with. If a model is not stable, the two oldest
+    stability. If a model is not stable, the two oldest
     acquisitions are removed, a model is fit using this shorter
     time-series and again checked for stability. This process continues as long
     as all of the following 3 conditions are met:
 
-    1. There timeseries is still unstable
+    1. The timeseries is still unstable
     2. There are enough cloud-free acquisitions left (threshold is 1.5x the
         number of parameters in the design matrix)
+    3. The time series includes data of more than half a year
 
     Stability depends on all these three conditions being true:
     1.             slope / RMSE < threshold
@@ -182,6 +183,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3):
         isna = np.isnan(y_sub)
         X_sub = X[~isna]
         y_sub = y_sub[~isna]
+        _dates = dates[~isna]
         is_stable = False
 
         # Run until minimum observations
@@ -198,19 +200,24 @@ def ccdc_stable_fit(X, y, dates, threshold=3):
 
             # Check for stability
             rmse = np.sqrt(np.mean(resid_sub ** 2))
-            slope = beta_sub[1] / rmse < threshold
-            first = resid_sub[0] / rmse < threshold
-            last = resid_sub[-1] / rmse < threshold
+            slope = np.fabs(beta_sub[1]) / rmse < threshold
+            first = np.fabs(resid_sub[0]) / rmse < threshold
+            last = np.fabs(resid_sub[-1]) / rmse < threshold
 
             # Break if stability is reached
             is_stable = slope & first & last
             if is_stable:
                 break
+            # Also break if less than half a year of data remain
+            last_date = _dates[-1]
+            first_date = _dates[-jdx]
+            if last_date - first_date < 183:
+                break
 
         beta[:,idx] = beta_sub
         residuals[-jdx:,idx] = resid_sub
         stable[idx] = is_stable
-        fit_start[idx] = dates[~isna][-jdx]
+        fit_start[idx] = _dates[-jdx]
     return beta, residuals, stable.astype(np.bool_), fit_start
 
 
