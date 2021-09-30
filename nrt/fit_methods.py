@@ -36,6 +36,7 @@ import numpy as np
 import numba
 
 from nrt.log import logger
+from nrt import utils
 from nrt.utils_efp import history_roc
 from nrt.stats import nanlstsq, mad, bisquare
 
@@ -56,6 +57,7 @@ def ols(X, y):
     return beta, residuals
 
 
+@utils.numba_kwargs
 @numba.jit(nopython=True, cache=True)
 def rirls(X, y, M=bisquare, tune=4.685,
           scale_est=mad, scale_constant=0.6745,
@@ -140,6 +142,7 @@ def weighted_ols(X, y, w):
 
     return beta, resid
 
+@utils.numba_kwargs
 @numba.jit(nopython=True, cache=True)
 def ccdc_stable_fit(X, y, dates, threshold=3):
     """Fitting stable regressions using an adapted CCDC method
@@ -221,6 +224,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3):
     return beta, residuals, stable.astype(np.bool_), fit_start
 
 
+@utils.numba_kwargs
 @numba.jit(nopython=True, cache=True)
 def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
     """Fitting stable regressions using Reverse Ordered Cumulative Sums

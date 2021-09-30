@@ -142,12 +142,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         # 1. Optionally screen outliers
         #   This just updates y_flat
         if screen_outliers == 'Shewhart':
-            try:
-                L = kwargs.pop('L')
-            except KeyError:
-                raise ValueError('"L" has to be passed for "Shewhart" outlier '
-                                 'screening.')
-            y_flat = shewhart(X, y_flat, L=L)
+            y_flat = shewhart(X, y_flat, **kwargs)
             y_flat = self._mask_short_series(y_flat, X)
         elif screen_outliers == 'CCDC_RIRLS':
             try:
@@ -155,14 +150,12 @@ class BaseNrt(metaclass=abc.ABCMeta):
                     .astype(np.float64)[:, self.mask == 1]
                 swir_flat = kwargs.pop('swir').values\
                     .astype(np.float64)[:, self.mask == 1]
-                scaling_factor = kwargs.get('scaling_factor', 1)
             except (KeyError, AttributeError):
                 raise ValueError('green and swir xarray.Dataarray(s) need to be'
                                  ' provided using green and swir arguments'
                                  ' respectively')
             y_flat = ccdc_rirls(X, y_flat,
-                                green=green_flat, swir=swir_flat,
-                                scaling_factor=scaling_factor)
+                                green=green_flat, swir=swir_flat, **kwargs)
             y_flat = self._mask_short_series(y_flat, X)
         elif screen_outliers:
             raise ValueError('Unknown screen_outliers')
@@ -171,22 +164,16 @@ class BaseNrt(metaclass=abc.ABCMeta):
 
         # 2. Fit using specified method
         if method == 'ROC':
-            try:
-                alpha = kwargs.pop('alpha')
-            except KeyError as e:
-                warnings.warn('Parameter `alpha` needs to be '
-                              'passed for ROC fit. Using alpha of 0.05.')
-                alpha = 0.05
             # Convert datetime64 to days, so numba is happy
             dates = dataarray.time.values.astype('datetime64[D]').astype('int')
             # crit already calculated here, to allow numba in roc_stable_fit
-            crit = _cusum_rec_test_crit(alpha)
+            crit = _cusum_rec_test_crit(**kwargs)
             # Suppress numba np.dot() warnings
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 # ROC requires double precision when using numba
                 beta_flat, residuals_flat, is_stable, fit_start = \
-                    roc_stable_fit(X, y_flat, dates, alpha=alpha, crit=crit)
+                    roc_stable_fit(X, y_flat, dates, crit=crit, **kwargs)
             self.mask.flat[np.flatnonzero(mask_bool)[~is_stable]] = 2
             self.fit_start.flat[np.flatnonzero(mask_bool)] = fit_start
         elif method == 'CCDC-stable':
@@ -194,7 +181,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 raise ValueError('Method "CCDC-stable" requires "trend" to be true.')
             dates = dataarray.time.values.astype('datetime64[D]').astype('int')
             beta_flat, residuals_flat, is_stable, fit_start = \
-                ccdc_stable_fit(X, y_flat, dates)
+                ccdc_stable_fit(X, y_flat, dates, **kwargs)
             self.mask.flat[np.flatnonzero(mask_bool)[~is_stable]] = 2
             self.fit_start.flat[np.flatnonzero(mask_bool)] = fit_start
         elif method == 'OLS':
@@ -202,7 +189,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         elif method == 'LASSO':
             raise NotImplementedError('Method not yet implemented')
         elif method == 'RIRLS':
-            beta_flat, residuals_flat = rirls(X, y_flat)
+            beta_flat, residuals_flat = rirls(X, y_flat, **kwargs)
         else:
             raise ValueError('Unknown method')
 

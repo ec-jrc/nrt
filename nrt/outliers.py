@@ -22,7 +22,7 @@ from nrt.fit_methods import rirls, ols
 from nrt.log import logger
 
 
-def shewhart(X, y, L):
+def shewhart(X, y, L=5, **kwargs):
     """Remove outliers using a Shewhart control chart
 
     As described in Brooks et al. 2014, following an initial OLS fit, outliers are
@@ -34,6 +34,7 @@ def shewhart(X, y, L):
         L (float): control limit used for outlier filtering. Must be a positive
             float. Lower values indicate stricter filtering. Residuals larger
             than L*sigma will get screened out
+        **kwargs: not used
 
     Returns:
         y(np.ndarray): Dependant variables with outliers set to np.nan
@@ -46,7 +47,7 @@ def shewhart(X, y, L):
     return y
 
 
-def ccdc_rirls(X, y, green, swir, scaling_factor=1):
+def ccdc_rirls(X, y, green, swir, scaling_factor=1, **kwargs):
     """Screen for missed clouds and other outliers using green and SWIR band
 
     Args:
@@ -62,8 +63,8 @@ def ccdc_rirls(X, y, green, swir, scaling_factor=1):
     """
     # 1. estimate time series model using rirls for green and swir
     # TODO could be sped up, since masking is the same for green and swir
-    g_beta, g_residuals = rirls(X, green)
-    s_beta, s_residuals = rirls(X, swir)
+    g_beta, g_residuals = rirls(X, green, **kwargs)
+    s_beta, s_residuals = rirls(X, swir, **kwargs)
     # Update mask using thresholds
     is_outlier = np.logical_or(g_residuals > 0.04*scaling_factor,
                                s_residuals < -0.04*scaling_factor)
