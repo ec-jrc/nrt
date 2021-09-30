@@ -1,8 +1,6 @@
 import numba
 import numpy as np
 
-from nrt.log import logger
-
 
 @numba.jit(nopython=True, cache=True)
 def nanlstsq(X, y):
