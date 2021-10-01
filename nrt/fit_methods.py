@@ -178,7 +178,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3):
     """
     min_obs = int(X.shape[1] * 1.5)
     beta = np.zeros((X.shape[1], y.shape[1]), dtype=np.float64)
-    residuals = np.empty_like(y)
+    residuals = np.full_like(y, np.nan)
     stable = np.empty((y.shape[1]))
     fit_start = np.empty((y.shape[1]))
     for idx in range(y.shape[1]):
