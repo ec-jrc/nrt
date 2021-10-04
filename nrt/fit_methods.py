@@ -253,6 +253,8 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
         beta (numpy.ndarray): The array of regression estimators
         residuals (numpy.ndarray): The array of residuals
         is_stable (numpy.ndarray): 1D Boolean array indicating stability
+        start (numpy.ndarray): 1D integer array indicating day of fitting start
+            as days since UNIX epoch.
     """
     is_stable = np.ones(y.shape[1], dtype=np.bool_)
     fit_start = np.zeros_like(is_stable, dtype=np.uint16)
