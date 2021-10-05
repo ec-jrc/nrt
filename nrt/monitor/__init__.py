@@ -119,7 +119,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 ``'RIRLS'``, ``'LASSO'``, ``'ROC'`` and ``'CCDC-stable'``.
             screen_outliers (str): The screening method. Possible values include
                 ``'Shewhart'`` and ``'CCDC_RIRLS'``.
-            **kwargs: Other parameters specific to each fit method
+            **kwargs: Other parameters specific to each fit and/or outlier
+                screening method
 
         Returns:
             beta (numpy.ndarray): The array of regression estimators
