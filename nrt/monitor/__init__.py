@@ -58,6 +58,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
         trend (bool): Indicate whether stable period fit is performed with
             trend or not
         harmonic_order (int): The harmonic order of the time-series regression
+        save_fit_start (bool): If start of the fit should be reported in the
+            model. Only applicable to stable fits (e.g. 'ROC', 'CCDC-stable').
+            If true, the data will be saved in the attribute `fit_start`
         x_coords (numpy.ndarray): x coordinates
         y_coords (numpy.ndarray): y coordinates
         process (numpy.ndarray): 2D numpy array containing the
@@ -70,9 +73,10 @@ class BaseNrt(metaclass=abc.ABCMeta):
             period in days since UNIX Epoch. Start of history period only varies
             when using stable fitting algorithms
     """
-    def __init__(self, mask=None, trend=True, harmonic_order=3, beta=None,
-                 x_coords=None, y_coords=None, process=None, boundary=None,
-                 detection_date=None, fit_start=None, **kwargs):
+    def __init__(self, mask=None, trend=True, harmonic_order=3,
+                 save_fit_start=False, beta=None, x_coords=None, y_coords=None,
+                 process=None, boundary=None, detection_date=None,
+                 fit_start=None, **kwargs):
         self.mask = np.copy(mask) if isinstance(mask, np.ndarray) else mask
         self.trend = trend
         self.harmonic_order = harmonic_order
@@ -82,7 +86,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
         self.process = process
         self.boundary = boundary
         self.detection_date = detection_date
-        self.fit_start = fit_start
+        if save_fit_start:
+            self.fit_start = fit_start
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -124,6 +129,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
             NotImplementedError: If method is not yet implemented
             ValueError: Unknown value for `method`
         """
+        # Check for strictly increasing time dimension:
+        if not np.all(dataarray.time.values[1:] >= dataarray.time.values[:-1]):
+            raise ValueError("Time dimension of dataarray has to be sorted chronologically.")
         # lower level functions using numba may require that X and y have the same
         # datatype (e.g. float64, float64 signature)
         # If the precision is below float64, occurences of singular matrices get
@@ -133,8 +141,10 @@ class BaseNrt(metaclass=abc.ABCMeta):
         # If no mask has been set at class instantiation, assume everything is forest
         if self.mask is None:
             self.mask = np.ones_like(y[0,:,:], dtype=np.uint8)
-        start_date = dataarray.time[0].values.astype('datetime64[D]').astype('int')
-        if self.fit_start is None:
+        # Check if fit_start exists. If it does and is None, initialize it
+        if getattr(self, 'fit_start', False) is None:
+            start_date = dataarray.time.values.min() \
+                .astype('datetime64[D]').astype('int')
             self.fit_start = np.full_like(self.mask, start_date, dtype=np.uint16)
         mask_bool = self.mask == 1
         shape = y.shape
@@ -181,7 +191,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 beta_flat, residuals_flat, is_stable, fit_start = \
                     roc_stable_fit(X, y_flat, dates, crit=crit, **kwargs)
             self.mask.flat[np.flatnonzero(mask_bool)[~is_stable]] = 2
-            self.fit_start.flat[np.flatnonzero(mask_bool)] = fit_start
+            if hasattr(self, 'fit_start'):
+                self.fit_start[mask_bool] = fit_start
         elif method == 'CCDC-stable':
             if not self.trend:
                 raise ValueError('Method "CCDC-stable" requires "trend" to be true.')
@@ -189,7 +200,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
             beta_flat, residuals_flat, is_stable, fit_start = \
                 ccdc_stable_fit(X, y_flat, dates, **kwargs)
             self.mask.flat[np.flatnonzero(mask_bool)[~is_stable]] = 2
-            self.fit_start.flat[np.flatnonzero(mask_bool)] = fit_start
+            if hasattr(self, 'fit_start'):
+                self.fit_start[mask_bool] = fit_start
         elif method == 'OLS':
             beta_flat, residuals_flat = ols(X, y_flat)
         elif method == 'LASSO':
