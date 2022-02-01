@@ -28,6 +28,8 @@ Example usage
 
 .. code-block:: python
 
+    import datetime
+
     from nrt.monitor.ewma import EWMA
     from nrt import data
 
@@ -46,7 +48,8 @@ Example usage
     EwmaMonitor.fit(dataarray=ndvi_history)
 
     # Monitor new observations
-    for array, date in zip(ndvi_monitoring.values, ndvi_monitoring.time.values):
+    for array, date in zip(ndvi_monitoring.values,
+                           ndvi_monitoring.time.values.astype('M8[s]').astype(datetime.datetime)):
         EwmaMonitor.monitor(array=array, date=date)
 
     # At any time a monitoring report can be produced with EwmaMonitor.report(filename)
