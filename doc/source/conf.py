@@ -13,6 +13,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../../nrt'))
+import nrt
 
 
 # -- Project information -----------------------------------------------------
@@ -22,7 +23,7 @@ copyright = '2021, Loic Dutrieux, Jonas Viehweger'
 author = 'Loic Dutrieux, Jonas Viehweger'
 
 # The full version, including alpha/beta/rc tags
-release = '0.0.3'
+release = nrt.__version__
 
 
 # -- General configuration ---------------------------------------------------
@@ -34,7 +35,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',
     'sphinx_rtd_theme',
-    'sphinx.ext.imgmath'
+    'sphinx.ext.mathjax'
 ]
 
 # Add any paths that contain templates here, relative to this directory.

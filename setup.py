@@ -18,7 +18,8 @@ with open('nrt/__init__.py') as f:
 with codecs.open('README.rst', encoding='utf-8') as f:
     readme = f.read()
 
-extra_reqs = {'tests': ['pytest']}
+extra_reqs = {'tests': ['pytest'],
+              'doc': ['sphinx', 'sphinx_rtd_theme']}
 
 setup(name='nrt',
       version=version,
