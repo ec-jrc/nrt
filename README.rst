@@ -20,7 +20,9 @@ Installation
 
 .. code-block:: bash
 
-    pip install git+https://jeodpp.jrc.ec.europa.eu/apps/gitlab/use_cases/canhemon/nrt.git
+    pip install nrt
+    # Or alternatively
+    pip install git+https://github.com/ec-jrc/nrt.git
 
 
 Example usage
