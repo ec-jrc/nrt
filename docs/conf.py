@@ -12,8 +12,17 @@
 
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../../nrt'))
 import nrt
+
+
+## Hack to ensure files under git LFS are not left behind when RTD clones the repos
+# to build online docs (https://github.com/readthedocs/readthedocs.org/issues/1846#issuecomment-477184259)
+if not os.path.exists('./git-lfs'):
+    os.system('wget https://github.com/git-lfs/git-lfs/releases/download/v2.7.1/git-lfs-linux-amd64-v2.7.1.tar.gz')
+    os.system('tar xvfz git-lfs-linux-amd64-v2.7.1.tar.gz')
+    os.system('./git-lfs install')  # make lfs available in current repository
+    os.system('./git-lfs fetch')  # download content from remote
+    os.system('./git-lfs checkout')  # make local files to have the real content on them
 
 
 # -- Project information -----------------------------------------------------
