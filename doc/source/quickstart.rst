@@ -19,11 +19,11 @@ For more information on the basic function of each monitoring method see :ref:`c
 Installation
 ============
 
-Install the package from gitlab using:
+Install the package from pypi using:
 
 .. code-block::
 
-	pip install git+https://jeodpp.jrc.ec.europa.eu/apps/gitlab/use_cases/canhemon/nrt.git
+	pip install nrt
 
 Workflow
 ========
