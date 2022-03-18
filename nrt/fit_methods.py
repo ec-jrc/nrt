@@ -36,8 +36,9 @@ import numpy as np
 import numba
 
 from nrt.log import logger
+from nrt import utils
 from nrt.utils_efp import history_roc
-from nrt.stats import nanlstsq, mad, bisquare, is_stable_ccdc
+from nrt.stats import nanlstsq, mad, bisquare
 
 
 def ols(X, y):
@@ -56,6 +57,7 @@ def ols(X, y):
     return beta, residuals
 
 
+@utils.numba_kwargs
 @numba.jit(nopython=True, cache=True)
 def rirls(X, y, M=bisquare, tune=4.685,
           scale_est=mad, scale_constant=0.6745,
@@ -140,20 +142,26 @@ def weighted_ols(X, y, w):
 
     return beta, resid
 
-
-def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
+@utils.numba_kwargs
+@numba.jit(nopython=True, cache=True)
+def ccdc_stable_fit(X, y, dates, threshold=3):
     """Fitting stable regressions using an adapted CCDC method
 
     Models are first fit using OLS regression. Those models are then checked for
-    stability with 'is_stable_ccdc()'. If a model is not stable, the two oldest
+    stability. If a model is not stable, the two oldest
     acquisitions are removed, a model is fit using this shorter
     time-series and again checked for stability. This process continues as long
     as all of the following 3 conditions are met:
 
-    1. There are unstable timeseries left.
+    1. The timeseries is still unstable
     2. There are enough cloud-free acquisitions left (threshold is 1.5x the
-        number of parameters in the design matrix).
-    3. There is still data of more than 1 year available.
+        number of parameters in the design matrix)
+    3. The time series includes data of more than half a year
+
+    Stability depends on all these three conditions being true:
+    1.             slope / RMSE < threshold
+    2. first observation / RMSE < threshold
+    3.  last observation / RMSE < threshold
 
     Args:
         X ((M, N) np.ndarray): Matrix of independant variables
@@ -165,64 +173,58 @@ def ccdc_stable_fit(X, y, dates, threshold=3, **kwargs):
         beta (numpy.ndarray): The array of regression estimators
         residuals (numpy.ndarray): The array of residuals
         is_stable (numpy.ndarray): 1D Boolean array indicating stability
+        start (numpy.ndarray): 1D integer array indicating day of fitting start
+            as days since UNIX epoch.
     """
-    # 0. Remove observations with too little data
-    # Minimum 1.5 times the number of coefficients
-    obs_count = np.count_nonzero(~np.isnan(y), axis=0)
-    enough = obs_count > X.shape[1] * 1.5
-    is_stable = np.full(enough.shape, False, dtype=bool)
-    y_sub = y[:, enough]
-    X_sub = X
+    min_obs = int(X.shape[1] * 1.5)
+    beta = np.zeros((X.shape[1], y.shape[1]), dtype=np.float64)
+    residuals = np.full_like(y, np.nan)
+    stable = np.empty((y.shape[1]))
+    fit_start = np.empty((y.shape[1]))
+    for idx in range(y.shape[1]):
+        y_sub = y[:, idx]
+        isna = np.isnan(y_sub)
+        X_sub = X[~isna]
+        y_sub = y_sub[~isna]
+        _dates = dates[~isna]
+        is_stable = False
 
-    # Initialize dates to check if there's acquisitions for an entire year
-    first_date = dates[0]
-    last_date = dates[-1]
-    delta = last_date - first_date
+        # Run until minimum observations
+        # or until stability is reached
+        for jdx in range(len(y_sub), min_obs-1, -2):
+            # Timeseries gets reduced by two elements
+            # each iteration
+            y_ = y_sub[-jdx:]
+            X_ = X_sub[-jdx:]
+            XTX = np.linalg.inv(np.dot(X_.T, X_))
+            XTY = np.dot(X_.T, y_)
+            beta_sub = np.dot(XTX, XTY)
+            resid_sub = np.dot(X_, beta_sub) - y_
 
-    # If the dates are less than one year apart Raise an Exception
-    if delta.astype('timedelta64[Y]') < np.timedelta64(1, 'Y'):
-        raise ValueError('"dates" requires a full year of data.')
+            # Check for stability
+            rmse = np.sqrt(np.mean(resid_sub ** 2))
+            slope = np.fabs(beta_sub[1]) / rmse < threshold
+            first = np.fabs(resid_sub[0]) / rmse < threshold
+            last = np.fabs(resid_sub[-1]) / rmse < threshold
 
-    # Initialize beta and residuals filled with nan
-    beta = np.full([X.shape[1], y.shape[1]], np.nan, dtype=np.float32)
-    residuals = np.full(y.shape, np.nan, dtype=np.float32)
+            # Break if stability is reached
+            is_stable = slope & first & last
+            if is_stable:
+                break
+            # Also break if less than half a year of data remain
+            last_date = _dates[-1]
+            first_date = _dates[-jdx]
+            if last_date - first_date < 183:
+                break
 
-    # Keep going while everything isn't either stable or has enough data left
-    while not np.all(is_stable | ~enough):
-        # 1. Fit
-        beta_sub, residuals_sub = ols(X_sub, y_sub)
-        beta[:,~is_stable & enough] = beta_sub
-        residuals[:,~is_stable & enough] = np.nan
-        residuals[-y_sub.shape[0]:,~is_stable & enough] = residuals_sub
-
-        # 2. Check stability
-        is_stable_sub = is_stable_ccdc(beta_sub[1, :], residuals_sub, threshold)
-
-        # 3. Update mask
-        # Everything that wasn't stable last time and had enough data gets updated
-        is_stable[~is_stable & enough] = is_stable_sub
-
-        # 4. Change Timeframe and remove everything that is now stable
-        y_sub = y_sub[2:,~is_stable_sub]
-        X_sub = X_sub[2:,:]
-        logger.debug('Fitted %d stable pixels.',
-                     is_stable_sub.shape[0]-y_sub.shape[1])
-        dates = dates[2:]
-        first_date = dates[0]
-        delta = last_date - first_date
-
-        # If the dates are less than one year apart stop the loop
-        if delta.astype('timedelta64[Y]') < np.timedelta64(1, 'Y'):
-            break
-        # Check where there isn't enough data left
-        obs_count = np.count_nonzero(~np.isnan(y_sub), axis=0)
-        enough_sub = obs_count > X.shape[1] * 1.5
-        enough[~is_stable & enough] = enough_sub
-        # Remove everything where there isn't enough data
-        y_sub = y_sub[:,enough_sub]
-    return beta, residuals, is_stable
+        beta[:,idx] = beta_sub
+        residuals[-jdx:,idx] = resid_sub
+        stable[idx] = is_stable
+        fit_start[idx] = _dates[-jdx]
+    return beta, residuals, stable.astype(np.bool_), fit_start
 
 
+@utils.numba_kwargs
 @numba.jit(nopython=True, cache=True)
 def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
     """Fitting stable regressions using Reverse Ordered Cumulative Sums
@@ -231,7 +233,7 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
     a stable history period which is provided by ``history_roc()``.
 
     The pixel will get marked as unstable if:
-    1. The stable period is shorter than 1 year OR
+    1. The stable period is shorter than half a year OR
     2. There are fewer observation than the number of coefficients in X
 
     The implementation roughly corresponds to the fit of bfastmonitor
@@ -251,8 +253,11 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
         beta (numpy.ndarray): The array of regression estimators
         residuals (numpy.ndarray): The array of residuals
         is_stable (numpy.ndarray): 1D Boolean array indicating stability
+        start (numpy.ndarray): 1D integer array indicating day of fitting start
+            as days since UNIX epoch.
     """
     is_stable = np.ones(y.shape[1], dtype=np.bool_)
+    fit_start = np.zeros_like(is_stable, dtype=np.uint16)
     beta = np.full((X.shape[1], y.shape[1]), np.nan, dtype=np.float64)
     nreg = X.shape[1]
     for idx in range(y.shape[1]):
@@ -275,7 +280,7 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
         _dates = dates[~is_nan]
         last_date = _dates[-1]
         first_date = _dates[stable_idx]
-        if last_date - first_date < 365:
+        if last_date - first_date < 183:
             is_stable[idx] = False
             continue
 
@@ -285,6 +290,7 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
         XTX = np.linalg.inv(np.dot(X_stable.T, X_stable))
         XTY = np.dot(X_stable.T, y_stable)
         beta[:, idx] = np.dot(XTX, XTY)
+        fit_start[idx] = _dates[stable_idx]
 
     residuals = np.dot(X, beta) - y
-    return beta, residuals, is_stable
+    return beta, residuals, is_stable, fit_start

@@ -13,12 +13,6 @@ def test_ncdf(test_input):
     np.testing.assert_allclose(numba_result, scipy_result)
 
 
-def test_ccdc_is_stable(stability_ccdc, threshold=3):
-    residuals, slope, check_stability = stability_ccdc
-    is_stable = st.is_stable_ccdc(slope, residuals, threshold)
-    np.testing.assert_array_equal(is_stable, check_stability)
-
-
 def test_nan_percentile_axis0():
     # test data
     xy = (20, 20, 20)

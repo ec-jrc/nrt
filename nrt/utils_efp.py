@@ -117,7 +117,7 @@ def _cusum_rec_boundary(x, crit=0.9478982340418134):
     return boundary
 
 
-def _cusum_rec_test_crit(alpha):
+def _cusum_rec_test_crit(alpha=0.05, **kwargs):
     """ Return critical test statistic value for some alpha """
     return optimize.brentq(lambda _x: _brownian_motion_pvalue(_x, 1) - alpha, 0, 20)
 

@@ -20,6 +20,11 @@ def test_roc_stable_fit(X_y_dates_romania):
     """Only integration test"""
     X, y, dates = X_y_dates_romania
     dates = dates.astype('datetime64[D]').astype('int')
-    beta, resid, is_stable = fm.roc_stable_fit(X.astype(np.float64),
-                                               y.astype(np.float64),
-                                               dates)
+    beta, resid, is_stable, fit_start = fm.roc_stable_fit(X.astype(np.float64),
+                                                          y.astype(np.float64),
+                                                          dates)
+
+def test_ccdc_stable_fit(stability_ccdc, threshold=3):
+    X, y, dates, result = stability_ccdc
+    beta, resid, stable, start = fm.ccdc_stable_fit(X, y, dates, threshold)
+    np.testing.assert_array_equal(result, stable)

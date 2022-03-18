@@ -45,6 +45,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
             pixels or every pixel individually
         detection_date (numpy.ndarray): 2D array signalling detection date of
             disturbances in days since 1970-01-01
+        fit_start (numpy.ndarray): 2D integer array reporting start of history
+            period in days since UNIX Epoch. Start of history period only varies
+            when using stable fitting algorithms
 
     Args:
         mask (numpy.ndarray): A 2D numpy array containing pixels that should be
@@ -55,6 +58,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
         trend (bool): Indicate whether stable period fit is performed with
             trend or not
         harmonic_order (int): The harmonic order of the time-series regression
+        save_fit_start (bool): If start of the fit should be reported in the
+            model. Only applicable to stable fits (e.g. 'ROC', 'CCDC-stable').
+            If true, the data will be saved in the attribute `fit_start`
         x_coords (numpy.ndarray): x coordinates
         y_coords (numpy.ndarray): y coordinates
         process (numpy.ndarray): 2D numpy array containing the
@@ -63,10 +69,14 @@ class BaseNrt(metaclass=abc.ABCMeta):
             pixels or every pixel individually
         detection_date (numpy.ndarray): 2D array signalling detection date of
             disturbances in days since 1970-01-01
+        fit_start (numpy.ndarray): 2D integer array reporting start of history
+            period in days since UNIX Epoch. Start of history period only varies
+            when using stable fitting algorithms
     """
-    def __init__(self, mask=None, trend=True, harmonic_order=3, beta=None,
-                 x_coords=None, y_coords=None, process=None, boundary=None,
-                 detection_date=None, **kwargs):
+    def __init__(self, mask=None, trend=True, harmonic_order=3,
+                 save_fit_start=False, beta=None, x_coords=None, y_coords=None,
+                 process=None, boundary=None, detection_date=None,
+                 fit_start=None, **kwargs):
         self.mask = np.copy(mask) if isinstance(mask, np.ndarray) else mask
         self.trend = trend
         self.harmonic_order = harmonic_order
@@ -76,6 +86,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
         self.process = process
         self.boundary = boundary
         self.detection_date = detection_date
+        if save_fit_start:
+            self.fit_start = fit_start
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -107,7 +119,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 ``'RIRLS'``, ``'LASSO'``, ``'ROC'`` and ``'CCDC-stable'``.
             screen_outliers (str): The screening method. Possible values include
                 ``'Shewhart'`` and ``'CCDC_RIRLS'``.
-            **kwargs: Other parameters specific to each fit method
+            **kwargs: Other parameters specific to each fit and/or outlier
+                screening method
 
         Returns:
             beta (numpy.ndarray): The array of regression estimators
@@ -117,6 +130,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
             NotImplementedError: If method is not yet implemented
             ValueError: Unknown value for `method`
         """
+        # Check for strictly increasing time dimension:
+        if not np.all(dataarray.time.values[1:] >= dataarray.time.values[:-1]):
+            raise ValueError("Time dimension of dataarray has to be sorted chronologically.")
         # lower level functions using numba may require that X and y have the same
         # datatype (e.g. float64, float64 signature)
         # If the precision is below float64, occurences of singular matrices get
@@ -126,6 +142,11 @@ class BaseNrt(metaclass=abc.ABCMeta):
         # If no mask has been set at class instantiation, assume everything is forest
         if self.mask is None:
             self.mask = np.ones_like(y[0,:,:], dtype=np.uint8)
+        # Check if fit_start exists. If it does and is None, initialize it
+        if getattr(self, 'fit_start', False) is None:
+            start_date = dataarray.time.values.min() \
+                .astype('datetime64[D]').astype('int')
+            self.fit_start = np.full_like(self.mask, start_date, dtype=np.uint16)
         mask_bool = self.mask == 1
         shape = y.shape
         beta_shape = (X.shape[1], shape[1], shape[2])
@@ -138,12 +159,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         # 1. Optionally screen outliers
         #   This just updates y_flat
         if screen_outliers == 'Shewhart':
-            try:
-                L = kwargs.pop('L')
-            except KeyError:
-                raise ValueError('"L" has to be passed for "Shewhart" outlier '
-                                 'screening.')
-            y_flat = shewhart(X, y_flat, L=L)
+            y_flat = shewhart(X, y_flat, **kwargs)
             y_flat = self._mask_short_series(y_flat, X)
         elif screen_outliers == 'CCDC_RIRLS':
             try:
@@ -151,14 +167,12 @@ class BaseNrt(metaclass=abc.ABCMeta):
                     .astype(np.float64)[:, self.mask == 1]
                 swir_flat = kwargs.pop('swir').values\
                     .astype(np.float64)[:, self.mask == 1]
-                scaling_factor = kwargs.get('scaling_factor', 1)
             except (KeyError, AttributeError):
                 raise ValueError('green and swir xarray.Dataarray(s) need to be'
                                  ' provided using green and swir arguments'
                                  ' respectively')
             y_flat = ccdc_rirls(X, y_flat,
-                                green=green_flat, swir=swir_flat,
-                                scaling_factor=scaling_factor)
+                                green=green_flat, swir=swir_flat, **kwargs)
             y_flat = self._mask_short_series(y_flat, X)
         elif screen_outliers:
             raise ValueError('Unknown screen_outliers')
@@ -167,36 +181,34 @@ class BaseNrt(metaclass=abc.ABCMeta):
 
         # 2. Fit using specified method
         if method == 'ROC':
-            try:
-                alpha = kwargs.pop('alpha')
-            except KeyError as e:
-                warnings.warn('Parameter `alpha` needs to be '
-                              'passed for ROC fit. Using alpha of 0.05.')
-                alpha = 0.05
             # Convert datetime64 to days, so numba is happy
             dates = dataarray.time.values.astype('datetime64[D]').astype('int')
             # crit already calculated here, to allow numba in roc_stable_fit
-            crit = _cusum_rec_test_crit(alpha)
+            crit = _cusum_rec_test_crit(**kwargs)
             # Suppress numba np.dot() warnings
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 # ROC requires double precision when using numba
-                beta_flat, residuals_flat, is_stable = roc_stable_fit(
-                    X, y_flat, dates, alpha=alpha, crit=crit)
+                beta_flat, residuals_flat, is_stable, fit_start = \
+                    roc_stable_fit(X, y_flat, dates, crit=crit, **kwargs)
             self.mask.flat[np.flatnonzero(mask_bool)[~is_stable]] = 2
+            if hasattr(self, 'fit_start'):
+                self.fit_start[mask_bool] = fit_start
         elif method == 'CCDC-stable':
             if not self.trend:
-                raise ValueError('Method "CCDC" requires "trend" to be true.')
-            dates = dataarray.time.values
-            beta_flat, residuals_flat, is_stable = \
+                raise ValueError('Method "CCDC-stable" requires "trend" to be true.')
+            dates = dataarray.time.values.astype('datetime64[D]').astype('int')
+            beta_flat, residuals_flat, is_stable, fit_start = \
                 ccdc_stable_fit(X, y_flat, dates, **kwargs)
             self.mask.flat[np.flatnonzero(mask_bool)[~is_stable]] = 2
+            if hasattr(self, 'fit_start'):
+                self.fit_start[mask_bool] = fit_start
         elif method == 'OLS':
             beta_flat, residuals_flat = ols(X, y_flat)
         elif method == 'LASSO':
             raise NotImplementedError('Method not yet implemented')
         elif method == 'RIRLS':
-            beta_flat, residuals_flat = rirls(X, y_flat)
+            beta_flat, residuals_flat = rirls(X, y_flat, **kwargs)
         else:
             raise ValueError('Unknown method')
 
