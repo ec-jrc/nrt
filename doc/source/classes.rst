@@ -18,7 +18,11 @@ The number of leaves and thus of scattering in the NIR is highest in summer and
 spring and lowest during winter. This seasonal pattern can be modelled and used to detect
 disturbances.
 
-.. image:: images/concept.png
+.. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
+
+.. figure:: images/concept.png
+
+   |copy| Copyright European Commission, 2022; Jonas Viehweger
 
 All implemented algorithms are based on this concept. They first fit a model to the stable forest,
 then monitor for unusual values compared to that model. How exactly this monitoring happens is one of
@@ -34,6 +38,7 @@ quality control charts, namely Shewhart and EWMA quality control charts.
 
 Instantiation
 -------------
+
 
 .. code-block:: python
     

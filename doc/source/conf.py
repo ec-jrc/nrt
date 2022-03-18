@@ -19,7 +19,7 @@ import nrt
 # -- Project information -----------------------------------------------------
 
 project = 'nrt'
-copyright = '2021, Loic Dutrieux, Jonas Viehweger'
+copyright = 'European Commission, 2022, Loic Dutrieux & Jonas Viehweger'
 author = 'Loic Dutrieux, Jonas Viehweger'
 
 # The full version, including alpha/beta/rc tags
