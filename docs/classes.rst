@@ -22,7 +22,7 @@ disturbances.
 
 .. figure:: images/concept.png
 
-   |copy| Copyright European Commission, 2022; Jonas Viehweger
+   |copy| Copyright European Union, 2022; Jonas Viehweger
 
 All implemented algorithms are based on this concept. They first fit a model to the stable forest,
 then monitor for unusual values compared to that model. How exactly this monitoring happens is one of
