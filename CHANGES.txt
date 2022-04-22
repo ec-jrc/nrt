@@ -1,0 +1,15 @@
+Changes
+=======
+
+0.1.0 (2022-04-22)
+------------------
+
+- The report() method can now receive a list of layers as argument to select the
+  attributes of the monitoring instance to be retrieved and written to disk. Backward
+  compatibility of the .report() method is not affected but backward compatibility
+  of the private ._report() method, used to prepare the array is broken
+
+0.0.5 (2022-03-21)
+------------------
+
+- First pypi release
