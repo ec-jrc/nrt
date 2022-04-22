@@ -297,23 +297,54 @@ class BaseNrt(metaclass=abc.ABCMeta):
         """
         pass
 
-    def _report(self):
+    def _report(self, layers, dtype):
         """Prepare data to be written to disk by ``self.report``
 
-        In general returns the mask attribute, but may be overridden in subclass
-        to report a different output (for instance mask and disturbance magnitude)
-        Must generate a 2D or 3D numpy array with geotiff compatible datatype.
-        In case of multi-band (3D) array, the band should be in the first axis
-        """
-        return np.stack((self.mask, self.detection_date), axis=0).astype(np.int16)
+        If overriden in subclass this method must generate a 3D numpy array (even
+        when a single layer is returned) with geotiff compatible datatype. Axis order
+        must be (band, y, x) as per the rasterio data model
 
-    def report(self, filename, driver='GTiff', crs=CRS.from_epsg(3035)):
-        """Write the result of reporting to a raster geospatial file
+        Args:
+            layers (list): A list of strings indicating the layers to include in
+                the report. Valid options are ``'mask'`` (the main output layer
+                containing confirmed breaks, non-monitored pixels, etc), ``'detection_date'``
+                (an integer value matching each confirmed break and indicating the date
+                 the break was confirmed in days since epoch), ``'process'`` (the process
+                 value). The process value has a different meaning and interpretation
+                 for each monitoring method.
+            dtype (type): The datatype of the stacked layers. Note that when returning
+                process value for MoSum, CuSum or EWMA the ``dtype`` should be set
+                to a float type to retain values
+
+        Returns:
+            numpy.ndarray: A 3D array with requested layers. Provided list order
+                is respected
         """
-        r = self._report()
-        count = 1
-        if r.ndim == 3:
-            count = r.shape[0]
+        valid = ['mask', 'detection_date', 'process']
+        if not all([x in valid for x in layers]):
+            raise ValueError('invalid layer(s) requested')
+        returned_layer = [getattr(self, x) for x in layers]
+        return np.stack(returned_layer, axis=0).astype(dtype)
+
+    def report(self, filename, layers=['mask', 'date'],
+               driver='GTiff', crs=CRS.from_epsg(3035),
+               dtype=np.int16):
+        """Write the result of reporting to a raster geospatial file
+
+        Args:
+            layers (list): A list of strings indicating the layers to include in
+                the report. Valid options are ``'mask'`` (the main output layer
+                containing confirmed breaks, non-monitored pixels, etc), ``'detection_date'``
+                (an integer value matching each confirmed break and indicating the date
+                 the break was confirmed in days since epoch), ``'process'`` (the process
+                 value). The process value has a different meaning and interpretation
+                 for each monitoring method.
+            dtype (type): The datatype of the stacked layers. Note that when returning
+                process value for MoSum, CuSum or EWMA the ``dtype`` should be set
+                to a float type to retain values
+        """
+        r = self._report(layers=layers, dtype=dtype)
+        count = r.shape[0]
         meta = {'driver': driver,
                 'crs': crs,
                 'count': count,
@@ -322,7 +353,6 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 'height': r.shape[-2],
                 'width': r.shape[-1]}
         with rasterio.open(filename, 'w', **meta) as dst:
-            # TODO: Not sure this will work for single band without passing 1 to read()
             dst.write(r)
 
     @property
