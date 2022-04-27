@@ -12,6 +12,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the Licence for the specific language governing permissions and
 # limitations under the Licence.
+import numpy as np
 
 from nrt.monitor.ccdc import CCDC
 
@@ -29,7 +30,8 @@ def test_fit_monitor(ndvi_history, green_swir_history, ndvi_monitoring_numpy,
     assert ccdc_monitor.beta.shape[0] == 6 # 2*2 harmonics + intercept + trend
     for array, date in zip(*ndvi_monitoring_numpy):
         ccdc_monitor.monitor(array=array, date=date)
-    ccdc_monitor._report()
+    ccdc_monitor._report(layers=['mask', 'detection_date'],
+                         dtype=np.int16)
 
 
 def test_netcdf(ndvi_history, green_swir_history, tmp_path):

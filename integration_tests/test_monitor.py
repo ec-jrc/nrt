@@ -39,7 +39,8 @@ def test_fit_monitor(monitor_cls, kwargs, beta,
     assert monitor_.beta.shape[0] == beta
     for array, date in zip(*ndvi_monitoring_numpy):
         monitor_.monitor(array=array, date=date)
-    monitor_._report()
+    monitor_._report(layers=['mask', 'detection_date'],
+                     dtype=np.int16)
 
 
 @pytest.mark.parametrize('monitor_cls, kwargs, beta', monitor_params.values(),
