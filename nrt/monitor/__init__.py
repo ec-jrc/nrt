@@ -353,6 +353,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 'height': r.shape[-2],
                 'width': r.shape[-1]}
         with rasterio.open(filename, 'w', **meta) as dst:
+            dst.descriptions = layers
             dst.write(r)
 
     @property
