@@ -107,7 +107,7 @@ def mre_crit_table():
 
 
 def make_ts(dates, break_idx=None, intercept=0.7, amplitude=0.15, magnitude=0.25,
-            recovery_time=1095, sigma_noise=0.02, n_outliers=3,
+            recovery_time=1095, sigma_noise=0.02, n_outlier=3,
             outlier_value=-0.1, n_nan=3):
     """Simulate a harmonic time-series with optional breakpoint, noise and outliers
 
@@ -134,7 +134,7 @@ def make_ts(dates, break_idx=None, intercept=0.7, amplitude=0.15, magnitude=0.25
             following a break
         sigma_noise (float): Sigma value of the normal distribution (mean = 0) from which
             noise values are drawn
-        n_outliers (int): Number of outliers randomly assigned to observations of the
+        n_outlier (int): Number of outliers randomly assigned to observations of the
             time-series
         outlier_value (float): Value to assign to outliers
         n_nan (int): Number of ``np.nan`` (no data) assigned to observations of the
@@ -181,11 +181,29 @@ def make_ts(dates, break_idx=None, intercept=0.7, amplitude=0.15, magnitude=0.25
     # Combine the 3 (trend, season, noise) components
     ts = y + season + noise
     # Add optional outliers and Nans
-    outliers_idx = np.random.choice(np.arange(0, dates.size), size=n_outliers)
-    nan_idx = np.random.choice(np.arange(0, dates.size), size=n_outliers)
+    outliers_idx = np.random.choice(np.arange(0, dates.size), size=n_outlier)
+    nan_idx = np.random.choice(np.arange(0, dates.size), size=n_nan)
     ts[outliers_idx] = outlier_value
     ts[nan_idx] = np.nan
     return ts
+
+
+def make_cube(dates, name='ndvi', shape=(100,100),
+              intercept_interval=(0.6, 0.8), amplitude_interval=(0.12, 0.2),
+              magnitude_interval=(0.2, 0.3), recovery_time_interval=(800,1400),
+              sigma_noise_interval=(0.02, 0.04), n_outliers_interval=(0,5),
+              n_nan_interval=(0,5), break_daterange=None,
+              unstable_proportion=0.5):
+    size = shape[0] * shape[1]
+    intercepts = np.random.uniform(*intercept_interval, size=size)
+    amplitudes = np.random.uniform(*amplitude_interval, size=size)
+    magnitudes = np.random.uniform(*magnitude_interval, size=size)
+    recovery_times = np.random.randint(*recovery_time_interval, size=size)
+    sigma_noises = np.random.uniform(*sigma_noise_interval, size=size)
+    n_outliers = np.random.randint(*n_outliers_interval, size=size)
+    n_nans = np.random.randint(*n_nan_interval, size=size)
+    # TODO: Compute min and max id of breaks if any break_daterange is provided
+    break_idxx = np.random.randint()
 
 
 if __name__ == "__main__":
