@@ -160,7 +160,7 @@ def make_ts(dates, break_idx=None, intercept=0.7, amplitude=0.15, magnitude=0.25
     # INtercept array
     y[:] = intercept
     # Build trend segment if break
-    if break_idx:
+    if break_idx is not None or break_idx is not np.nan:
         # Segment bounds
         segment_start_y = intercept - magnitude
         segment_start_timestamp = timestamps[break_idx]
@@ -209,6 +209,8 @@ def make_cube_parameters(shape=(100,100),
         break_idx_interval (tuple): A tuple of two integers indicating the interval
             from which the breakpoint position in the time-series is drawn. Generate
             array of random values passed to the ``break_idx` argument of ``make_ts``.
+            Similarly to python ranges, upper bound value is excluded from the resulting
+            array. To produce a zero filled array ``(0,1)`` can therefore be used
             TODO: add a default to allow breakpoint at any location (conflict with Nan that indicate no break)
         intercept_interval (tuple): A tuple of two floats providing the interval
             from which intercept is drawn. Generate array of random values passed
@@ -243,20 +245,28 @@ def make_cube_parameters(shape=(100,100),
         >>> import time
         >>> import numpy as np
         >>> from nrt import data
+        >>> import matplotlib.pyplot as plt
         >>> params_nir = data.make_cube_parameters(shape=(20,20),
-        ...                                        n_outliers_interval=(0,0),
-        ...                                        n_nan_interval=(0,0),
+        ...                                        n_outliers_interval=(0,1),
+        ...                                        n_nan_interval=(0,1),
         ...                                        break_idx_interval=(100,200))
-        >>> params_red = params_nir.copy(data={'intercept': np.random.uniform(0.09, 0.12, size=(20,20)),
-        ...                                    'magnitude': np.random.uniform(-0.1, -0.03, size=(20,20)),
-        ...                                    'amplitude': np.random.uniform(0.03, 0.07, size=(20,20))})
-        >>> params_green = params_nir.copy(data={'intercept': np.random.uniform(0.12, 0.20, size=(20,20)),
-        ...                                      'magnitude': np.random.uniform(0.05, 0.1, size=(20,20)),
-        ...                                      'amplitude': np.random.uniform(0.05, 0.08, size=(20,20))})
-        >>> params_blue = params_nir.copy(data={'intercept': np.random.uniform(0.08, 0.13, size=(20,20)),
-        ...                                     'magnitude': np.random.uniform(-0.01, 0.01, size=(20,20)),
-        ...                                     'amplitude': np.random.uniform(0.02, 0.04, size=(20,20))})
+        >>> print(params_nir)
+        >>> params_red = params_nir.copy(deep=True)
+        >>> # create parameters for red, green, blue cubes by slightly adjusting intercept,
+        >>> # magnitude and amplitude parameters
+        >>> params_red['intercept'].data = np.random.uniform(0.09, 0.12, size=(20,20))
+        >>> params_red['magnitude'].data = np.random.uniform(-0.1, -0.03, size=(20,20))
+        >>> params_red['amplitude'].data = np.random.uniform(0.03, 0.07, size=(20,20))
+        >>> params_green = params_nir.copy(deep=True)
+        >>> params_green['intercept'].data = np.random.uniform(0.12, 0.20, size=(20,20))
+        >>> params_green['magnitude'].data = np.random.uniform(0.05, 0.1, size=(20,20))
+        >>> params_green['amplitude'].data = np.random.uniform(0.05, 0.08, size=(20,20))
+        >>> params_blue = params_nir.copy(deep=True)
+        >>> params_blue['intercept'].data = np.random.uniform(0.08, 0.13, size=(20,20))
+        >>> params_blue['magnitude'].data = np.random.uniform(-0.01, 0.01, size=(20,20))
+        >>> params_blue['amplitude'].data = np.random.uniform(0.02, 0.04, size=(20,20))
         >>> dates = np.arange('2018-01-01', '2022-06-15', dtype='datetime64[W]')
+        >>> # Create cubes (DataArrays) and merge them into a sligle Dataset
         >>> nir = data.make_cube(dates, name='nir', params_ds=params_nir)
         >>> red = data.make_cube(dates, name='red', params_ds=params_red)
         >>> green = data.make_cube(dates, name='green', params_ds=params_green)
@@ -277,7 +287,7 @@ def make_cube_parameters(shape=(100,100),
     # Make a proportion of these cells stable
     size = np.multiply(*shape)
     stable_size = size - round(unstable_proportion * size)
-    break_idx.ravel()[np.random.choice(size, stable_size, replace=False)] = np.nan
+    break_idx.ravel()[np.random.choice(size, stable_size, replace=False)] = -1
     # Build Dataset of parameters
     params = xr.Dataset(data_vars={'intercept': (['y', 'x'], intercept),
                                    'amplitude': (['y', 'x'], amplitude),
@@ -292,15 +302,21 @@ def make_cube_parameters(shape=(100,100),
     return params
 
 
-def make_cube(dates, name='ndvi', shape=(100,100),
-              intercept_interval=(0.6, 0.8), amplitude_interval=(0.12, 0.2),
-              magnitude_interval=(0.2, 0.3), recovery_time_interval=(800,1400),
-              sigma_noise_interval=(0.02, 0.04), n_outliers_interval=(0,5),
-              n_nan_interval=(0,5), break_daterange=None,
-              unstable_proportion=0.5):
-    """
+def make_cube(dates, params_ds, outlier_value=0.1, name='ndvi'):
+    """Generate a cube of synthetic time-series
+
+    See ``make_ts`` for more details on how every single time-series is generated
+
     Args:
         dates (array-like): List or array of dates (numpy.datetime64)
+        params_ds (xarray.Dataset): Dataset containing arrays of time-series generation
+            parameters. See ``make_cube_parameters`` for a helper to generate such Dataset.
+            Spatial dimensions of the params_ds Dataset are used for the generated cube
+        name (str): Name of the generated variable in the DataArray
+
+    Return:
+        xarray.DataArray: Cube of synthetic time-series generated using the paramters
+            provided via ``param_ds`` Dataset.
 
     Example:
         >>> import time
@@ -308,50 +324,37 @@ def make_cube(dates, name='ndvi', shape=(100,100),
         >>> import matplotlib.pyplot as plt
         >>> # Compile
         >>> dates = np.arange('2018-01-01', '2022-06-15', dtype='datetime64[W]')
-        >>> _ = make_cube(dates=dates, shape=(5,5))
-        >>> # Time compiled execution of larger array
-        >>> t0 = time.time()
-        >>> params, cube = make_cube(dates=dates, shape=(200,200))
-        >>> t1 = time.time()
-        >>> print('Execution time: %.1f' % (t1 - t0))
+        >>> params_ds = make_cube_parameters(shape=(100,100),
+        ...                                  n_outliers_interval=(0,5),
+        ...                                  n_nan_interval=(0,7),
+        ...                                  break_idx_interval=(100,dates.size - 20))
+        >>> cube = make_cube(dates=dates, params_ds=params_ds)
         >>> print(cube)
-        >>> print(params)
         >>> # PLot one ts
         >>> cube.isel(x=5, y=5).plot()
         >>> plt.show()
     """
-    size = shape[0] * shape[1]
-    intercepts = np.random.uniform(*intercept_interval, size=size)
-    amplitudes = np.random.uniform(*amplitude_interval, size=size)
-    magnitudes = np.random.uniform(*magnitude_interval, size=size)
-    recovery_times = np.random.randint(*recovery_time_interval, size=size)
-    sigma_noises = np.random.uniform(*sigma_noise_interval, size=size)
-    n_outliers = np.random.randint(*n_outliers_interval, size=size)
-    n_nans = np.random.randint(*n_nan_interval, size=size)
-    # TODO: Compute min and max id of breaks if any break_daterange is provided
-    break_idxx = np.random.randint(0, dates.size, size=size)
+    nrows, ncols = params_ds.intercept.data.shape
+    # Vectorize function
+    make_ts_v = np.vectorize(make_ts, signature='(n),(),(),(),(),(),(),(),(),()->(n)')
     # Create output array
-    out_flat = np.empty((dates.size, size), dtype=np.float64)
-    for i in range(out_flat.shape[1]):
-        out_flat[:,i] = make_ts(dates=dates, break_idx=break_idxx[i])
+    out = make_ts_v(dates=dates,
+                    break_idx=params_ds.break_idx.data,
+                    intercept=params_ds.intercept.data,
+                    amplitude=params_ds.amplitude.data,
+                    magnitude=params_ds.magnitude.data,
+                    recovery_time=params_ds.recovery_time.data,
+                    sigma_noise=params_ds.sigma_noise.data,
+                    n_outlier=params_ds.n_outlier.data,
+                    outlier_value=outlier_value,
+                    n_nan=params_ds.n_nan.data)
     # Build xarray dataset
-    xr_cube = xr.DataArray(data=out_flat.reshape((dates.size,*shape)),
-                           coords={'time': dates, 'y': np.arange(shape[0]),
-                                   'x': np.arange(shape[1])},
+    xr_cube = xr.DataArray(data=np.moveaxis(out, -1, 0),
+                           coords={'time': dates,
+                                   'y': np.arange(nrows),
+                                   'x': np.arange(ncols)},
                           name=name)
-    # Build Dataset of parameters
-    params = xr.Dataset(data_vars={'intercept': (['y', 'x'], intercepts.reshape(shape)),
-                                   'amplitude': (['y', 'x'], amplitudes.reshape(shape)),
-                                   'magnitude': (['y', 'x'], magnitudes.reshape(shape)),
-                                   'recovery_time': (['y', 'x'], recovery_times.reshape(shape)),
-                                   'sigma_noise': (['y', 'x'], sigma_noises.reshape(shape)),
-                                   'n_outlier': (['y', 'x'], n_outliers.reshape(shape)),
-                                   'n_nan': (['y', 'x'], n_nans.reshape(shape)),
-                                   'break_idx': (['y', 'x'], break_idxx.reshape(shape))},
-                        coords={'y': np.arange(shape[0]),
-                                'x': np.arange(shape[1])})
-    return params, xr_cube
-
+    return xr_cube
 
 if __name__ == "__main__":
     import doctest
