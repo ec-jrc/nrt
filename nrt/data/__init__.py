@@ -106,7 +106,7 @@ def mre_crit_table():
     return crit_table
 
 
-def make_ts(dates, break_idx=None, intercept=0.7, amplitude=0.15, magnitude=0.25,
+def make_ts(dates, break_idx=-1, intercept=0.7, amplitude=0.15, magnitude=0.25,
             recovery_time=1095, sigma_noise=0.02, n_outlier=3,
             outlier_value=-0.1, n_nan=3):
     """Simulate a harmonic time-series with optional breakpoint, noise and outliers
@@ -125,7 +125,7 @@ def make_ts(dates, break_idx=None, intercept=0.7, amplitude=0.15, magnitude=0.25
     Args:
         dates (array-like): List or array of dates (numpy.datetime64)
         break_idx (int): Breakpoint index in the date array provided. Defaults to
-            ``None``, corresponding to a stable time-series
+            ``-1``, corresponding to a stable time-series
         intercept (float): Intercept of the time-series
         amplitude (float): Amplitude of the harmonic model (note that at every point
             of the time-series, the actual model amplitude is multiplied by the intercept
@@ -160,7 +160,7 @@ def make_ts(dates, break_idx=None, intercept=0.7, amplitude=0.15, magnitude=0.25
     # INtercept array
     y[:] = intercept
     # Build trend segment if break
-    if break_idx is not None or break_idx is not np.nan:
+    if break_idx != -1:
         # Segment bounds
         segment_start_y = intercept - magnitude
         segment_start_timestamp = timestamps[break_idx]
@@ -244,13 +244,13 @@ def make_cube_parameters(shape=(100,100),
     Examples:
         >>> import time
         >>> import numpy as np
+        >>> import xarray as xr
         >>> from nrt import data
         >>> import matplotlib.pyplot as plt
         >>> params_nir = data.make_cube_parameters(shape=(20,20),
         ...                                        n_outliers_interval=(0,1),
         ...                                        n_nan_interval=(0,1),
-        ...                                        break_idx_interval=(100,200))
-        >>> print(params_nir)
+        ...                                        break_idx_interval=(50,100))
         >>> params_red = params_nir.copy(deep=True)
         >>> # create parameters for red, green, blue cubes by slightly adjusting intercept,
         >>> # magnitude and amplitude parameters
@@ -271,9 +271,9 @@ def make_cube_parameters(shape=(100,100),
         >>> red = data.make_cube(dates, name='red', params_ds=params_red)
         >>> green = data.make_cube(dates, name='green', params_ds=params_green)
         >>> blue = data.make_cube(dates, name='blue', params_ds=params_blue)
-        >>> cube = xr.merge([blue, green, red, nir])
+        >>> cube = xr.merge([blue, green, red, nir]).to_array()
         >>> # PLot one ts
-        >>> cube.isel(x=5, y=5).plot()
+        >>> cube.isel(x=5, y=5).plot(row='variable')
         >>> plt.show()
     """
     intercept = np.random.uniform(*intercept_interval, size=shape)
@@ -312,6 +312,7 @@ def make_cube(dates, params_ds, outlier_value=0.1, name='ndvi'):
         params_ds (xarray.Dataset): Dataset containing arrays of time-series generation
             parameters. See ``make_cube_parameters`` for a helper to generate such Dataset.
             Spatial dimensions of the params_ds Dataset are used for the generated cube
+        outlier_value (float): Value to assign to outliers
         name (str): Name of the generated variable in the DataArray
 
     Return:
@@ -320,16 +321,15 @@ def make_cube(dates, params_ds, outlier_value=0.1, name='ndvi'):
 
     Example:
         >>> import time
+        >>> import numpy as np
         >>> from nrt import data
         >>> import matplotlib.pyplot as plt
-        >>> # Compile
         >>> dates = np.arange('2018-01-01', '2022-06-15', dtype='datetime64[W]')
-        >>> params_ds = make_cube_parameters(shape=(100,100),
+        >>> params_ds = data.make_cube_parameters(shape=(100,100),
         ...                                  n_outliers_interval=(0,5),
         ...                                  n_nan_interval=(0,7),
         ...                                  break_idx_interval=(100,dates.size - 20))
-        >>> cube = make_cube(dates=dates, params_ds=params_ds)
-        >>> print(cube)
+        >>> cube = data.make_cube(dates=dates, params_ds=params_ds)
         >>> # PLot one ts
         >>> cube.isel(x=5, y=5).plot()
         >>> plt.show()
