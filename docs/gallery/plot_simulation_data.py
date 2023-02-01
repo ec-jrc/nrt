@@ -2,18 +2,6 @@ r"""
 This example illustrates the simulation of a near real time monitoring scenario on synthetic data.
 The EWMA approach instantiated from ``nrt.monitor.ewma import EWMA`` is used for monitoring and detection
 of the artificially generated breakpoints and the experiment is concluded by a simple accuracy assessment.
-
-The different sections of the tutorial are:
-    - Simulation of synthetic data
-    - Harmonic regression parameters fitting for a model
-    - MOnitoring
-    - Accuracy assessment
-    - Comparison of all monitoring methods implemented
-    - COnclusion:
-        - ONly default parameters tested
-        - Synthetic data useful for ensuring that everything works
-        - Rough approximation of the actual temporal behaviour of vegetation (see timesync for a more elaborated phenology fit)
-        - Having a standardized interface makes intercomparison really easy (all monitoring methods are called via the same API)
 """
 
 #############################################################
@@ -190,6 +178,7 @@ plt.legend(loc='lower right')
 plt.grid(True)
 plt.show()
 
+###########################################################################
 # References
 # ----------
 #
