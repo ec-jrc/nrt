@@ -19,7 +19,10 @@ with codecs.open('README.rst', encoding='utf-8') as f:
     readme = f.read()
 
 extra_reqs = {'tests': ['pytest'],
-              'docs': ['sphinx', 'sphinx_rtd_theme']}
+              'docs': ['sphinx',
+                       'sphinx_rtd_theme',
+                       'matplotlib',
+                       'sphinx-gallery']}
 
 setup(name='nrt',
       version=version,

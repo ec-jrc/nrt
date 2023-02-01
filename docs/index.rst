@@ -16,6 +16,7 @@ Welcome to nrt's documentation!
    classes
    fit
    nrt
+   auto_examples/index
 
 
 Indices and tables
