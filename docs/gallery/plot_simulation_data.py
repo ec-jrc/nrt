@@ -1,4 +1,6 @@
 r"""
+Synthetic disturbance data
+==========================
 This example illustrates the simulation of a near real time monitoring scenario on synthetic data.
 The EWMA approach instantiated from ``nrt.monitor.ewma import EWMA`` is used for monitoring and detection
 of the artificially generated breakpoints and the experiment is concluded by a simple accuracy assessment.
@@ -13,18 +15,33 @@ of the artificially generated breakpoints and the experiment is concluded by a s
 # amplitude, noise level, etc
 # One such example can be visualized using the ``make_ts`` function, which
 # creates a single time-series.
+import random
 
 import numpy as np
 from nrt import data
 import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
 
 dates = np.arange('2018-01-01', '2022-06-15', dtype='datetime64[W]')
-break_idx = 50
-ts = data.make_ts(dates=dates, break_idx=break_idx)
-plt.plot(dates, ts)
-plt.axvline(x=dates[break_idx], color='magenta')
-plt.xlabel('Time')
-plt.ylabel('NDVI')
+fig, axes = plt.subplots(3,3, constrained_layout=True)
+for row, amplitude in zip(axes, [0.1, 0.2, 0.3]):
+    for ax, noise in zip(row, [0.02, 0.05, 0.1]):
+        break_idx = random.randint(30,100)
+        ts = data.make_ts(dates=dates,
+                          break_idx=break_idx,
+                          sigma_noise=noise,
+                          amplitude=amplitude)
+        ax.plot(dates, ts)
+        ax.axvline(x=dates[break_idx], color='magenta')
+        ax.set_ylim(-0.1,1.1)
+        ax.set_title('Amplitude: %.1f\nsigma noise: %.2f' % (amplitude, noise),
+                     fontsize=11)
+        ax.xaxis.set_major_locator(mdates.YearLocator())
+        ax.xaxis.set_major_formatter(mdates.DateFormatter("\n%Y"))
+        ax.tick_params( axis='x', which='both', bottom=False, top=False,
+                       labelbottom=False)
+fig.supxlabel('Time')
+fig.supylabel('NDVI')
 plt.show()
 
 #################################################################
@@ -144,9 +161,15 @@ print(accuracy(Monitor, params_ds, dates))
 # vary with the amount of noise present in the synthetic data.
 # For that we define a new function encompassing all the steps of data generation,
 # instantiation, fitting and monitoring
+#
+# The increase in recall at low noise levels is probably due to the extreme outliers
+# filtering feature of the EWMA monitoring process, OUtliers that exceed ``threshold_outlier``
+# times the standard deviation of the fit residuals are considered extreme
+# outliers (often clouds or artifacts) in real imagest, and do not contribute to the monitoring
+# process. With such low noise levels, that threshold is easily reached and breaks missed.
 
 def make_cube_fit_and_monitor(dates, noise_level):
-    params_ds = data.make_cube_parameters(shape=(50,50),
+    params_ds = data.make_cube_parameters(shape=(20,20),
                                           n_outliers_interval=(4,5),
                                           n_nan_interval=(3,4),
                                           sigma_noise_interval=(noise_level, noise_level),
@@ -164,7 +187,7 @@ def make_cube_fit_and_monitor(dates, noise_level):
         Monitor.monitor(array=array, date=date)
     return params_ds, Monitor
 
-noises = [0.01, 0.02, 0.03, 0.05, 0.1, 0.2]
+noises = [0.02, 0.03, 0.05, 0.07, 0.09, 0.12, 0.15, 0.2]
 prs = []
 for noise in noises:
     params_ds, Monitor = make_cube_fit_and_monitor(dates, noise)
