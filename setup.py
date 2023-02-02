@@ -35,7 +35,6 @@ setup(name='nrt',
       url='https://jeodpp.jrc.ec.europa.eu/apps/gitlab/use_cases/canhemon/nrt.git',
       license='EUPL-v1.2',
       classifiers=[
-          'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
           'Programming Language :: Python :: 3.8',
       ],
