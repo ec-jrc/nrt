@@ -19,7 +19,6 @@ import json
 import xarray as xr
 import rasterio
 import numpy as np
-import numba
 
 
 data_dir = os.path.abspath(os.path.dirname(__file__))
