@@ -153,10 +153,11 @@ def make_ts(dates, break_idx=-1, intercept=0.7, amplitude=0.15, magnitude=0.25,
     Returns:
         np.ndarray: Array of simulated values of same size as ``dates``
     """
-    timestamps = (dates - np.datetime64(0, 'D')).astype(int)
+    dates = dates.astype('datetime64[D]')
+    timestamps = dates.astype(int)
     ydays = (dates - dates.astype('datetime64[Y]')).astype(int) + 1
     y = np.empty_like(dates, dtype=np.float64)
-    # INtercept array
+    # Intercept array
     y[:] = intercept
     # Build trend segment if break
     if break_idx != -1:
@@ -179,7 +180,7 @@ def make_ts(dates, break_idx=-1, intercept=0.7, amplitude=0.15, magnitude=0.25,
     # Combine the 3 (trend, season, noise) components
     ts = y + season + noise
     # Add optional outliers and Nans
-    outliers_idx = np.random.choice(np.arange(0, dates.size), size=n_outlier)
+    outliers_idx = np.random.choice(np.arange(0, dates.size), size=n_outlier, replace=False)
     nan_idx = np.random.choice(np.arange(0, dates.size), size=n_nan)
     ts[outliers_idx] = outlier_value
     ts[nan_idx] = np.nan

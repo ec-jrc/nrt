@@ -37,6 +37,8 @@ setup(name='nrt',
       classifiers=[
           'Programming Language :: Python :: 3.7',
           'Programming Language :: Python :: 3.8',
+          'Programming Language :: Python :: 3.9',
+          
       ],
       packages=find_packages(),
       package_data={'nrt': ['data/*.nc', 'data/*.tif', 'data/*.json']},
