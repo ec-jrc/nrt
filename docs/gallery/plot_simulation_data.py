@@ -87,7 +87,7 @@ cube = data.make_cube(dates=dates, params_ds=params_ds)
 # See the ``to_netcdf()`` method for more details. 
 # During monitoring each new observation needs to be passed to the monitor method 
 # as a numpy array. Since we currently have these observations in an xarray DataArray
-# structure, we need to unpack each temporal slice as an (array, date) couple
+# structure, we need to unpack each temporal slice as an (array, date) tuple
 
 import datetime
 
@@ -143,7 +143,7 @@ def accuracy(nrtInstance, params_ds, dates, delta=180):
     dates_true_bound = dates_true + np.timedelta64(delta)
     dates_pred = np.datetime64('1970-01-01') + np.timedelta64(1) * detection_date
     dates_pred[dates_pred == np.datetime64('1970-01-01')] = np.datetime64('NaT')
-    # COmputes arrays of TP, FP, FN (they should be mutually exclusive
+    # Computes arrays of TP, FP, FN (they should be mutually exclusive)
     TP = np.where(np.logical_and(dates_pred >= dates_true, dates_pred <= dates_true_bound),
                   1, 0)
     FP = np.where(np.logical_and(TP == 0, ~np.isnat(dates_pred)), 1, 0)
