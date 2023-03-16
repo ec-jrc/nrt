@@ -97,14 +97,14 @@ cube_history = cube.sel(time=slice('2018-01-01','2019-12-31'))
 cube_monitor = cube.sel(time=slice('2020-01-01', '2022-12-31'))
 
 # Monitoring class instantiation and fitting
-Monitor = EWMA(trend=False, harmonic_order=1, lambda_=0.3, sensitivity=4,
+monitor = EWMA(trend=False, harmonic_order=1, lambda_=0.3, sensitivity=4,
                threshold_outlier=10)
-Monitor.fit(dataarray=cube_history)
+monitor.fit(dataarray=cube_history)
 
 # Monitor every date of the ``cube_monitor`` DataArray
 for array, date in zip(cube_monitor.values,
                        cube_monitor.time.values.astype('M8[s]').astype(datetime.datetime)):
-    Monitor.monitor(array=array, date=date)
+    monitor.monitor(array=array, date=date)
 
 
 ############################################################################
@@ -152,7 +152,7 @@ def accuracy(nrtInstance, params_ds, dates, delta=180):
     recall = TP.sum() / (TP.sum() + FN.sum())
     return precision, recall
 
-print(accuracy(Monitor, params_ds, dates))
+print(accuracy(monitor, params_ds, dates))
 
 ####################################################################
 # White noise sensitivity analysis
@@ -178,20 +178,20 @@ def make_cube_fit_and_monitor(dates, noise_level):
     cube_history = cube.sel(time=slice('2018-01-01','2019-12-31'))
     cube_monitor = cube.sel(time=slice('2020-01-01', '2022-12-31'))
     # Monitoring class instantiation and fitting
-    Monitor = EWMA(trend=False, harmonic_order=1, lambda_=0.3, sensitivity=4,
+    monitor = EWMA(trend=False, harmonic_order=1, lambda_=0.3, sensitivity=4,
                    threshold_outlier=10)
-    Monitor.fit(dataarray=cube_history)
+    monitor.fit(dataarray=cube_history)
     # Monitor every date of the ``cube_monitor`` DataArray
     for array, date in zip(cube_monitor.values,
                            cube_monitor.time.values.astype('M8[s]').astype(datetime.datetime)):
-        Monitor.monitor(array=array, date=date)
-    return params_ds, Monitor
+        monitor.monitor(array=array, date=date)
+    return params_ds, monitor
 
 noises = [0.02, 0.03, 0.05, 0.07, 0.09, 0.12, 0.15, 0.2]
 prs = []
 for noise in noises:
-    params_ds, Monitor = make_cube_fit_and_monitor(dates, noise)
-    prs.append(accuracy(Monitor, params_ds, dates))
+    params_ds, monitor = make_cube_fit_and_monitor(dates, noise)
+    prs.append(accuracy(monitor, params_ds, dates))
 
 precisions, recalls = zip(*prs)
 plt.plot(noises, precisions, label='Precision')
