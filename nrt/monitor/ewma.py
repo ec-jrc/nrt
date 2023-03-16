@@ -44,7 +44,7 @@ class EWMA(BaseNrt):
             ``.from_netcdf()``
     """
     def __init__(self, trend=True, harmonic_order=2, sensitivity=2, mask=None,
-                 lambda_=0.3, threshold_outlier=2, **kwargs):
+                 lambda_=0.3, threshold_outlier=10, **kwargs):
         super().__init__(mask=mask,
                          trend=trend,
                          harmonic_order=harmonic_order,

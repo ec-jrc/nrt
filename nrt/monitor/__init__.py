@@ -326,7 +326,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         returned_layer = [getattr(self, x) for x in layers]
         return np.stack(returned_layer, axis=0).astype(dtype)
 
-    def report(self, filename, layers=['mask', 'date'],
+    def report(self, filename, layers=['mask', 'detection_date'],
                driver='GTiff', crs=CRS.from_epsg(3035),
                dtype=np.int16):
         """Write the result of reporting to a raster geospatial file
