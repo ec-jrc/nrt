@@ -1,6 +1,14 @@
 Changes
 =======
 
+0.1.1
+-----
+
+- New set of functions to generate synthetic data (single time-series and DataArrays)
+  added to the data module
+- Gallery section added to the documentation, with one example on use of synthetic data
+  for nrt simulation and computation of performance metrics 
+
 0.1.0 (2022-04-27)
 ------------------
 

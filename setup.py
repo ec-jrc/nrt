@@ -19,7 +19,10 @@ with codecs.open('README.rst', encoding='utf-8') as f:
     readme = f.read()
 
 extra_reqs = {'tests': ['pytest'],
-              'docs': ['sphinx', 'sphinx_rtd_theme']}
+              'docs': ['sphinx',
+                       'sphinx_rtd_theme',
+                       'matplotlib',
+                       'sphinx-gallery']}
 
 setup(name='nrt',
       version=version,
@@ -32,9 +35,10 @@ setup(name='nrt',
       url='https://jeodpp.jrc.ec.europa.eu/apps/gitlab/use_cases/canhemon/nrt.git',
       license='EUPL-v1.2',
       classifiers=[
-          'Programming Language :: Python :: 3.6',
           'Programming Language :: Python :: 3.7',
           'Programming Language :: Python :: 3.8',
+          'Programming Language :: Python :: 3.9',
+          
       ],
       packages=find_packages(),
       package_data={'nrt': ['data/*.nc', 'data/*.tif', 'data/*.json']},
