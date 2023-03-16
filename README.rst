@@ -19,11 +19,11 @@ nrt
 ``nrt`` provides a standardized interface for Near Real Time monitoring of disturbances on satellite image time-series.
 The package is optimized for fast computation and suitable for operational deployment at scale.
 A typical operational use case of such package would be a system constantly receiving new satellite based acquisitions and generating alerts when an anomaly is detected.
-Five monitoring frameworks from scientific litterature on change detection are implemented and exposed via a common API.
+Five monitoring frameworks from scientific literature on change detection are implemented and exposed via a common API.
 All five monitoring framework share a common general approach which consists in modelling the "normal" behavior of the variable through time by fitting a linear model on a user defined stable history period and monitoring until a "break" is detected.
 Monitoring starts right after the stable history period, and for each new incoming observation the observed value is compared to the predicted "normal" behavior.
 When observations and predictions diverge, a "break" is detected.
-A confirmed "break" tipically requires several successive diverging observations, this sensitivity or rapid detection capacity depending on many variables such as the algorithm, its fitting and monitoring parameters, the noise level of the history period or the magnitude of the divergence. 
+A confirmed "break" typically requires several successive diverging observations, this sensitivity or rapid detection capacity depending on many variables such as the algorithm, its fitting and monitoring parameters, the noise level of the history period or the magnitude of the divergence. 
 The five monitoring frameworks implemented are:
 
 - Exponentially Weighted Moving Average (EWMA_) (Brooks et al., 2013) 
