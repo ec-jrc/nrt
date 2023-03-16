@@ -165,7 +165,7 @@ print(accuracy(Monitor, params_ds, dates))
 # The increase in recall at low noise levels is probably due to the extreme outliers
 # filtering feature of the EWMA monitoring process, OUtliers that exceed ``threshold_outlier``
 # times the standard deviation of the fit residuals are considered extreme
-# outliers (often clouds or artifacts) in real imagest, and do not contribute to the monitoring
+# outliers (often clouds or artifacts) in real images, and do not contribute to the monitoring
 # process. With such low noise levels, that threshold is easily reached and breaks missed.
 
 def make_cube_fit_and_monitor(dates, noise_level):
