@@ -24,20 +24,22 @@ import numpy as np
 data_dir = os.path.abspath(os.path.dirname(__file__))
 
 
-def _load(f):
+def _load(f, **kwargs):
     """Load a ncdf file located in the data directory as a xarray Dataset
 
     Args:
         f (str): File basename
+        **kwargs: Keyword arguments passed to ``xarray.open_dataset``
 
     Return:
         xarray.Dataset: The Dataset
     """
-    xr_dataset = xr.open_dataset(os.path.join(data_dir, f))
+    xr_dataset = xr.open_dataset(os.path.join(data_dir, f),
+                                 **kwargs)
     return xr_dataset
 
 
-def romania_10m():
+def romania_10m(**kwargs):
     """Sentinel 2 datacube of a small forested area in Romania at 10 m resolution
 
     Examples:
@@ -49,10 +51,10 @@ def romania_10m():
         >>> # Filter clouds
         >>> s2_cube = s2_cube.where(s2_cube.SCL.isin([4,5,7]))
     """
-    return _load('sentinel2_cube_subset_romania_10m.nc')
+    return _load(f='sentinel2_cube_subset_romania_10m.nc', **kwargs)
 
 
-def romania_20m():
+def romania_20m(**kwargs):
     """Sentinel 2 datacube of a small forested area in Romania at 20 m resolution
 
     Examples:
@@ -64,7 +66,7 @@ def romania_20m():
         >>> # Filter clouds
         >>> s2_cube = s2_cube.where(s2_cube.SCL.isin([4,5,7]))
     """
-    return _load('sentinel2_cube_subset_romania_20m.nc')
+    return _load(f='sentinel2_cube_subset_romania_20m.nc', **kwargs)
 
 
 def romania_forest_cover_percentage():
