@@ -72,7 +72,7 @@ def ols(X, y):
 
 
 @utils.numba_kwargs
-@numba.jit(nopython=True, cache=True)
+@numba.jit(nopython=True, cache=True, parallel=True)
 def rirls(X, y, M=bisquare, tune=4.685,
           scale_est=mad, scale_constant=0.6745,
           update_scale=True, maxiter=50, tol=1e-8):
@@ -102,7 +102,7 @@ def rirls(X, y, M=bisquare, tune=4.685,
     """
     beta = np.zeros((X.shape[1], y.shape[1]), dtype=np.float64)
     resid = np.full_like(y, np.nan, dtype=np.float64)
-    for idx in range(y.shape[1]):
+    for idx in numba.prange(y.shape[1]):
         y_sub = y[:,idx]
         isna = np.isnan(y_sub)
         X_sub = X[~isna]
@@ -156,7 +156,7 @@ def weighted_ols(X, y, w):
     return beta, resid
 
 @utils.numba_kwargs
-@numba.jit(nopython=True, cache=True)
+@numba.jit(nopython=True, cache=True, parallel=True)
 def ccdc_stable_fit(X, y, dates, threshold=3):
     """Fitting stable regressions using an adapted CCDC method
 
@@ -194,7 +194,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3):
     residuals = np.full_like(y, np.nan)
     stable = np.empty((y.shape[1]))
     fit_start = np.empty((y.shape[1]))
-    for idx in range(y.shape[1]):
+    for idx in numba.prange(y.shape[1]):
         y_sub = y[:, idx]
         isna = np.isnan(y_sub)
         X_sub = X[~isna]
@@ -238,7 +238,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3):
 
 
 @utils.numba_kwargs
-@numba.jit(nopython=True, cache=True)
+@numba.jit(nopython=True, cache=True, parallel=True)
 def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
     """Fitting stable regressions using Reverse Ordered Cumulative Sums
 
@@ -273,7 +273,7 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
     fit_start = np.zeros_like(is_stable, dtype=np.uint16)
     beta = np.full((X.shape[1], y.shape[1]), np.nan, dtype=np.float64)
     nreg = X.shape[1]
-    for idx in range(y.shape[1]):
+    for idx in numba.prange(y.shape[1]):
         # subset and remove nan
         is_nan = np.isnan(y[:, idx])
         _y = y[~is_nan, idx]

@@ -17,7 +17,7 @@ import numba
 import numpy as np
 
 
-@numba.jit(nopython=True, cache=True)
+@numba.jit(nopython=True, cache=True, parallel=True)
 def nanlstsq(X, y):
     """Return the least-squares solution to a linear matrix equation
 
@@ -46,7 +46,7 @@ def nanlstsq(X, y):
         np.ndarray: Least-squares solution, ignoring ``Nan``
     """
     beta = np.zeros((X.shape[1], y.shape[1]), dtype=np.float64)
-    for idx in range(y.shape[1]):
+    for idx in numba.prange(y.shape[1]):
         # subset y and X
         isna = np.isnan(y[:,idx])
         X_sub = X[~isna]
