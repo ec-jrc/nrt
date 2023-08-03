@@ -23,11 +23,24 @@ def nanlstsq(X, y):
 
     Analog to ``numpy.linalg.lstsq`` for dependant variable containing ``Nan``
 
+    Note:
+        For best performances of the multithreaded implementation, it is
+        recommended to limit the number of threads used by MKL or OpenBLAS to 1.
+        This avoids over-subscription, and improves performances.
+        By default the function will use all cores available; the number of cores
+        used can be controled using the ``numba.set_num_threads`` function or
+        by modifying the ``NUMBA_NUM_THREADS`` environment variable
+
     Args:
         X ((M, N) np.ndarray): Matrix of independant variables
         y ({(M,), (M, K)} np.ndarray): Matrix of dependant variables
 
     Examples:
+        >>> import os
+        >>> # Adjust linear algebra configuration (only one should be required
+        >>> # depending on how numpy was installed/compiled)
+        >>> os.environ['OPENBLAS_NUM_THREADS'] = '1'
+        >>> os.environ['MKL_NUM_THREADS'] = '1'
         >>> import numpy as np
         >>> from sklearn.datasets import make_regression
         >>> from nrt.stats import nanlstsq
@@ -51,12 +64,8 @@ def nanlstsq(X, y):
         isna = np.isnan(y[:,idx])
         X_sub = X[~isna]
         y_sub = y[~isna,idx]
-        # Compute beta on data subset
-        XTX = np.linalg.inv(np.dot(X_sub.T, X_sub))
-        XTY = np.dot(X_sub.T, y_sub)
-        beta[:,idx] = np.dot(XTX, XTY)
+        beta[:, idx] = np.linalg.solve(np.dot(X_sub.T, X_sub), np.dot(X_sub.T, y_sub))
     return beta
-
 
 
 @numba.jit(nopython=True, cache=True)
