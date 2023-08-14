@@ -266,14 +266,6 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
     The implementation roughly corresponds to the fit of bfastmonitor
     with the history option set to 'ROC'.
 
-    Note:
-        For best performances of the multithreaded implementation, it is
-        recommended to limit the number of threads used by MKL or OpenBLAS to 1.
-        This avoids over-subscription, and improves performances.
-        By default the function will use all cores available; the number of cores
-        used can be controled using the ``numba.set_num_threads`` function or
-        by modifying the ``NUMBA_NUM_THREADS`` environment variable
-
     Args:
         X ((M, N) np.ndarray): Matrix of independant variables
         y ((M, K) np.ndarray): Matrix of dependant variables
