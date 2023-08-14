@@ -252,7 +252,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3):
 
 
 @utils.numba_kwargs
-@numba.jit(nopython=True, cache=True, parallel=True)
+@numba.jit(nopython=True, cache=True, parallel=False)
 def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
     """Fitting stable regressions using Reverse Ordered Cumulative Sums
 

@@ -136,7 +136,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 ``'RIRLS'``, ``'LASSO'``, ``'ROC'`` and ``'CCDC-stable'``.
             screen_outliers (str): The screening method. Possible values include
                 ``'Shewhart'`` and ``'CCDC_RIRLS'``.
-            n_threads (int): Number of threads used for parallel fitting
+            n_threads (int): Number of threads used for parallel fitting. Note that
+                parallel fitting is not supported for ``ROC``; and that argument
+                has therefore no impact when combined with ``method='ROC'``
             **kwargs: Other parameters specific to each fit and/or outlier
                 screening method
 

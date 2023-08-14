@@ -215,6 +215,7 @@ def _cusum_rec_sctest(x):
 @numba.jit(nopython=True, cache=True)
 def _recresid(X, y, span):
     """ Return standardized recursive residuals for y ~ X
+
     Args:
         X ((M, N) np.ndarray): Matrix of independant variables
         y ((M, K) np.ndarray): Matrix of dependant variables
