@@ -20,6 +20,7 @@ with codecs.open('README.rst', encoding='utf-8') as f:
 
 extra_reqs = {'tests': ['pytest'],
               'docs': ['sphinx',
+                       'dask',
                        'sphinx_rtd_theme',
                        'matplotlib',
                        'sphinx-gallery']}

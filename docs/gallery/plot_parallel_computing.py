@@ -74,7 +74,7 @@ import matplotlib.pyplot as plt
 benchmark_dict = defaultdict(dict)
 monitor = CuSum()
 methods = ['OLS', 'RIRLS', 'CCDC-stable', 'ROC']
-threads = range(1,4)
+threads = range(1,3)
 
 # Make sure all numba jitted function are compiled
 monitor_ = CuSum()
