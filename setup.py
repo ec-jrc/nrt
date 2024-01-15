@@ -32,13 +32,12 @@ setup(name='nrt',
       keywords='sentinel2, xarray, datacube, monitoring, change',
       author=u"Loic Dutrieux, Jonas Viehweger, Chris Holden",
       author_email='loic.dutrieux@ec.europa.eu',
-      url='https://jeodpp.jrc.ec.europa.eu/apps/gitlab/use_cases/canhemon/nrt.git',
+      url='https://github.com/ec-jrc/nrt.git',
       license='EUPL-v1.2',
       classifiers=[
-          'Programming Language :: Python :: 3.7',
-          'Programming Language :: Python :: 3.8',
           'Programming Language :: Python :: 3.9',
-          
+          'Programming Language :: Python :: 3.10',
+          'Programming Language :: Python :: 3.11',
       ],
       packages=find_packages(),
       package_data={'nrt': ['data/*.nc', 'data/*.tif', 'data/*.json']},
@@ -52,5 +51,6 @@ setup(name='nrt',
           'pandas',
           'affine'
       ],
+      requires-python = ">=3.9",
       extras_require=extra_reqs)
 

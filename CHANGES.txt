@@ -10,6 +10,7 @@ Changes
 - Possibility to pass kwargs to function of data module that load xarray.Datasets
   objects (particularly useful to specify chunking and get a dask based object)
 - New example in gallery on parallel fitting
+- Add a minimum python version requirement (>=3.9). 3.8 not longer tested
 
 
 0.1.1
