@@ -1,10 +1,13 @@
-name: Build and test nrt
+name: Build, Test, and Deploy nrt
 
-on: [push, pull_request]
+on:
+  push:
+    tags:
+      - '*'
+  pull_request:
 
 jobs:
-  build:
-
+  build-and-test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -29,3 +32,34 @@ jobs:
       - name: Test with pytest
         run: |
           pytest
+
+  # Deploy tagged commits that pass the test step
+  deploy:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout repository + LFS files
+        uses: actions/checkout@v2
+        with:
+          lfs: true
+      
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.11'
+
+      - name: Install pypi-publish requirements
+        run: |
+          python -m pip install --upgrade pip twine build
+
+      - name: Build package
+        run: |
+          python -m build
+
+      - name: Publish package to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.4.2
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
+          user: __token__
+
