@@ -51,6 +51,6 @@ setup(name='nrt',
           'pandas',
           'affine'
       ],
-      requires-python = ">=3.9",
+      python_requires=">=3.9",
       extras_require=extra_reqs)
 
