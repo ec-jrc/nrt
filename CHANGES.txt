@@ -1,6 +1,17 @@
 Changes
 =======
 
+0.2.0
+-----
+
+- np.linalg.inv replaced by the more recommanded np.linalg.solve in many places
+- Integration of numba parallel accelerator in most fitting functions (new argument
+  to control number of threads in the .fit method of BaseNrt class)
+- Possibility to pass kwargs to function of data module that load xarray.Datasets
+  objects (particularly useful to specify chunking and get a dask based object)
+- New example in gallery on parallel fitting
+
+
 0.1.1
 -----
 

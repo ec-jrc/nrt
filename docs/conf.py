@@ -12,6 +12,8 @@
 
 import os
 import sys
+import warnings
+from numba import NumbaWarning
 import nrt
 
 
@@ -44,6 +46,10 @@ sphinx_gallery_conf = {
      'examples_dirs': 'gallery',   # path to your example scripts
      'gallery_dirs': 'auto_examples',  # path to where to save gallery generated output
 }
+
+# Avoid displaying some common warnings in gallery examples
+warnings.filterwarnings('ignore', category=NumbaWarning)
+warnings.filterwarnings('ignore', category=RuntimeWarning)
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

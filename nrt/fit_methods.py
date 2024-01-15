@@ -72,7 +72,7 @@ def ols(X, y):
 
 
 @utils.numba_kwargs
-@numba.jit(nopython=True, cache=True)
+@numba.jit(nopython=True, cache=True, parallel=True)
 def rirls(X, y, M=bisquare, tune=4.685,
           scale_est=mad, scale_constant=0.6745,
           update_scale=True, maxiter=50, tol=1e-8):
@@ -81,6 +81,14 @@ def rirls(X, y, M=bisquare, tune=4.685,
     Perform robust fitting regression via iteratively reweighted least squares
     according to weight function and tuning parameter.
     Basically a clone from `statsmodels` that should be much faster.
+
+    Note:
+        For best performances of the multithreaded implementation, it is
+        recommended to limit the number of threads used by MKL or OpenBLAS to 1.
+        This avoids over-subscription, and improves performances.
+        By default the function will use all cores available; the number of cores
+        used can be controled using the ``numba.set_num_threads`` function or
+        by modifying the ``NUMBA_NUM_THREADS`` environment variable
 
     Args:
         X (np.ndarray): 2D (n_obs x n_features) design matrix
@@ -102,7 +110,7 @@ def rirls(X, y, M=bisquare, tune=4.685,
     """
     beta = np.zeros((X.shape[1], y.shape[1]), dtype=np.float64)
     resid = np.full_like(y, np.nan, dtype=np.float64)
-    for idx in range(y.shape[1]):
+    for idx in numba.prange(y.shape[1]):
         y_sub = y[:,idx]
         isna = np.isnan(y_sub)
         X_sub = X[~isna]
@@ -156,7 +164,7 @@ def weighted_ols(X, y, w):
     return beta, resid
 
 @utils.numba_kwargs
-@numba.jit(nopython=True, cache=True)
+@numba.jit(nopython=True, cache=True, parallel=True)
 def ccdc_stable_fit(X, y, dates, threshold=3):
     """Fitting stable regressions using an adapted CCDC method
 
@@ -176,6 +184,14 @@ def ccdc_stable_fit(X, y, dates, threshold=3):
     2. first observation / RMSE < threshold
     3.  last observation / RMSE < threshold
 
+    Note:
+        For best performances of the multithreaded implementation, it is
+        recommended to limit the number of threads used by MKL or OpenBLAS to 1.
+        This avoids over-subscription, and improves performances.
+        By default the function will use all cores available; the number of cores
+        used can be controled using the ``numba.set_num_threads`` function or
+        by modifying the ``NUMBA_NUM_THREADS`` environment variable
+
     Args:
         X ((M, N) np.ndarray): Matrix of independant variables
         y ((M, K) np.ndarray): Matrix of dependant variables
@@ -194,7 +210,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3):
     residuals = np.full_like(y, np.nan)
     stable = np.empty((y.shape[1]))
     fit_start = np.empty((y.shape[1]))
-    for idx in range(y.shape[1]):
+    for idx in numba.prange(y.shape[1]):
         y_sub = y[:, idx]
         isna = np.isnan(y_sub)
         X_sub = X[~isna]
@@ -209,9 +225,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3):
             # each iteration
             y_ = y_sub[-jdx:]
             X_ = X_sub[-jdx:]
-            XTX = np.linalg.inv(np.dot(X_.T, X_))
-            XTY = np.dot(X_.T, y_)
-            beta_sub = np.dot(XTX, XTY)
+            beta_sub = np.linalg.solve(np.dot(X_.T, X_), np.dot(X_.T, y_))
             resid_sub = np.dot(X_, beta_sub) - y_
 
             # Check for stability
@@ -238,7 +252,7 @@ def ccdc_stable_fit(X, y, dates, threshold=3):
 
 
 @utils.numba_kwargs
-@numba.jit(nopython=True, cache=True)
+@numba.jit(nopython=True, cache=True, parallel=False)
 def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
     """Fitting stable regressions using Reverse Ordered Cumulative Sums
 
@@ -262,6 +276,7 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
         crit (float): Critical value corresponding to the chosen alpha. Can be
             calculated with ``_cusum_rec_test_crit``.
             Default is the value for alpha=0.05
+
     Returns:
         beta (numpy.ndarray): The array of regression estimators
         residuals (numpy.ndarray): The array of residuals
@@ -273,7 +288,7 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
     fit_start = np.zeros_like(is_stable, dtype=np.uint16)
     beta = np.full((X.shape[1], y.shape[1]), np.nan, dtype=np.float64)
     nreg = X.shape[1]
-    for idx in range(y.shape[1]):
+    for idx in numba.prange(y.shape[1]):
         # subset and remove nan
         is_nan = np.isnan(y[:, idx])
         _y = y[~is_nan, idx]
@@ -300,9 +315,8 @@ def roc_stable_fit(X, y, dates, alpha=0.05, crit=0.9478982340418134):
         # Subset and fit
         X_stable = _X[stable_idx:]
         y_stable = _y[stable_idx:]
-        XTX = np.linalg.inv(np.dot(X_stable.T, X_stable))
-        XTY = np.dot(X_stable.T, y_stable)
-        beta[:, idx] = np.dot(XTX, XTY)
+        beta[:, idx] = np.linalg.solve(np.dot(X_stable.T, X_stable),
+                                       np.dot(X_stable.T, y_stable))
         fit_start[idx] = _dates[stable_idx]
 
     residuals = np.dot(X, beta) - y

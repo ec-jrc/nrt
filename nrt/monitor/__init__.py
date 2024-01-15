@@ -19,6 +19,7 @@ import datetime
 
 import numpy as np
 import pandas as pd
+import numba
 from netCDF4 import Dataset
 import rasterio
 from rasterio.crs import CRS
@@ -124,7 +125,8 @@ class BaseNrt(metaclass=abc.ABCMeta):
 
     def _fit(self, X, dataarray,
              method='OLS',
-             screen_outliers=None, **kwargs):
+             screen_outliers=None,
+             n_threads=1, **kwargs):
         """Fit a regression model on an xarray.DataArray
         Args:
             X (numpy.ndarray): The design matrix used for the regression
@@ -134,6 +136,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 ``'RIRLS'``, ``'LASSO'``, ``'ROC'`` and ``'CCDC-stable'``.
             screen_outliers (str): The screening method. Possible values include
                 ``'Shewhart'`` and ``'CCDC_RIRLS'``.
+            n_threads (int): Number of threads used for parallel fitting. Note that
+                parallel fitting is not supported for ``ROC``; and that argument
+                has therefore no impact when combined with ``method='ROC'``
             **kwargs: Other parameters specific to each fit and/or outlier
                 screening method
 
@@ -145,6 +150,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
             NotImplementedError: If method is not yet implemented
             ValueError: Unknown value for `method`
         """
+        numba.set_num_threads(n_threads)
         # Check for strictly increasing time dimension:
         if not np.all(dataarray.time.values[1:] >= dataarray.time.values[:-1]):
             raise ValueError("Time dimension of dataarray has to be sorted chronologically.")
