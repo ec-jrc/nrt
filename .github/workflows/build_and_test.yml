@@ -2,8 +2,6 @@ name: Build, Test, and Deploy nrt
 
 on:
   push:
-    tags:
-      - '*'
   pull_request:
 
 jobs:
