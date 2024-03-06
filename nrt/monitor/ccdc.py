@@ -97,8 +97,33 @@ class CCDC(BaseNrt):
             swir (xr.DataArray): Short wave infrared (SWIR) reflectance values
                 to be used by ``screen_outliers``.
             scaling_factor (int): Optional Scaling factor to be applied to
-                ``green`` and ``swir``.
+                ``green`` and ``swir``. When ``screen_outliers`` is ``'CCDC_RIRLS'``
+                (default for CCDC), the outlier screening algorithm expects green
+                and swir reflectance values in the [0,1] range. EO data are often
+                scaled and stored as integer, with a scaling factor to convert
+                between scaled and actual reflectance values. As an example, if
+                scaled reflectance values are in the [0,10000] range, set
+                ``scaling_factor`` to ``10000``.
             **kwargs: to be passed to ``_fit``
+
+        Examples:
+            >>> from nrt.monitor.ccdc import CCDC
+            >>> from nrt import data
+
+            >>> # Load and prepare test data
+            >>> mask = (data.romania_forest_cover_percentage() > 30).astype('int')
+            >>> s2_cube = data.romania_20m()
+
+            >>> s2_cube['ndvi'] = (s2_cube.B8A - s2_cube.B4) / (s2_cube.B8A + s2_cube.B4)
+            >>> s2_cube = s2_cube.where(s2_cube.SCL.isin([4,5,7]))
+            >>> cube_history = s2_cube.sel(time=slice('2015-01-01', '2018-12-31'))
+
+            >>> # Instantiate monitoring class and fit the model, including outliers screening
+            >>> ccdcMonitor = CCDC(trend=True, mask=mask)
+            >>> ccdcMonitor.fit(dataarray=cube_history.ndvi,
+            ...                 green=cube_history.B3,
+            ...                 swir=cube_history.B11,
+            ...                 scaling_factor=10000)
         """
         self.set_xy(dataarray)
         X = self.build_design_matrix(dataarray, trend=self.trend,
