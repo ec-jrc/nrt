@@ -1,6 +1,13 @@
 Changes
 =======
 
+
+0.2.1
+-----
+- Small documentation improvement for CCDC monitoring
+- New update_mask argument and moniroting class attribute to allow monitoring to
+  continue regardless of boundary crossing
+
 0.2.0
 -----
 

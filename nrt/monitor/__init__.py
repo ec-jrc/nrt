@@ -64,6 +64,11 @@ class BaseNrt(metaclass=abc.ABCMeta):
         fit_start (numpy.ndarray): 2D integer array reporting start of history
             period in days since UNIX Epoch. Start of history period only varies
             when using stable fitting algorithms
+        update_mask (bool): Specifies whether to update the mask and halt
+            further monitoring when values exceed boundary limits during a
+            `.monitor()` call. A ``True`` value indicates that crossing the
+            boundary limits will trigger a mask update and stop successive
+            observation monitoring.
 
     Args:
         mask (numpy.ndarray): A 2D numpy array containing pixels that should be
@@ -88,11 +93,16 @@ class BaseNrt(metaclass=abc.ABCMeta):
         fit_start (numpy.ndarray): 2D integer array reporting start of history
             period in days since UNIX Epoch. Start of history period only varies
             when using stable fitting algorithms
+        update_mask (bool): Specifies whether to update the mask and halt
+            further monitoring when values exceed boundary limits during a
+            `.monitor()` call. A ``True`` value (default) indicates that
+            crossing the boundary limits will trigger a mask update and stop
+            successive observation monitoring.
     """
     def __init__(self, mask=None, trend=True, harmonic_order=3,
                  save_fit_start=False, beta=None, x_coords=None, y_coords=None,
                  process=None, boundary=None, detection_date=None,
-                 fit_start=None, **kwargs):
+                 fit_start=None, update_mask=True, **kwargs):
         self.mask = np.copy(mask) if isinstance(mask, np.ndarray) else mask
         self.trend = trend
         self.harmonic_order = harmonic_order
@@ -104,6 +114,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         self.detection_date = detection_date
         if save_fit_start:
             self.fit_start = fit_start
+        self.update_mask = update_mask
 
     def __eq__(self, other):
         if not isinstance(other, type(self)):
@@ -241,7 +252,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
     def fit(self):
         pass
 
-    def monitor(self, array, date):
+    def monitor(self, array, date, update_mask=None):
         """Monitor given a new acquisition
 
         The method takes care of (1) predicting the expected pixels values,
@@ -253,7 +264,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 monitored
             date (datetime.datetime): Date of acquisition of data contained in
                 the array
+            update_mask (bool): Override ``update_mask`` instance attribute
         """
+        update = update_mask if update_mask is not None else self.update_mask
         if not isinstance(date, datetime.date):
             raise TypeError("'date' has to be of type datetime.date")
         if self.detection_date is None:
@@ -265,13 +278,14 @@ class BaseNrt(metaclass=abc.ABCMeta):
         is_valid = self._detect_extreme_outliers(residuals=residuals,
                                                  is_valid=is_valid)
         self._update_process(residuals=residuals, is_valid=is_valid)
-        is_break = self._detect_break()
-        # Update mask (3 value corresponds to a confirmed break)
-        to_update = np.logical_and(is_valid, is_break)
-        self.mask[to_update] = 3
-        # Update detection date
-        days_since_epoch = (date - datetime.datetime(1970, 1, 1)).days
-        self.detection_date[to_update] = days_since_epoch
+        if update:
+            is_break = self._detect_break()
+            # Update mask (3 value corresponds to a confirmed break)
+            to_update = np.logical_and(is_valid, is_break)
+            self.mask[to_update] = 3
+            # Update detection date
+            days_since_epoch = (date - datetime.datetime(1970, 1, 1)).days
+            self.detection_date[to_update] = days_since_epoch
 
     def _detect_break(self):
         """Defines if the current process value is a confirmed break
