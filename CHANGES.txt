@@ -7,6 +7,8 @@ Changes
 - Small documentation improvement for CCDC monitoring
 - New update_mask argument and moniroting class attribute to allow monitoring to
   continue regardless of boundary crossing
+- Exclude version 0.59 of numba in requirements due to known bug in pararrel accelerator.
+  See https://github.com/numba/numba/issues/9490
 
 0.2.0
 -----
