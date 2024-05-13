@@ -48,7 +48,7 @@ setup(name='nrt',
           'xarray',
           'rasterio',
           'netCDF4',
-          'numba!=0.59',
+          'numba!=0.59.*',
           'pandas',
           'affine'
       ],
