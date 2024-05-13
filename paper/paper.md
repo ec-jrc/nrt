@@ -1,5 +1,5 @@
 ---
-title: 'NRT: operational monitoring of satellite images time-series in python'
+title: 'NRT: operational monitoring of satellite image time-series in python'
 tags:
   - Python
   - time-series
@@ -54,6 +54,8 @@ However, when it is available, the software provided with the research papers on
 Individual software is often primarily developed to support the research experiment and consequently not optimized for speed or deployment at scale.
 In addition, implementation in different programming languages or the absence of a common interface to operate the algorithm make interoperability and comparisons exercises challenging.
 The `nrt` package directly addresses these shortcomings by providing a standardized Application Programming Interface (API) to various near real-time disturbance detection approaches, all optimized for rapid computation and specifically designed for effective operational deployment.
+Furthermore, the API design is inspired by the highly successful scikit-learn library, considered the de-facto standard for machine learning in Python, and works seamlessly with xarray, the industry standard for representing spatio-temporal gridded data [@buitinck2013api].
+This ensures a familiar and efficient workflow for a broad range of users.
 
 
 
@@ -105,7 +107,7 @@ The `nrt` package currently implements five distinct monitoring approaches:
 - Continuous Change Detection and Classification of land cover (CCDC, CMFDA) [@zhu2012continuous; @zhu2014continuous] - Focuses on the core change detection component of the original CCDC algorithm.
 - InterQuantile Range (IQR) - A simple, unpublished outlier identification strategy proposed by Rob J. Hyndman on [StackExchange](https://stats.stackexchange.com/a/1153).
 
-While all temporal fitting methods are compatible with each monitoring algorithm, the default settings are tailored independently for each approach, adhering to the original manuscripts' recommendations. For example, @verbesselt2012near recommend performing a stability test on the historical period to ensure no disturbances are present; thus, the default fitting strategy for CuSum and MoSum is `ROC` (Reversed Cumulative Sum of residuals). However, if the historical period is known to be stable and free of disturbances, users may opt for a simpler and faster fitting strategy such as `OLS` (Ordinary Least Squares).
+While all temporal fitting methods are compatible with each monitoring algorithm, the default settings are tailored independently for each approach, adhering to the original manuscripts' recommendations. For example, @verbesselt2012near recommend performing a stability test on the historical period to ensure no disturbances are present; thus, the default fitting strategy for `CuSum` and `MoSum` is `ROC` (Reversed Cumulative Sum of residuals). However, if the historical period is known to be stable and free of disturbances, users may opt for a simpler and faster fitting strategy such as `OLS` (Ordinary Least Squares).
 
 
 ## Demo data
@@ -128,7 +130,7 @@ The system utilizes the EWMA algorithm from `nrt`, minimally tuned, and employs 
 ![Snapshot of the operational forest disturbance alert system deployed across Estonia during the 2023 vegetation period. The bottom-right panel shows an example of a tree cover loss event that was successfully detected. \label{fig:deployment}](figs/deployment.png)
 
 Estonia was divided into 50 km tiles, and a monitoring instance for each tile was established using data from 2021 and 2022 as a stable history period.
-Each night, a containerized process automatically queried the SpatioTemporal Asset Catalog (STAC) on the Big Data Analytics Platform (BDAP) platform for new Sentinel 2 data [@soille2018versatile; @STAC2021]. When new data was available, it was used to update both the monitoring status and the alert layer, which was accessible via Web Map Service (WMS) protocol.
+Each night, a containerized process automatically queried the SpatioTemporal Asset Catalog (STAC) on the Big Data Analytics Platform (BDAP) for new Sentinel 2 data [@soille2018versatile; @STAC2021]. When new data was available, it was used to update both the monitoring status and the alert layer, which was accessible via Web Map Service (WMS) protocol.
 
 It is important to note that tools like `PySTAC` and Open Data Cube (ODC) played a crucial role in the deployment and functionality of this pipeline [@hanson2019open; @killough2018overview].
 
