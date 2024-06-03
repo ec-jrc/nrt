@@ -1,5 +1,5 @@
 ---
-title: 'NRT: operational monitoring of satellite image time-series in Python'
+title: 'nrt: operational monitoring of satellite image time-series in Python'
 tags:
   - Python
   - time-series
