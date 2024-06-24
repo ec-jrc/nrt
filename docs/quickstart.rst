@@ -41,7 +41,7 @@ Instantiating
 
     # load example mask
     mask = (data.romania_forest_cover_percentage() > 20).astype('int')
-    
+
     # Instantiate
     nrt_class = EWMA(
         mask=mask,
@@ -72,12 +72,12 @@ Fitting
     
     # load example xarray
     s2_cube = data.romania_20m()
-    history = s2_cube.B3.sel(slice(None, '2019-01-01'))
-    monitor = s2_cube.B3.sel(slice('2019-01-01', None))
-    
+    history = s2_cube.B3.sel(time=slice(None, '2019-01-01'))
+    monitor = s2_cube.B3.sel(time=slice('2019-01-01', None))
+
     # Fitting
     nrt_class.fit(dataarray=history)
-    
+
     # Dump model
     nrt_class.to_netcdf('model.nc')
 
@@ -97,14 +97,14 @@ Monitoring
     
     # Load dumped model
     nrt_class = EWMA.from_netcdf('model.nc')
-    
+
     # Monitor new observations
     for array, date in zip(monitor.values, monitor.time.values.astype('datetime64[s]').tolist()):
         nrt_class.monitor(array=array, date=date)
 
     # Report results
     nrt_class.report('report.tif')
-    
+
 If the model was dumped to a NetCDF it can be read from disk with ``from_netcdf()``.
 Monitoring happens with ``.monitor()``. This only takes an numpy array and a date of class
 ``datetime.date``. 
