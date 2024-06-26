@@ -140,16 +140,15 @@ ds
 # 
 # Data preparation involves three primary steps:
 # 
-# - **Masking the Data**: Utilize the ``qa_pixel`` layer to mask clouds
-#   and shadows in Landsat imagery. Observations classified as “invalid”
+# - **Masking the Data**: Use the ``qa_pixel`` layer to mask pixels contaminated
+#   by clouds and shadows. Observations classified as “invalid”
 #   due to cloud or shadow coverage are converted to ``np.nan`` to signify missing data.
 # - **Applying Scale and Offset**: Adjust the raw satellite data by applying
 #   necessary scaling factors and offsets to convert pixel values into
-#   scientifically meaningful units.
-# - **Computing Vegetation Indices**: Specifically, calculating the
-#   Normalized Difference Vegetation Index (NDVI) to assess the
-#   density of plant growth in the area of interest.
-# 
+#   calibrated surface reflectance values.
+# - **Computing Vegetation Indices**: Compute the Normalized Difference
+#   Vegetation Index (NDVI) which will be used later on in the monitoring process 
+#
 # Cloud Masking
 # ~~~~~~~~~~~~~
 # 
