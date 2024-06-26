@@ -34,7 +34,8 @@ demonstrates how to:
 # ---------------------
 # 
 # Here we prepare a bounding box of 20 by 20 km, centered on a forest area
-# near the city of Concepción in Bolivia. Center coordinates are in
+# near the city of Concepción in Bolivia (The area is further described in [1]_). 
+# Center coordinates are in
 # longitude, latitude which is the Coordinate Reference System we
 # generally get from most online services (google maps or simply typing
 # “name of the place coordinates” in a search engine). To expand these
@@ -208,7 +209,7 @@ monitor = ds_clean.sel(time=slice(datetime.datetime(2020, 1, 1), None))
 # There are many ways to obtain a forest mask, such as using global
 # products or from a custom local classification. Here we use a rule based
 # approach proposed by Zhu et al. (2012) as part of an article on
-# continuous forest disturbances mapping. The reasoning of that rule based
+# continuous forest disturbances mapping [2]_. The reasoning of that rule based
 # algorithm is that forests have a high NDVI (high “greenesss”) and are
 # relatively “dark” in the short wave infrared part of the light
 # sprectrum. The long term NDVI and SWIR values both correspond to the
@@ -322,3 +323,16 @@ ax.set_yticks([])
 # east and south-west of the study area, as well as more subtle traces of
 # selective logging in the north. Patterns in the north-west corner are
 # likely errors due to unexpected natural variability.
+
+###########################################################################
+# References
+# ----------
+#
+# .. [1] Dutrieux, L.P., Verbesselt, J., Kooistra, L., & Herold, M., 2015.
+#        Monitoring forest cover loss using multiple data streams, a case study
+#        of a tropical dry forest in Bolivia. ISPRS Journal of Photogrammetry
+#        and Remote Sensing, 107, pp.112-125.
+#
+# .. [2] Zhu, Z., Woodcock, C.E. and Olofsson, P., 2012. Continuous
+#        monitoring of forest disturbance using all available Landsat
+#        imagery. Remote sensing of environment, 122, pp.75-91.     
