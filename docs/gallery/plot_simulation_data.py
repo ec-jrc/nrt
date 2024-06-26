@@ -8,7 +8,7 @@ of the artificially generated breakpoints and the experiment is concluded by a s
 
 #############################################################
 # Synthetic data generation
-# =========================
+# -------------------------
 #
 # The data module of the nrt package contains functionalities to create synthetic
 # data with controlled parameters such as position of structural change, phenological
@@ -70,7 +70,7 @@ cube = data.make_cube(dates=dates, params_ds=params_ds)
 
 ###################################################################
 # Simulation of an NRT monitoring scenario
-# ==================================================
+# --------------------------------------------------
 # For the simulating a near real time monitoring scenario, we consider all the pixels
 # of the datacube (no mask) and define the 2018-01-01 to 2019-12-31 period as the
 # stable history period and all subsequent dates as monitoring. We know from the
@@ -109,7 +109,7 @@ for array, date in zip(cube_monitor.values,
 
 ############################################################################
 # Monitoring performances evaluation
-# ==================================
+# ----------------------------------
 # Assessing the performance of a time-series monitoring algorithm can be a complex
 # task that depends on the specific use case and what the user wants to emphasize.
 # A user valuing rapid detection will chose an assessment approach that puts extra
@@ -156,7 +156,7 @@ print(accuracy(monitor, params_ds, dates))
 
 ####################################################################
 # White noise sensitivity analysis
-# ================================
+# --------------------------------
 # To go one step further we can assess and visualize how these accuracy measures
 # vary with the amount of noise present in the synthetic data.
 # For that we define a new function encompassing all the steps of data generation,

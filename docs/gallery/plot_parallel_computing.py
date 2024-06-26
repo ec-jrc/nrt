@@ -9,7 +9,7 @@ This example illustrates how multithreading can be enabled and adjusted to your 
 
 ##############################################################
 # Confirgure multithreading options of linear algebra library
-# ===========================================================
+# -----------------------------------------------------------
 #
 # Most of the low level computation/numerical optimization occuring during model
 # fitting with nrt relies on a linear algebra library. These libraries often implement
@@ -35,7 +35,7 @@ os.environ['BLIS_NUM_THREADS'] = '1'
 
 ##############################################################
 # Create benchmark data
-# =====================
+# ---------------------
 #
 # Using the synthetic data generation functionalities of the package, we can create
 # an xarray DataArray for benchmark. Note that in order to keep the compilation time
@@ -57,7 +57,7 @@ cube_sub = cube.isel(indexers={'x': slice(1,5), 'y': slice(1,5)})
 
 ##############################################################
 # Benchmark fitting time of all methods 
-# =====================================
+# -------------------------------------
 # 
 # Note that we are only interested in fitting time and therefore use a single
 # class instance for the benchmark. The time required for any subsequent .monitor()
@@ -117,7 +117,7 @@ print(multiprocessing.cpu_count())
 
 ##############################################################
 # Further considerations
-# ======================
+# ----------------------
 #
 # A deployment at scale may involve several levels of parallelization. The multi-threaded
 # example illustrated above is made possible thanks to the numba parallel accelerator.
