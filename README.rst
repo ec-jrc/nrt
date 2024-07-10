@@ -61,6 +61,16 @@ Installation
     pip install nrt
 
 
+The main dependencies, which should be automatically resolved by ``pip``, are:
+
+- `numpy <https://pypi.org/project/numpy/>`_
+- `scipy <https://pypi.org/project/scipy/>`_
+- `xarray <https://pypi.org/project/xarray/>`_
+- `numba <https://pypi.org/project/numba/>`_
+- `rasterio <https://pypi.org/project/rasterio/>`_
+- `netCDF4 <https://pypi.org/project/netCDF4/>`_
+
+
 Example usage
 =============
 
@@ -95,6 +105,12 @@ The snippet below presents a near real time monitoring simulation. The input dat
     # At any time a monitoring report can be produced with EwmaMonitor.report(filename)
     # and state of the monitoring instance can be saved as netcdf with
     # EwmaMonitor.to_netcdf(filename)
+
+
+Contributing
+============
+
+Any type of contribution is welcome. Please see the contributing guidelines at `CONTRIBUTING.md <CONTRIBUTING.md>`_.
 
 
 About the authors

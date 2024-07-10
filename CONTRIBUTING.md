@@ -23,8 +23,18 @@ For any contribution to the code base or the documentation, use the pull request
 2. Apply changes to your fork.
 3. Open a pull request on github
 
+
 Your contribution will be reviewed and discussied as part of the pull request. If approved, it will then be merged
 into the main branch of the repository and included in the following release. 
 
+> :warning: **Ensure that you have git-lfs installed**: The test data included in the package (reasonably sized netCDF and GeoTIFF files) are versioned using Git with the Large File Storage (LFS) extension. Cloning the repository without LFS installed will silently replace these files with placeholders, causing some tests to fail.
+
+### Testing
+
+We use `pytest` for unit tests.
+
+- Unit tests are written using the `pytest` framework.
+- Tests are automatically run using GitHub CI with every push and pull request.
+- You can run tests locally by simply calling `pytest` in the root directory of the project.
 
 
