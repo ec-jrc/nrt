@@ -113,6 +113,23 @@ Contributing
 Any type of contribution is welcome. Please see the contributing guidelines at `CONTRIBUTING.md <CONTRIBUTING.md>`_.
 
 
+Citing nrt
+==========
+
+If you use nrt in your research or project, please consider citing it using the following BibTeX entry.
+
+.. code-block:: bibtex
+
+   @article{dutrieux2024nrt,
+     year = {2024},
+     publisher = {The Open Journal},
+     author = {Lo\"{i}c Dutrieux and Jonas Viehweger},
+     title = {nrt: Operational monitoring of satellite image time-series in Python},
+     journal = {Journal of Open Source Software},
+     note = {in review}
+   }
+
+
 About the authors
 =================
 

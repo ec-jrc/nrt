@@ -1,0 +1,27 @@
+cff-version: 1.2.0
+message: "If you use nrt in your research or project, please consider citing it using the following entry."
+authors:
+  - family-names: Dutrieux
+    given-names: Loïc
+  - family-names: Viehweger
+    given-names: Jonas
+title: "nrt: Operational monitoring of satellite image time-series in Python"
+version: 0.2.1
+doi: 10.21105/joss.00000
+date-released: 2024-01-15
+url: "https://github.com/ec-jrc/nrt"
+repository-code: "https://github.com/ec-jrc/nrt"
+license: EUPL-v1.2
+preferred-citation:
+  type: article
+  authors:
+    - family-names: Dutrieux
+      given-names: Loïc
+    - family-names: Viehweger
+      given-names: Jonas
+  title: "nrt: Operational monitoring of satellite image time-series in Python"
+  journal: "Journal of Open Source Software"
+  year: 2024
+  publisher: "The Open Journal"
+  note: "in review"
+
