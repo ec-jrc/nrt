@@ -1,9 +1,16 @@
 Changes
 =======
 
+Dev
+---
 
-0.2.1
+
+0.2.1 (2024-07-15)
 -----
+
+- Various improvements to documentation and package metadata suggested by JOSS
+  review (new example using PC archive and STAC catalogue, Contributing guidelines,
+  explicit citation information, etc) 
 - Small documentation improvement for CCDC monitoring
 - New update_mask argument and moniroting class attribute to allow monitoring to
   continue regardless of boundary crossing
