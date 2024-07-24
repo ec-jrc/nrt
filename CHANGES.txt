@@ -6,7 +6,7 @@ Dev
 
 
 0.2.1 (2024-07-15)
------
+------------------
 
 - Various improvements to documentation and package metadata suggested by JOSS
   review (new example using PC archive and STAC catalogue, Contributing guidelines,
@@ -17,8 +17,8 @@ Dev
 - Exclude version 0.59 of numba in requirements due to known bug in pararrel accelerator.
   See https://github.com/numba/numba/issues/9490
 
-0.2.0
------
+0.2.0 (2024-01-15)
+------------------
 
 - np.linalg.inv replaced by the more recommanded np.linalg.solve in many places
 - Integration of numba parallel accelerator in most fitting functions (new argument
@@ -27,11 +27,6 @@ Dev
   objects (particularly useful to specify chunking and get a dask based object)
 - New example in gallery on parallel fitting
 - Add a minimum python version requirement (>=3.9). 3.8 not longer tested
-
-
-0.1.1
------
-
 - New set of functions to generate synthetic data (single time-series and DataArrays)
   added to the data module
 - Gallery section added to the documentation, with one example on use of synthetic data
