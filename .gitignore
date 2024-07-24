@@ -1,1 +1,11 @@
-.Rhistory
+__pycache__/
+*.pyc
+*.pyo
+
+# Distribution / packaging
+*.egg-info/
+dist/
+build/
+
+# Sphinx doc
+_build/
