@@ -331,7 +331,9 @@ ax.set_yticks([])
 #        Monitoring forest cover loss using multiple data streams, a case study
 #        of a tropical dry forest in Bolivia. ISPRS Journal of Photogrammetry
 #        and Remote Sensing, 107, pp.112-125.
+#        https://doi.org/10.1016/j.isprsjprs.2015.03.015
 #
 # .. [2] Zhu, Z., Woodcock, C.E. and Olofsson, P., 2012. Continuous
 #        monitoring of forest disturbance using all available Landsat
 #        imagery. Remote sensing of environment, 122, pp.75-91.     
+#        https://doi.org/10.1016/j.rse.2011.10.030

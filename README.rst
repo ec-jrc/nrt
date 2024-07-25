@@ -144,13 +144,16 @@ References
 ==========
 
 Brooks, E.B., Wynne, R.H., Thomas, V.A., Blinn, C.E. and Coulston, J.W., 2013. On-the-fly massively multitemporal change detection using statistical quality control charts and Landsat data. IEEE Transactions on Geoscience and Remote Sensing, 52(6), pp.3316-3332.
+https://doi.org/10.1109/TGRS.2013.2272545
 
 Verbesselt, J., Zeileis, A. and Herold, M., 2012. Near real-time disturbance detection using satellite image time series. Remote Sensing of Environment, 123, pp.98-108.
+https://doi.org/10.1016/j.rse.2012.02.022
 
 Zeileis, A., Leisch, F., Kleiber, C. and Hornik, K., 2005. Monitoring structural change in dynamic econometric models. Journal of Applied Econometrics, 20(1), pp.99-121.
+https://doi.org/10.1002/jae.776
 
 Zhu, Z., Woodcock, C.E. and Olofsson, P., 2012. Continuous monitoring of forest disturbance using all available Landsat imagery. Remote sensing of environment, 122, pp.75-91.
+https://doi.org/10.1016/j.rse.2011.10.030
 
 Zhu, Z. and Woodcock, C.E., 2014. Continuous change detection and classification of land cover using all available Landsat data. Remote sensing of Environment, 144, pp.152-171.
-
-
+https://doi.org/10.1016/j.rse.2014.01.011
