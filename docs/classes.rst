@@ -20,7 +20,7 @@ disturbances.
 
 .. |copy|   unicode:: U+000A9 .. COPYRIGHT SIGN
 
-.. figure:: images/concept.png
+.. figure:: _static/concept.png
 
    |copy| Copyright European Union, 2022; Jonas Viehweger
 

@@ -44,12 +44,14 @@ class BaseNrt(metaclass=abc.ABCMeta):
         mask (numpy.ndarray): A 2D numpy array containing pixels that should
             be monitored (1) and not (0). The mask may be updated following
             historing period stability check, and after a call to monitor
-            following a confirmed break. Values are as follow.
-            ``{0: 'Not monitored',
-               1: 'monitored',
-               2: 'Unstable history',
-               3: 'Confirmed break - no longer monitored',
-               4: 'Not enough observations - not monitored'}``
+            following a confirmed break. Values are as follow::
+
+                {0: 'Not monitored',
+                 1: 'monitored',
+                 2: 'Unstable history',
+                 3: 'Confirmed break - no longer monitored',
+                 4: 'Not enough observations - not monitored'}
+
         trend (bool): Indicate whether stable period fit is performed with
             trend or not
         harmonic_order (int): The harmonic order of the time-series regression
@@ -66,7 +68,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
             when using stable fitting algorithms
         update_mask (bool): Specifies whether to update the mask and halt
             further monitoring when values exceed boundary limits during a
-            `.monitor()` call. A ``True`` value indicates that crossing the
+            ``.monitor()`` call. A ``True`` value indicates that crossing the
             boundary limits will trigger a mask update and stop successive
             observation monitoring.
 
@@ -81,7 +83,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
         harmonic_order (int): The harmonic order of the time-series regression
         save_fit_start (bool): If start of the fit should be reported in the
             model. Only applicable to stable fits (e.g. 'ROC', 'CCDC-stable').
-            If true, the data will be saved in the attribute `fit_start`
+            If true, the data will be saved in the attribute ``fit_start``
         x_coords (numpy.ndarray): x coordinates
         y_coords (numpy.ndarray): y coordinates
         process (numpy.ndarray): 2D numpy array containing the
@@ -95,7 +97,7 @@ class BaseNrt(metaclass=abc.ABCMeta):
             when using stable fitting algorithms
         update_mask (bool): Specifies whether to update the mask and halt
             further monitoring when values exceed boundary limits during a
-            `.monitor()` call. A ``True`` value (default) indicates that
+            ``.monitor()`` call. A ``True`` value (default) indicates that
             crossing the boundary limits will trigger a mask update and stop
             successive observation monitoring.
     """
@@ -329,9 +331,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 the report. Valid options are ``'mask'`` (the main output layer
                 containing confirmed breaks, non-monitored pixels, etc), ``'detection_date'``
                 (an integer value matching each confirmed break and indicating the date
-                 the break was confirmed in days since epoch), ``'process'`` (the process
-                 value). The process value has a different meaning and interpretation
-                 for each monitoring method.
+                the break was confirmed in days since epoch), ``'process'`` (the process
+                value). The process value has a different meaning and interpretation
+                for each monitoring method.
             dtype (type): The datatype of the stacked layers. Note that when returning
                 process value for MoSum, CuSum or EWMA the ``dtype`` should be set
                 to a float type to retain values
@@ -356,9 +358,9 @@ class BaseNrt(metaclass=abc.ABCMeta):
                 the report. Valid options are ``'mask'`` (the main output layer
                 containing confirmed breaks, non-monitored pixels, etc), ``'detection_date'``
                 (an integer value matching each confirmed break and indicating the date
-                 the break was confirmed in days since epoch), ``'process'`` (the process
-                 value). The process value has a different meaning and interpretation
-                 for each monitoring method.
+                the break was confirmed in days since epoch), ``'process'`` (the process
+                value). The process value has a different meaning and interpretation
+                for each monitoring method.
             dtype (type): The datatype of the stacked layers. Note that when returning
                 process value for MoSum, CuSum or EWMA the ``dtype`` should be set
                 to a float type to retain values

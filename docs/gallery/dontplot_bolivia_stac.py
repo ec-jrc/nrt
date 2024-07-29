@@ -27,7 +27,7 @@ demonstrates how to:
 -  Generate a simple rule-based forest mask
 -  Simulate a near real-time monitoring scenario
 """
-# sphinx_gallery_thumbnail_path = 'images/iqr_results_bolivia.png'
+# sphinx_gallery_thumbnail_path = '_static/iqr_results_bolivia.png'
 
 #############################################
 # Define the study area
@@ -262,7 +262,7 @@ ax.set_xticks([])
 ax.set_yticks([])
 
 ###############################################################################
-# .. image:: ../../_static/forest_mask_bolivia.png
+# .. image:: ../_static/forest_mask_bolivia.png
 
 ###############################################################################
 # Monitoring simulation
@@ -316,7 +316,7 @@ ax.set_xticks([])
 ax.set_yticks([])
 
 ###############################################################################
-# .. image:: ../../_static/iqr_results_bolivia.png
+# .. image:: ../_static/iqr_results_bolivia.png
 # 
 # The resulting mask reveals clear signs of agricultural expansion in the
 # east and south-west of the study area, as well as more subtle traces of

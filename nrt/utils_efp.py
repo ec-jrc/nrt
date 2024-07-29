@@ -81,11 +81,11 @@ def history_roc(X, y, alpha=0.05, crit=0.9478982340418134):
         crit (float): Critical value corresponding to the chosen alpha. Can be
             calculated with ``_cusum_rec_test_crit``.
             Default is the value for alpha=0.05
-    Returns:
-        (int) Index of structural change in y.
-             0: y completely stable
-            >0: y stable after this index
 
+    Returns:
+        int: Index of structural change in y.
+        ``0`` - y completely stable
+        ``>0`` -  y stable after this index
     """
     # Index, where instability in time-series is detected
     #  0: time-series completely stable
