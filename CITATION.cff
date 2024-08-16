@@ -1,27 +1,35 @@
-cff-version: 1.2.0
-message: "If you use nrt in your research or project, please consider citing it using the following entry."
+cff-version: "1.2.0"
 authors:
+- family-names: Dutrieux
+  given-names: Loïc
+  orcid: "https://orcid.org/0000-0002-5058-2526"
+- family-names: Viehweger
+  given-names: Jonas
+  orcid: "https://orcid.org/0000-0002-1610-4600"
+doi: 10.5281/zenodo.12799278
+message: If you use nrt in your research or project, please cite our article in the
+  Journal of Open Source Software.
+preferred-citation:
+  authors:
   - family-names: Dutrieux
     given-names: Loïc
+    orcid: "https://orcid.org/0000-0002-5058-2526"
   - family-names: Viehweger
     given-names: Jonas
-title: "nrt: Operational monitoring of satellite image time-series in Python"
-version: 0.2.1
-doi: 10.21105/joss.00000
-date-released: 2024-01-15
-url: "https://github.com/ec-jrc/nrt"
-repository-code: "https://github.com/ec-jrc/nrt"
-license: EUPL-v1.2
-preferred-citation:
+    orcid: "https://orcid.org/0000-0002-1610-4600"
+  date-published: 2024-08-15
+  doi: 10.21105/joss.06815
+  issn: 2475-9066
+  issue: 100
+  journal: Journal of Open Source Software
+  publisher:
+    name: Open Journals
+  start: 6815
+  title: "nrt: operational monitoring of satellite image time-series in
+    Python"
   type: article
-  authors:
-    - family-names: Dutrieux
-      given-names: Loïc
-    - family-names: Viehweger
-      given-names: Jonas
-  title: "nrt: Operational monitoring of satellite image time-series in Python"
-  journal: "Journal of Open Source Software"
-  year: 2024
-  publisher: "The Open Journal"
-  note: "in review"
+  url: "https://joss.theoj.org/papers/10.21105/joss.06815"
+  volume: 9
+title: "nrt: operational monitoring of satellite image time-series in
+  Python"
 

@@ -15,6 +15,9 @@ nrt
     :target: https://github.com/ec-jrc/nrt/actions/workflows/build_and_test.yml
     :alt: Build status
 
+.. image:: https://joss.theoj.org/papers/10.21105/joss.06815/status.svg
+   :target: https://doi.org/10.21105/joss.06815
+
 
 ``nrt`` provides a standardized interface for Near Real Time monitoring of disturbances on satellite image time-series.
 The package is optimized for fast computation and suitable for operational deployment at scale.
@@ -123,10 +126,13 @@ If you use nrt in your research or project, please consider citing it using the 
    @article{dutrieux2024nrt,
      year = {2024},
      publisher = {The Open Journal},
+     volume = {9},
+     number = {100},
+     pages = {6815},
      author = {Lo\"{i}c Dutrieux and Jonas Viehweger},
-     title = {nrt: Operational monitoring of satellite image time-series in Python},
+     title = {nrt: operational monitoring of satellite image time-series in Python},
      journal = {Journal of Open Source Software},
-     note = {in review}
+     doi = {10.21105/joss.06815},
    }
 
 
