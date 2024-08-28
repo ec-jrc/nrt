@@ -13,6 +13,8 @@
 # See the Licence for the specific language governing permissions and
 # limitations under the Licence.
 
+__path__ = __import__('pkgutil').extend_path(__path__, __name__)
+
 import abc
 import warnings
 import datetime

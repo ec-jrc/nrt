@@ -1,6 +1,5 @@
 include LICENSE README.rst setup.py
 include tests*/*.py
-include tests/data/*.csv
 include integration_test/*.py
 recursive-include docs *.rst
 recursive-include docs *.png
