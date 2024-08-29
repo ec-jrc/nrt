@@ -27,7 +27,6 @@ For any contribution to the code base or the documentation, use the pull request
 Your contribution will be reviewed and discussied as part of the pull request. If approved, it will then be merged
 into the main branch of the repository and included in the following release. 
 
-> :warning: **Ensure that you have git-lfs installed**: The test data included in the package (reasonably sized netCDF and GeoTIFF files) are versioned using Git with the Large File Storage (LFS) extension. Cloning the repository without LFS installed will silently replace these files with placeholders, causing some tests to fail.
 
 ### Testing
 

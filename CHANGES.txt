@@ -1,8 +1,8 @@
 Changes
 =======
 
-Dev
----
+0.3.0 (2024-08-29)
+------------------
 - nrt.data now lives in its own namespace package (nrt-data). Subpackage removed,
   and namespace enabling in multiple __init__.py files
 - A few edits (e.g. pkg-data and MANIFEST.in) as a consequence of removing
@@ -12,6 +12,8 @@ Dev
 - Adapted integration fixture to new test data access method (+ band names slightly changed
   B4 is now B04, etc)
 - Version number now managed via git tags using setuptools-scm
+- Removed all LFS hack in .readthedocs, github actions, etc. No longer needed
+  given that the package itself no longer contain data
 
 
 0.2.1 (2024-07-15)
