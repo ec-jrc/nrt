@@ -72,8 +72,8 @@ Fitting
     
     # load example xarray
     s2_cube = data.romania_20m()
-    history = s2_cube.B3.sel(time=slice(None, '2019-01-01'))
-    monitor = s2_cube.B3.sel(time=slice('2019-01-01', None))
+    history = s2_cube.B03.sel(time=slice(None, '2019-01-01'))
+    monitor = s2_cube.B03.sel(time=slice('2019-01-01', None))
 
     # Fitting
     nrt_class.fit(dataarray=history)

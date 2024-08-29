@@ -114,14 +114,14 @@ class CCDC(BaseNrt):
             >>> mask = (data.romania_forest_cover_percentage() > 30).astype('int')
             >>> s2_cube = data.romania_20m()
 
-            >>> s2_cube['ndvi'] = (s2_cube.B8A - s2_cube.B4) / (s2_cube.B8A + s2_cube.B4)
+            >>> s2_cube['ndvi'] = (s2_cube.B8A - s2_cube.B04) / (s2_cube.B8A + s2_cube.B04)
             >>> s2_cube = s2_cube.where(s2_cube.SCL.isin([4,5,7]))
             >>> cube_history = s2_cube.sel(time=slice('2015-01-01', '2018-12-31'))
 
             >>> # Instantiate monitoring class and fit the model, including outliers screening
             >>> ccdcMonitor = CCDC(trend=True, mask=mask)
             >>> ccdcMonitor.fit(dataarray=cube_history.ndvi,
-            ...                 green=cube_history.B3,
+            ...                 green=cube_history.B03,
             ...                 swir=cube_history.B11,
             ...                 scaling_factor=10000)
         """

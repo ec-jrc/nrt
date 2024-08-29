@@ -91,7 +91,7 @@ The snippet below presents a near real time monitoring simulation. The input dat
 
     # NDVI training and monitoring periods
     s2_cube = data.romania_20m()
-    s2_cube['ndvi'] = (s2_cube.B8A - s2_cube.B4) / (s2_cube.B8A + s2_cube.B4)
+    s2_cube['ndvi'] = (s2_cube.B8A - s2_cube.B04) / (s2_cube.B8A + s2_cube.B04)
     s2_cube = s2_cube.where(s2_cube.SCL.isin([4,5,7]))
     ndvi_history = s2_cube.ndvi.sel(time=slice('2015-01-01', '2018-12-31'))
     ndvi_monitoring = s2_cube.ndvi.sel(time=slice('2019-01-01', '2021-12-31'))

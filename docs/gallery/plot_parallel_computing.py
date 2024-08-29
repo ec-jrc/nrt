@@ -131,7 +131,7 @@ from nrt import data
 
 # Lazy load test data using dask
 cube = data.romania_10m(chunks={'x': 20, 'y': 20})
-vi_cube = (cube.B8 - cube.B4) / (cube.B8 + cube.B4)
+vi_cube = (cube.B08 - cube.B04) / (cube.B08 + cube.B04)
 print(vi_cube)
 monitor = CuSum()
 monitor.fit(vi_cube, method='OLS', n_threads=2)

@@ -22,6 +22,9 @@ import rasterio
 import numpy as np
 import pandas as pd
 
+from nrt import data
+
+
 @pytest.fixture
 def history_dataarray():
     """History dataarray over romania
@@ -30,10 +33,8 @@ def history_dataarray():
     NDVI with cloud already filtered (appear as np.nan) in the arrays
     3.5 years of data from 2015 to end of 2018
     """
-    filename = pkg_resources.resource_filename('nrt',
-                                               'data/sentinel2_cube_subset_romania_20m.nc')
-    ds = xr.open_dataset(filename)
-    ds['ndvi'] = (ds.B8A - ds.B4) / (ds.B8A + ds.B4)
+    ds = data.romania_20m()
+    ds['ndvi'] = (ds.B8A - ds.B04) / (ds.B8A + ds.B04)
     ds = ds.where(ds.SCL.isin([4,5,7]))
     history = ds.sel(time=slice(datetime.datetime(2015, 1, 1),
                                      datetime.datetime(2016, 12, 31)))
@@ -51,15 +52,13 @@ def ndvi_history(history_dataarray):
 def green_swir_history(history_dataarray):
     """A NDVI dataarray of Romania
     """
-    return history_dataarray.B3, history_dataarray.B11
+    return history_dataarray.B03, history_dataarray.B11
 
 
 @pytest.fixture
 def ndvi_monitoring_numpy():
-    filename = pkg_resources.resource_filename('nrt',
-                                               'data/sentinel2_cube_subset_romania_20m.nc')
-    ds = xr.open_dataset(filename)
-    ds['ndvi'] = (ds.B8A - ds.B4) / (ds.B8A + ds.B4)
+    ds = data.romania_20m()
+    ds['ndvi'] = (ds.B8A - ds.B04) / (ds.B8A + ds.B04)
     ds = ds.where(ds.SCL.isin([4,5,7]))
     ndvi_monitoring = ds.ndvi.sel(time=slice(datetime.datetime(2017, 1, 1),
                                              datetime.datetime(2021, 1, 15)))
@@ -72,8 +71,5 @@ def ndvi_monitoring_numpy():
 def forest_mask():
     """Forest density over romania
     """
-    filename = pkg_resources.resource_filename('nrt',
-                                               'data/tree_cover_density_2018_romania.tif')
-    with rasterio.open(filename) as src:
-        arr = src.read(1)
+    arr = data.romania_forest_cover_percentage()
     return (arr > 30).astype(np.int8)
