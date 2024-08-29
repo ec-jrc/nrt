@@ -13,6 +13,8 @@
 import os
 import sys
 import warnings
+from importlib.metadata import version as version_
+
 from numba import NumbaWarning
 import nrt
 
@@ -25,7 +27,7 @@ copyright = 'European Union, 2022, Loic Dutrieux & Jonas Viehweger'
 author = 'Loic Dutrieux, Jonas Viehweger'
 
 # The full version, including alpha/beta/rc tags
-release = nrt.__version__
+release = version_('nrt')
 
 
 # -- General configuration ---------------------------------------------------

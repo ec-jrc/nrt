@@ -1,10 +1,11 @@
 [build-system]
-requires = ["setuptools>=40.8.0", "wheel"]
+requires = ["setuptools>=64",
+            "wheel",
+            "setuptools-scm>=8"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "nrt"
-version = "0.3.0"
 description = "Online monitoring with xarray"
 readme = "README.rst"
 keywords = ["sentinel2", "xarray", "datacube", "monitoring", "change"]
@@ -13,13 +14,15 @@ authors = [
     { name = "Jonas Viehweger" },
     { name = "Chris Holden" }
 ]
-license = {file = "LICENSE"}
+dynamic = ["version"]
+license = {text = "EUPL-1.2"}
 classifiers = [
     "Programming Language :: Python :: 3",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
-    "Programming Language :: Python :: 3.12"
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)"
 ]
 requires-python = ">=3.9"
 dependencies = [
@@ -50,3 +53,5 @@ docs = [
 [tool.setuptools.packages.find]
 where = ["."]
 
+[tool.setuptools_scm]
+fallback_version = "9999"

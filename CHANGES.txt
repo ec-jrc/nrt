@@ -3,6 +3,15 @@ Changes
 
 Dev
 ---
+- nrt.data now lives in its own namespace package (nrt-data). Subpackage removed,
+  and namespace enabling in multiple __init__.py files
+- A few edits (e.g. pkg-data and MANIFEST.in) as a consequence of removing
+  nrt.data subpackage
+- Transitioned from setup.py to pyproject.toml
+- Package version now maintained in pyproject.toml
+- Adapted integration fixture to new test data access method (+ band names slightly changed
+  B4 is now B04, etc)
+- Version number now managed via git tags using setuptools-scm
 
 
 0.2.1 (2024-07-15)
