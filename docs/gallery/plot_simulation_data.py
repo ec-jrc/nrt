@@ -10,7 +10,7 @@ of the artificially generated breakpoints and the experiment is concluded by a s
 # Synthetic data generation
 # -------------------------
 #
-# The data module of the nrt package contains functionalities to create synthetic
+# The simulate module of the nrt-data package contains functionalities to create synthetic
 # data with controlled parameters such as position of structural change, phenological
 # amplitude, noise level, etc
 # One such example can be visualized using the ``make_ts`` function, which
@@ -18,7 +18,7 @@ of the artificially generated breakpoints and the experiment is concluded by a s
 import random
 
 import numpy as np
-from nrt import data
+from nrt.data import simulate
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
 
@@ -27,10 +27,10 @@ fig, axes = plt.subplots(3,3, constrained_layout=True)
 for row, amplitude in zip(axes, [0.1, 0.2, 0.3]):
     for ax, noise in zip(row, [0.02, 0.05, 0.1]):
         break_idx = random.randint(30,100)
-        ts = data.make_ts(dates=dates,
-                          break_idx=break_idx,
-                          sigma_noise=noise,
-                          amplitude=amplitude)
+        ts = simulate.make_ts(dates=dates,
+                              break_idx=break_idx,
+                              sigma_noise=noise,
+                              amplitude=amplitude)
         ax.plot(dates, ts)
         ax.axvline(x=dates[break_idx], color='magenta')
         ax.set_ylim(-0.1,1.1)
@@ -53,14 +53,14 @@ plt.show()
 # a time-series of simulated values with varying levels of noise, seasonality, outliers
 # and in some cases a structural break point
 
-params_ds = data.make_cube_parameters(shape=(50,50),
-                                      n_outliers_interval=(0,5),
-                                      n_nan_interval=(0,7),
-                                      break_idx_interval=(105,dates.size - 20))
+params_ds = simulate.make_cube_parameters(shape=(50,50),
+                                          n_outliers_interval=(0,5),
+                                          n_nan_interval=(0,7),
+                                          break_idx_interval=(105,dates.size - 20))
 # Convert break_idx to dates
 print('Early breakpoint: %s' % dates[105])
 print('Late breakpoint: %s' % dates[dates.size - 20])
-cube = data.make_cube(dates=dates, params_ds=params_ds)
+cube = simulate.make_cube(dates=dates, params_ds=params_ds)
 
 #################################################################
 # In the ndvi datacube created, 50 percents of the pixels contain a break point
@@ -169,12 +169,12 @@ print(accuracy(monitor, params_ds, dates))
 # process. With such low noise levels, that threshold is easily reached and breaks missed.
 
 def make_cube_fit_and_monitor(dates, noise_level):
-    params_ds = data.make_cube_parameters(shape=(20,20),
-                                          n_outliers_interval=(4,5),
-                                          n_nan_interval=(3,4),
-                                          sigma_noise_interval=(noise_level, noise_level),
-                                          break_idx_interval=(105,dates.size - 20))
-    cube = data.make_cube(dates=dates, params_ds=params_ds)
+    params_ds = simulate.make_cube_parameters(shape=(20,20),
+                                              n_outliers_interval=(4,5),
+                                              n_nan_interval=(3,4),
+                                              sigma_noise_interval=(noise_level, noise_level),
+                                              break_idx_interval=(105,dates.size - 20))
+    cube = simulate.make_cube(dates=dates, params_ds=params_ds)
     cube_history = cube.sel(time=slice('2018-01-01','2019-12-31'))
     cube_monitor = cube.sel(time=slice('2020-01-01', '2022-12-31'))
     # Monitoring class instantiation and fitting

@@ -37,3 +37,9 @@ We use `pytest` for unit tests.
 - You can run tests locally by simply calling `pytest` in the root directory of the project.
 
 
+### Releasing a new version
+
+Package version is set via git tags thanks to [setuptools-scm](https://setuptools-scm.readthedocs.io/en/latest/). A new release
+is made for every tagged commit pushed to github and that passes unit tests.
+Examples git tag command: `git tag -a v0.3.0 -m "version 0.3.0"
+
