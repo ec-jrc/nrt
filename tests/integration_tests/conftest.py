@@ -13,7 +13,6 @@
 # See the Licence for the specific language governing permissions and
 # limitations under the Licence.
 
-import pkg_resources
 import datetime
 
 import pytest
