@@ -17,6 +17,7 @@ Welcome to nrt's documentation!
    quickstart
    classes
    fit
+   deploy
    api_reference
    auto_examples/index
 
