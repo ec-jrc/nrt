@@ -81,6 +81,7 @@ Here is an example of producing a forest mask using ``xinfereo``:
     )
 
     # 4. Apply standard offset and scaling
+    ds = ds.where(ds != 0)
     ds = (ds.astype(np.float32) - 1000) / 10000
 
     # 5. Initialize the EOInferencer with a pre-trained model
