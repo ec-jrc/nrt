@@ -46,7 +46,7 @@ docs = [
     "sphinx==7.4.7",
     "dask",
     "sphinx_rtd_theme==2.0.0",
-    "matplotlib==3.9.1",
+    "matplotlib==3.9.2",
     "sphinx-gallery==0.17.0"
 ]
 
