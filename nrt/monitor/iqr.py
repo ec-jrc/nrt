@@ -56,8 +56,10 @@ class IQR(BaseNrt):
         trend (bool): Indicate whether stable period fit is performed with
             trend or not
         harmonic_order (int): The harmonic order of the time-series regression
-        sensitivity (float): sensitivity of the monitoring. Lower numbers are
-            high sensitivity. Value can't be zero.
+        sensitivity (float, float) | (float): sensitivity of the monitoring. Lower numbers are
+            high sensitivity. Value can't be zero. Sensitivity for deviations of the residuals 
+            in the negative and positive direction can be passed as a tuple (lower, upper). 
+            If a single value is passed, the same sensitivity will be used for upper and lower deviations
         boundary (int): Number of consecutive observations identified as outliers
             to signal as disturbance
         **kwargs: Used to set internal attributes when initializing with
@@ -70,7 +72,11 @@ class IQR(BaseNrt):
                          harmonic_order=harmonic_order,
                          boundary=boundary,
                          **kwargs)
-        self.sensitivity = sensitivity
+        self.sensitivity = (
+            sensitivity 
+            if isinstance(sensitivity, tuple) 
+            else (sensitivity, sensitivity)
+        )
         self.q25 = kwargs.get('q25')
         self.q75 = kwargs.get('q75')
         self.monitoring_strategy = 'IQR'
@@ -89,8 +95,8 @@ class IQR(BaseNrt):
     def _update_process(self, residuals, is_valid):
         # Compute upper and lower thresholds
         iqr = self.q75 - self.q25
-        lower_limit = self.q25 - self.sensitivity * iqr
-        upper_limit = self.q75 + self.sensitivity * iqr
+        lower_limit = self.q25 - self.sensitivity[0] * iqr
+        upper_limit = self.q75 + self.sensitivity[1] * iqr
         # compare residuals to thresholds
         is_outlier = np.logical_or(residuals > upper_limit,
                                    residuals < lower_limit)

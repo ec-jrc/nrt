@@ -24,6 +24,11 @@ monitor_params = {
                          marks=pytest.mark.ewma),
     'IQR': pytest.param(iqr.IQR, {'trend': False, 'harmonic_order': 1}, 3,
                         marks=pytest.mark.iqr),
+    'IQR_sensitivity_tuple': pytest.param(
+        iqr.IQR, 
+        {'trend': False, 'harmonic_order': 1, 'sensitivity': (1,3)}, 3,
+        marks=pytest.mark.iqr_sens
+    ),
     'CUSUM': pytest.param(cusum.CuSum, {}, 6,
                           marks=pytest.mark.cusum),
     'MOSUM': pytest.param(mosum.MoSum, {}, 6,
